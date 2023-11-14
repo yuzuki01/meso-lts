@@ -1,6 +1,8 @@
 # Meso
 
-DUGKS
+DUGKS 求解器
+
+重构前<a href="https://github.com/yuzuki01/meso">代码</a>已经不再维护，仅供参考
 
 ## 重大更新(Nov 14, 2023)
 
