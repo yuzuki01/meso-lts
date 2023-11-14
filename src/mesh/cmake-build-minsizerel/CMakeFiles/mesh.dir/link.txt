@@ -1,3 +1,0 @@
-D:\App\CMake\bin\cmake.exe -E rm -f CMakeFiles\mesh.dir/objects.a
-D:\App\MinGW\mingw-w64-13.2.0-posix-seh-ucrt\bin\ar.exe qc CMakeFiles\mesh.dir/objects.a @CMakeFiles\mesh.dir\objects1
-D:\App\MinGW\mingw-w64-13.2.0-posix-seh-ucrt\bin\c++.exe -Os -DNDEBUG -shared -o D:\Solver\meso-new-mesh\build\mesh.dll -Wl,--out-implib,D:\Solver\meso-new-mesh\build\libmesh.dll.a -Wl,--major-image-version,0,--minor-image-version,0 -Wl,--whole-archive CMakeFiles\mesh.dir/objects.a -Wl,--no-whole-archive @CMakeFiles\mesh.dir\linkLibs.rsp

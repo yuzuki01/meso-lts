@@ -1,4 +1,0 @@
-ToolSet: w64 11.0 (local)@D:\App\MinGW\mingw-w64-13.2.0-posix-seh-ucrt
-Options: 
-
-Options:

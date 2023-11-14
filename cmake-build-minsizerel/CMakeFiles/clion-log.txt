@@ -1,9 +1,0 @@
-"D:\App\JetBrains\CLion 2020.3.4\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=MinSizeRel -G "CodeBlocks - MinGW Makefiles" D:\Solver\meso-new-mesh
-OS is Windows
--- Found OpenMP_C: -fopenmp  
--- Found OpenMP_CXX: -fopenmp  
--- Found OpenMP: TRUE   
-OpenMP Found.
--- Configuring done
--- Generating done
--- Build files have been written to: D:/Solver/meso-new-mesh/cmake-build-minsizerel

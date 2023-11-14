@@ -1,3 +1,0 @@
-D:\App\CMake\bin\cmake.exe -E rm -f CMakeFiles\solver.dir/objects.a
-D:\App\MinGW\mingw-w64-13.2.0-posix-seh-ucrt\bin\ar.exe qc CMakeFiles\solver.dir/objects.a @CMakeFiles\solver.dir\objects1
-D:\App\MinGW\mingw-w64-13.2.0-posix-seh-ucrt\bin\g++.exe  -fopenmp -Os -DNDEBUG -shared -o D:\Solver\meso-new-mesh\build\solver.dll -Wl,--out-implib,D:\Solver\meso-new-mesh\build\libsolver.dll.a -Wl,--major-image-version,0,--minor-image-version,0 -Wl,--whole-archive CMakeFiles\solver.dir/objects.a -Wl,--no-whole-archive @CMakeFiles\solver.dir\linkLibs.rsp
