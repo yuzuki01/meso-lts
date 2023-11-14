@@ -1,0 +1,3 @@
+D:\App\CMake\bin\cmake.exe -E rm -f CMakeFiles\core.dir/objects.a
+D:\App\MinGW\mingw-w64-13.2.0-posix-seh-ucrt\bin\ar.exe qc CMakeFiles\core.dir/objects.a @CMakeFiles\core.dir\objects1
+D:\App\MinGW\mingw-w64-13.2.0-posix-seh-ucrt\bin\c++.exe -Os -DNDEBUG -shared -o D:\Solver\meso-new-mesh\build\core.dll -Wl,--out-implib,D:\Solver\meso-new-mesh\build\libcore.dll.a -Wl,--major-image-version,0,--minor-image-version,0 -Wl,--whole-archive CMakeFiles\core.dir/objects.a -Wl,--no-whole-archive @CMakeFiles\core.dir\linkLibs.rsp

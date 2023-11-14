@@ -1,0 +1,1 @@
+ "D:/Solver/meso-new-mesh/build/core.dll" "D:/Solver/meso-new-mesh/build/mesh.dll" "D:/Solver/meso-new-mesh/build/solver.dll" -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

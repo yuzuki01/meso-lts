@@ -1,0 +1,5 @@
+"D:\App\JetBrains\CLion 2020.3.4\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=MinSizeRel -G "CodeBlocks - MinGW Makefiles" D:\Solver\meso-new-mesh\src\mesh
+OS is Windows
+-- Configuring done
+-- Generating done
+-- Build files have been written to: D:/Solver/meso-new-mesh/src/mesh/cmake-build-minsizerel
