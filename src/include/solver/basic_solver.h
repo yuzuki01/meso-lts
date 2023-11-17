@@ -20,6 +20,7 @@ public:
 struct MacroVars {
     double density = 0.0;
     double temperature = 0.0;
+    double pressure = 0.0;
     Vec3D velocity{0.0, 0.0, 0.0};
     Vec3D heat_flux{0.0, 0.0, 0.0};
 };

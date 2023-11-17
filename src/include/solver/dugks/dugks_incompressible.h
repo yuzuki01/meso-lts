@@ -31,7 +31,7 @@ public:
     class Cell {
     public:
         Scheme &solver;
-        MESH::Cell<int> &mesh_cell;
+        MESH::Cell<int> *mesh_cell_ptr;
         /// 最小二乘法
         LeastSquare lsp;
         /// 分布函数
@@ -52,7 +52,7 @@ public:
     class Face {
     public:
         Scheme &solver;
-        MESH::Face<int> &mesh_face;
+        MESH::Face<int> *mesh_face_ptr;
         /// 分布函数
         DistributionFunction f{}, f_b{};
         /// 宏观量

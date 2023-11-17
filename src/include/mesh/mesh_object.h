@@ -71,6 +71,7 @@ public:
 
     /// for structural DVS - bounce-back
     key_type inv_cell_key{};
+    // Cell<key_type> * inv_cell_ptr;
     /// for structural DVS - mirror-reflect
     int on_layer_id{}, layer_cell_num{};
     /// Geom parameters
@@ -81,9 +82,13 @@ public:
     double position_square;             /// equal to position * position
     double volume;                      /// volume of cell
     key_vector node_key;
+    // std::vector<Node<key_type> *> node_ptr;
     key_vector face_key;
+    // std::vector<Face<key_type> *> face_ptr;
     key_vector near_cell_key;           /// cells using the same face
+    // std::vector<Cell<key_type> *> near_cell_ptr;
     key_vector second_near_cell_key;    /// for high-order scheme
+    // std::vector<Cell<key_type> *> second_near_cell_ptr;
 
     void shrink_to_fit();
 
@@ -108,6 +113,7 @@ public:
     key_type key{};
     int boundary_type = MESH_BC_INTERFACE;  /// boundary type
     key_type mark_key{};                    /// mark where the interface is
+    // Mark<key_type> * mark_ptr{};
 
     /// Geom parameters
     /**
@@ -122,21 +128,24 @@ public:
      *      on_cell_nv == inv_cell_nv
      */
     key_type on_cell_key{};
+    // Cell<key_type> * on_cell_ptr{};
     int on_cell_face{};
-    Vec3D on_cell_nv;
+    Vec3D on_cell_nv{};
     key_type inv_cell_key{};
+    // Cell<key_type> * inv_cell_ptr{};
     int inv_cell_face{};
-    Vec3D inv_cell_nv;
+    Vec3D inv_cell_nv{};
     double area{};
     Vec3D position = {0.0, 0.0, 0.0};
-    key_vector node_key;
+    key_vector node_key{};
+    // std::vector<Node<key_type> *> node_ptr{};
+
+    void shrink_to_fit();
 
     /// Gambit format       face_id | face_type | node_id
     Face(const key_type &face_key, int elem_type, const key_vector &node_key_vec);
 
     Face() = default;
-
-    void shrink_to_fit();
 
     /// debug func
     std::string info() const;

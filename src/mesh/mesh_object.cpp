@@ -178,12 +178,14 @@ TP_func MarkElem<std::string>::MarkElem(const std::vector<std::string> &init_str
 Mark<int>::Mark(const string_vector &init_strings) {
     const int len = init_strings.size();
     if (len > 0) key = init_strings[0];
+    info_println("Read mark<" + key + "> from mesh file.");
     if (len > 2) elem_num = stoi(init_strings[2]);
 }
 
 Mark<std::string>::Mark(const string_vector &init_strings) {
     const int len = init_strings.size();
     if (len > 0) key = init_strings[0];
+    info_println("Read mark<" + key + "> from mesh file.");
     if (len > 2) elem_num = stoi(init_strings[2]);
 }
 

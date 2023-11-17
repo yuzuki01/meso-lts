@@ -25,4 +25,7 @@
 /// MESH writer
 #include "mesh/mesh_writer.h"
 
+/// Discrete Phase - Particle Tracker
+#include "mesh/dpm_object.h"
+
 #endif  // HEADER_MESH

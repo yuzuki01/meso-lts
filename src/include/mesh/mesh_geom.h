@@ -35,4 +35,7 @@ namespace GEOM {
     TP_key
     double cell_volume(const MESH::Cell<key_type> &cell, MESH::Mesh<key_type> &mesh);
     double vector_angles_2d(const Vec3D &_vec1, const Vec3D &_vec2);
+    /// particle tracker
+    TP_key
+    bool is_particle_in_cell(MESH::Cell<key_type> &cell, MESH::Mesh<key_type> &mesh);
 }
