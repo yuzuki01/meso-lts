@@ -24,7 +24,7 @@
 #include "solver/basic_solver.h"    // basic
 // #include "solver/dvm_mesh.h"        // dvm wrapped mesh
 
+#include "solver/navier-stokes/simple_incompressible.h"
 #include "solver/dugks/dugks_incompressible.h"
-
 
 #endif  // HEADER_SOLVER

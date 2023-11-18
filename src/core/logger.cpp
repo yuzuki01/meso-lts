@@ -5,6 +5,15 @@
 
 # include <core.h>
 
+std::string logo = "******************************\n"
+                   "*     __  ___                *\n"
+                   "*    /  |/  /__  _________   *\n"
+                   "*   / /|_/ / _ \\/ ___/ __ \\  *\n"
+                   "*  / /  / /  __(__  ) /_/ /  *\n"
+                   "* /_/  /_/\\___/____/\\____/   *\n"
+                   "*                            *\n"
+                   "******************************\n";
+
 /**
  * logger 基类
  */
@@ -21,7 +30,7 @@ Logger::Logger(const std::string &logger_name, const std::string &file_path) {
     path = file_path;
 }
 
-Logger & Logger::operator()(const std::string &logger_name) {
+Logger &Logger::operator()(const std::string &logger_name) {
     ss.str("");
     path.clear();
     prefix = logger_name;
@@ -88,12 +97,5 @@ void LoggerInit() {
     std::ios::sync_with_stdio(0);
     std::cin.tie(0);
     std::cout.tie(0);
-
-    std::cout << "*****************************************\n"
-                 "*     __  ___    ______   _____   ____  *\n"
-                 "*    /  |/  /   / ____/  / ___/  / __ \\ *\n"
-                 "*   / /|_/ /   / __/     \\__ \\  / / / / *\n"
-                 "*  / /  / /   / /___    ___/ / / /_/ /  *\n"
-                 "* /_/  /_/   /_____/   /____/  \\____/   *\n"
-                 "*****************************************\n\n";
+    std::cout << logo;
 }
