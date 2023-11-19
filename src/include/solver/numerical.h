@@ -8,5 +8,5 @@ struct LeastSquare {
     Vec3D Cx{}, Cy{}, Cz{};
 };
 
-TP_key
-LeastSquare generate_least_square(const key_type &cell_key, MESH::Mesh<key_type> &mesh);
+TP_key_mesh
+LeastSquare generate_least_square(const key_type &cell_key, mesh_type &mesh);

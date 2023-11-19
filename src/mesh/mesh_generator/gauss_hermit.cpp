@@ -58,7 +58,7 @@ MESH::ListMesh GENERATOR::gauss_hermit(int gauss_point, int dimension, double RT
                     mesh.update_max_discrete_velocity(cell.position.magnitude());
                 }
     }
-    mesh.NDFCD = dimension;
+    mesh.NDIME = dimension;
     mesh.NELEM = mesh.CELLS.size();
     mesh.shrink_to_fit();
     std::stringstream ss;

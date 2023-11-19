@@ -1,5 +1,6 @@
 #include "mesh.h"
 
+/// Gambit mesh
 TP_func
 void neuReader::parse(MESH::MapMesh &mesh) {
     int read_case = 0;

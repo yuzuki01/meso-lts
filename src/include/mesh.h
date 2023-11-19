@@ -18,8 +18,8 @@
 #include "mesh/mesh_object.h"
 /// MESH geom
 #include "mesh/mesh_geom.h"
-/// neu reader
-#include "mesh/neu_reader.h"
+/// MESH reader
+#include "mesh/mesh_reader.h"
 /// MESH generator
 #include "mesh/mesh_generator.h"
 /// MESH writer

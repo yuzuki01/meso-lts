@@ -7,15 +7,12 @@
 #define MESH_TYPE_NORMAL    0
 #define MESH_TYPE_NO_FACE   1
 
-#define key_type KeyType
-#define TP(_x) template<_x>
-#define TP_func TP()
-#define TP_key TP(class key_type)
+/// template
+#define TP_func template<>
+#define TP_key template<class key_type>
+#define TP_mesh template<class mesh_type>
+#define TP_key_mesh template<class key_type, class mesh_type>
 #define key_vector std::vector<key_type>
-
-/// MeshType Macro
-#define ListMesh    Mesh<int>
-#define MapMesh     Mesh<std::string>
 
 namespace MESH {
 
@@ -35,9 +32,9 @@ namespace MESH {
     class Mark;
 
     class BasicMesh;    // basic mesh class
-
-    TP_key
-    class Mesh;
+    /// Mesh
+    class ListMesh;
+    class MapMesh;
 
     extern std::unordered_map<std::string, int> MarkTypeID;
 }
@@ -57,10 +54,7 @@ public:
     key_type key{};
     Vec3D position = {0.0, 0.0, 0.0};
 
-    explicit Node(const key_type &node_key, const Vec3D &node_position) : key(node_key),
-                                                                          position(node_position) {};
-
-    explicit Node(const string_vector &init_strings);
+    explicit Node(const key_type &node_key, const Vec3D &node_position);
 };
 
 TP_key
@@ -92,8 +86,8 @@ public:
 
     void shrink_to_fit();
 
-    /// Gambit format       cell_id | cell_type | node_num | node_id
-    explicit Cell(const string_vector &init_strings);
+    /// su2 format              TYPE | NODES | (ID)
+    explicit Cell(const key_type &cell_key, const int cell_type, const key_vector &node_set);
 
     /// structural DVS mesh
     Cell(const Vec3D &particle_velocity, double weight,
@@ -142,7 +136,7 @@ public:
 
     void shrink_to_fit();
 
-    /// Gambit format       face_id | face_type | node_id
+    /// self defined format       face_id | face_type | node_id
     Face(const key_type &face_key, int elem_type, const key_vector &node_key_vec);
 
     Face() = default;
@@ -156,27 +150,27 @@ public:
 TP_key
 class MESH::MarkElem {
 public:
-    int cell_type;
-    key_type cell_key{};
-    int on_cell_face_id;
+    int type;
+    std::string key;
+    key_vector node_set;
     key_type face_key{};
 
-    /// Gambit format       cell_id | cell_type | on_cell_face_id
+    /// su2 format              TYPE | nodes
     explicit MarkElem(const string_vector &init_strings);
 };
 
 TP_func
 class MESH::Mark<int> {
 public:
-    std::string key;
+    std::string name;
     int elem_num;
     std::string type = MESH_KEY_NULL;
     /// Physical parameters
     double density = 0.0, temperature = 0.0;
     Vec3D velocity = {0.0, 0.0, 0.0};
 
-    /// Gambit format
-    explicit Mark(const string_vector &init_strings);
+    /// su2
+    explicit Mark(const std::string &mark_name, const int nelem);
 
     void shrink_to_fit();
 
@@ -192,7 +186,6 @@ public:
 TP_func
 class MESH::Mark<std::string> {
 public:
-    std::string key;
     std::string name;
     int elem_num;
     std::string type = MESH_KEY_NULL;
@@ -200,8 +193,8 @@ public:
     double density = 0.0, temperature = 0.0;
     Vec3D velocity = {0.0, 0.0, 0.0};
 
-    /// Gambit format
-    explicit Mark(const string_vector &init_strings);
+    /// su2
+    explicit Mark(const std::string &mark_name, const int nelem);
 
     void shrink_to_fit();
 
@@ -222,12 +215,10 @@ public:
      * MapMesh params
      */
     int type = -1;
-    int NUMNP = 0;  // number of node points
+    int NDIME = 0;  // dimension
+    int NPOIN = 0;  // number of node points
     int NELEM = 0;  // number of elements
-    int NGRPS = 0;  // number of element groups
-    int NBSETS = 0; // number of B.C. sets
-    int NDFCD = 0;  // number of coordinate directions
-    int NDFVL = 0;  // number of velocity components
+    int NMARK = 0;  // number of marks
     std::string name{};
     double max_discrete_velocity = -1.0;
     double min_mesh_size = -1.0;
@@ -248,7 +239,6 @@ public:
 };
 
 /// ListMesh
-TP_func
 class MESH::ListMesh : public BasicMesh {
 public:
     /**
@@ -259,17 +249,15 @@ public:
     std::vector<Face<int>> FACES{};
     std::vector<Mark<int>> MARKS{};
 
-    Mesh() = default;
+    ListMesh() = default;
 
-    explicit Mesh(int mesh_type) : BasicMesh(mesh_type) {};
+    explicit ListMesh(int mesh_type) : BasicMesh(mesh_type) {};
 
-    Mesh(int mesh_type, std::string mesh_name) : BasicMesh(mesh_type, mesh_name) {};
+    ListMesh(int mesh_type, std::string mesh_name) : BasicMesh(mesh_type, mesh_name) {};
 
     void load(const std::string &file_path);
 
     void build();
-
-    void set_mesh_params(const string_vector &init_strings);
 
     void set_mark(const BoundaryParam &bc_param);
 
@@ -299,7 +287,6 @@ private:
 };
 
 /// MapMesh
-TP_func
 class MESH::MapMesh : public BasicMesh {
 public:
     /**
@@ -316,17 +303,15 @@ public:
     std::unordered_map<std::string, Face<std::string>> FACES{};
     std::unordered_map<std::string, Mark<std::string>> MARKS{};
 
-    Mesh() = default;
+    MapMesh() = default;
 
-    explicit Mesh(int mesh_type) : BasicMesh(mesh_type) {};
+    explicit MapMesh(int mesh_type) : BasicMesh(mesh_type) {};
 
-    Mesh(int mesh_type, std::string mesh_name) : BasicMesh(mesh_type, mesh_name) {};
+    MapMesh(int mesh_type, std::string mesh_name) : BasicMesh(mesh_type, mesh_name) {};
 
     void load(const std::string &file_path);
 
     void build();
-
-    void set_mesh_params(const string_vector &init_strings);
 
     void set_mark(const BoundaryParam &bc_param);
 

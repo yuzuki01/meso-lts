@@ -2,73 +2,70 @@
 
 /// node set map
 std::unordered_map<int, std::vector<std::vector<int>>> node_set_map = {
+        {GEOM::TRIA,  {
+                              {0, 1}, // face 1
+                              {1, 2}, // face 2
+                              {2, 0}, // face 3
+                      }},
         {GEOM::QUAD,  {
                               {0, 1}, // face 1
                               {1, 2}, // face 2
                               {2, 3}, // face 3
                               {3, 0}, // face 4
                       }},
-        {GEOM::TRIA,  {
-                              {0, 1}, // face 1
-                              {1, 2}, // face 2
-                              {2, 0}, // face 3
+        {GEOM::HEXAH, {
+                              {0, 1, 2, 3}, // face 1
+                              {0, 1, 5, 4}, // face 2
+                              {1, 2, 6, 5}, // face 3
+                              {2, 3, 7, 6}, // face 4
+                              {0, 3, 7, 4}, // face 5
+                              {4, 5, 6, 7}, // face 6
                       }},
-        {GEOM::BRICK, {
-                              {0, 1, 5, 4}, // face 1
-                              {1, 3, 7, 5}, // face 2
-                              {3, 2, 6, 7}, // face 3
-                              {2, 0, 4, 6}, // face 4
-                              {1, 0, 2, 3}, // face 5
-                              {4, 5, 7, 6}, // face 6
-                      }},
-        {GEOM::WEDGE, {
-                              {0, 1, 4, 3}, // face 1
-                              {1, 2, 5, 4}, // face 2
-                              {2, 0, 3, 5}, // face 3
-                              {0, 2, 1},    // face 4
-                              {3, 4, 5},    // face 5
+        {GEOM::PRISM, {
+                              {0, 1, 2, 3}, // face 1
+                              {0, 1, 4},    // face 2
+                              {1, 2, 4},    // face 3
+                              {2, 3, 4},    // face 4
+                              {3, 0, 4},    // face 5
                       }},
         {GEOM::TETRA, {
-                              {1, 0, 2}, // face 1
+                              {0, 1, 2}, // face 1
                               {0, 1, 3}, // face 2
-                              {1, 2, 3}, // face 3
-                              {2, 0, 3}, // face 4
+                              {0, 2, 3}, // face 3
+                              {1, 2, 3}, // face 4
                       }},
         {GEOM::PYRAM, {
-                              {0, 2, 3, 1},   // face 1
-                              {0, 1, 4},      // face 2
-                              {1, 3, 4},      // face 3
-                              {3, 2, 4},      // face 4
-                              {2, 0, 4},      // face 5
+                              {0, 1, 4, 3},   // face 1
+                              {1, 2, 5, 4},   // face 2
+                              {0, 3, 5, 2},   // face 3
+                              {0, 1, 2},      // face 4
+                              {3, 4, 5},      // face 5
                       }},
 };
 
 /// 内部函数声明
-TP_key
-void build_face_2d(MESH::Mesh<key_type> &mesh);
+TP_mesh
+void build_face_2d(mesh_type &mesh);
 /// explicit init
-TP_func void build_face_2d<int>(MESH::ListMesh &mesh);
+TP_func void build_face_2d<MESH::ListMesh>(MESH::ListMesh &mesh);
 /// explicit init
-TP_func void build_face_2d<std::string>(MESH::MapMesh &mesh);
+TP_func void build_face_2d<MESH::MapMesh>(MESH::MapMesh &mesh);
 
-TP_key
-void build_face_3d(MESH::Mesh<key_type> &mesh);
+TP_mesh
+void build_face_3d(mesh_type &mesh);
 /// explicit init
-TP_func void build_face_3d<int>(MESH::ListMesh &mesh);
+TP_func void build_face_3d<MESH::ListMesh>(MESH::ListMesh &mesh);
 /// explicit init
-TP_func void build_face_3d<std::string>(MESH::MapMesh &mesh);
+TP_func void build_face_3d<MESH::MapMesh>(MESH::MapMesh &mesh);
 
-TP_key
-void generate_face(MESH::Mesh<key_type> &mesh, MESH::Cell<key_type> &cell,
+TP_key_mesh
+void generate_face(mesh_type &mesh, MESH::Cell<key_type> &cell,
                    int face_type, int face_on_cell_key,
                    std::unordered_map<std::string, key_type> &face_map);
 
-TP_key
-MESH::Face<key_type> &create_face(MESH::Mesh<key_type> &mesh, MESH::Cell<key_type> &on_cell, key_vector &node_set,
+TP_key_mesh
+MESH::Face<key_type> &create_face(mesh_type &mesh, MESH::Cell<key_type> &on_cell, key_vector &node_set,
                                   int face_type, int face_on_cell_key);
-
-TP_key
-std::string generate_face_key(key_vector &node_set);
 
 /// 函数实现
 /// for ListMesh only
@@ -86,23 +83,10 @@ void MESH::ListMesh::build_geom() {
         /// face
         for (auto &face : FACES) {
             face.position = GEOM::face_position(face, *this);
-            face.area = GEOM::face_area(face, *this);
+            face.area = GEOM::face_area<int, MESH::ListMesh>(face, *this);
             GEOM::face_normal_vector(face, *this);
         }
         info_println(" - build geom: face - ok.");
-        /// bind face to mark
-        int mark_id = 0;
-        for (auto &mark : MARKS) {
-            for (auto &mark_elem : mark.MARK_ELEM) {
-                auto &cell = get_cell(mark_elem.cell_key);
-                auto &face = get_face(cell.face_key[mark_elem.on_cell_face_id]);
-                /// bind face & mark
-                face.mark_key = mark_id;
-                mark_elem.face_key = face.key;
-            }
-            mark_id++;
-        }
-        info_println(" - build geom: mark - ok.");
         /// link near cells by face
         std::unordered_map<int, std::vector<int>> face_map;
         for (auto &cell : CELLS) {
@@ -147,21 +131,21 @@ void MESH::ListMesh::build_face() {
 }
 
 TP_func
-void build_face_2d<int>(MESH::ListMesh &mesh) {
-    /// 2D config - edge only
-    std::unordered_map<std::string, int> edge_map;
+void build_face_2d<MESH::ListMesh>(MESH::ListMesh &mesh) {
+    /// 2D config - LINE only
+    std::unordered_map<std::string, int> line_map;
     for (auto &cell : mesh.CELLS) {
         switch (cell.type) {
             case GEOM::TRIA:
-                generate_face(mesh, cell, GEOM::EDGE, 0, edge_map);
-                generate_face(mesh, cell, GEOM::EDGE, 1, edge_map);
-                generate_face(mesh, cell, GEOM::EDGE, 2, edge_map);
+                generate_face(mesh, cell, GEOM::LINE, 0, line_map);
+                generate_face(mesh, cell, GEOM::LINE, 1, line_map);
+                generate_face(mesh, cell, GEOM::LINE, 2, line_map);
                 break;
             case GEOM::QUAD:
-                generate_face(mesh, cell, GEOM::EDGE, 0, edge_map);
-                generate_face(mesh, cell, GEOM::EDGE, 1, edge_map);
-                generate_face(mesh, cell, GEOM::EDGE, 2, edge_map);
-                generate_face(mesh, cell, GEOM::EDGE, 3, edge_map);
+                generate_face(mesh, cell, GEOM::LINE, 0, line_map);
+                generate_face(mesh, cell, GEOM::LINE, 1, line_map);
+                generate_face(mesh, cell, GEOM::LINE, 2, line_map);
+                generate_face(mesh, cell, GEOM::LINE, 3, line_map);
                 break;
             default:
                 std::string s = "build_face_2d() caught invalid geom type.";
@@ -169,15 +153,27 @@ void build_face_2d<int>(MESH::ListMesh &mesh) {
                 throw std::invalid_argument(s);
         }
     }
+    /// link face to mark
+    debug_println("link face to mark");
+    for (int mark_key = 0; mark_key < mesh.MARKS.size(); mark_key++) {
+        auto &mark = mesh.get_mark(mark_key);
+        for (auto &mark_elem : mark.MARK_ELEM) {
+            /// 2D - LINE only
+            auto &face_key = line_map.at(mark_elem.key);
+            auto &face = mesh.get_face(face_key);
+            face.mark_key = mark_key;
+            mark_elem.face_key = face_key;
+        }
+    }
 }
 
 TP_func
-void build_face_3d<int>(MESH::ListMesh &mesh) {
+void build_face_3d<MESH::ListMesh>(MESH::ListMesh &mesh) {
     /// 3D config - quad, tria
     std::unordered_map<std::string, int> quad_map, tria_map;
     for (auto &cell : mesh.CELLS) {
         switch (cell.type) {
-            case GEOM::BRICK:
+            case GEOM::HEXAH:
                 generate_face(mesh, cell, GEOM::QUAD, 0, quad_map);
                 generate_face(mesh, cell, GEOM::QUAD, 1, quad_map);
                 generate_face(mesh, cell, GEOM::QUAD, 2, quad_map);
@@ -185,10 +181,10 @@ void build_face_3d<int>(MESH::ListMesh &mesh) {
                 generate_face(mesh, cell, GEOM::QUAD, 4, quad_map);
                 generate_face(mesh, cell, GEOM::QUAD, 5, quad_map);
                 break;
-            case GEOM::WEDGE:
+            case GEOM::PRISM:
                 generate_face(mesh, cell, GEOM::QUAD, 0, quad_map);
-                generate_face(mesh, cell, GEOM::QUAD, 1, quad_map);
-                generate_face(mesh, cell, GEOM::QUAD, 2, quad_map);
+                generate_face(mesh, cell, GEOM::TRIA, 1, tria_map);
+                generate_face(mesh, cell, GEOM::TRIA, 2, tria_map);
                 generate_face(mesh, cell, GEOM::TRIA, 3, tria_map);
                 generate_face(mesh, cell, GEOM::TRIA, 4, tria_map);
                 break;
@@ -200,8 +196,8 @@ void build_face_3d<int>(MESH::ListMesh &mesh) {
                 break;
             case GEOM::PYRAM:
                 generate_face(mesh, cell, GEOM::QUAD, 0, quad_map);
-                generate_face(mesh, cell, GEOM::TRIA, 1, tria_map);
-                generate_face(mesh, cell, GEOM::TRIA, 2, tria_map);
+                generate_face(mesh, cell, GEOM::QUAD, 1, quad_map);
+                generate_face(mesh, cell, GEOM::QUAD, 2, quad_map);
                 generate_face(mesh, cell, GEOM::TRIA, 3, tria_map);
                 generate_face(mesh, cell, GEOM::TRIA, 4, tria_map);
                 break;
@@ -209,6 +205,31 @@ void build_face_3d<int>(MESH::ListMesh &mesh) {
                 std::string s = "build_face_3d() caught invalid geom type.";
                 warn_println(s);
                 throw std::invalid_argument(s);
+        }
+    }
+    /// link face to mark
+    for (int mark_key = 0; mark_key < mesh.MARKS.size(); mark_key++) {
+        auto &mark = mesh.get_mark(mark_key);
+        for (auto &mark_elem : mark.MARK_ELEM) {
+            switch (mark_elem.type) {
+                case GEOM::TRIA: {
+                    auto &face_key = tria_map.at(mark_elem.key);
+                    auto &face = mesh.get_face(face_key);
+                    face.mark_key = mark_key;
+                    mark_elem.face_key = face_key;
+                    break;
+                }
+                case GEOM::QUAD: {
+                    auto &face_key = quad_map.at(mark_elem.key);
+                    auto &face = mesh.get_face(face_key);
+                    face.mark_key = mark_key;
+                    mark_elem.face_key = face_key;
+                    break;
+                }
+                default:
+                    warn_println("Caught mark elem with unsupported geom type.");
+                    break;
+            }
         }
     }
 }
@@ -230,23 +251,10 @@ void MESH::MapMesh::build_geom() {
         for (auto &it : FACES) {
             auto &face = it.second;
             face.position = GEOM::face_position(face, *this);
-            face.area = GEOM::face_area(face, *this);
+            face.area = GEOM::face_area<std::string, MESH::MapMesh>(face, *this);
             GEOM::face_normal_vector(face, *this);
         }
         info_println(" - build geom: face - ok.");
-        /// bind face to mark
-        for (auto &it : MARKS) {
-            auto &mark = it.second;
-            for (auto &it2 : mark.MARK_ELEM) {
-                auto &mark_elem = it2.second;
-                auto &cell = get_cell(mark_elem.cell_key);
-                auto &face = get_face(cell.face_key[mark_elem.on_cell_face_id]);
-                /// bind face & mark
-                face.mark_key = mark.key;
-                mark_elem.face_key = face.key;
-            }
-        }
-        info_println(" - build geom: mark - ok.");
         /// link near cells by face
         std::unordered_map<std::string, string_vector > face_map;
         for (auto &it : CELLS) {
@@ -276,22 +284,22 @@ void MESH::MapMesh::build_face() {
 }
 
 TP_func
-void build_face_2d<std::string>(MESH::MapMesh &mesh) {
-    /// 2D config - edge only
-    std::unordered_map<std::string, std::string> edge_map;
+void build_face_2d<MESH::MapMesh>(MESH::MapMesh &mesh) {
+    /// 2D config - LINE only
+    std::unordered_map<std::string, std::string> line_map;
     for (auto &it : mesh.CELLS) {
         auto &cell = it.second;
         switch (cell.type) {
             case GEOM::TRIA:
-                generate_face(mesh, cell, GEOM::EDGE, 0, edge_map);
-                generate_face(mesh, cell, GEOM::EDGE, 1, edge_map);
-                generate_face(mesh, cell, GEOM::EDGE, 2, edge_map);
+                generate_face(mesh, cell, GEOM::LINE, 0, line_map);
+                generate_face(mesh, cell, GEOM::LINE, 1, line_map);
+                generate_face(mesh, cell, GEOM::LINE, 2, line_map);
                 break;
             case GEOM::QUAD:
-                generate_face(mesh, cell, GEOM::EDGE, 0, edge_map);
-                generate_face(mesh, cell, GEOM::EDGE, 1, edge_map);
-                generate_face(mesh, cell, GEOM::EDGE, 2, edge_map);
-                generate_face(mesh, cell, GEOM::EDGE, 3, edge_map);
+                generate_face(mesh, cell, GEOM::LINE, 0, line_map);
+                generate_face(mesh, cell, GEOM::LINE, 1, line_map);
+                generate_face(mesh, cell, GEOM::LINE, 2, line_map);
+                generate_face(mesh, cell, GEOM::LINE, 3, line_map);
                 break;
             default:
                 std::string s = "build_face_2d() caught invalid geom type.";
@@ -299,16 +307,28 @@ void build_face_2d<std::string>(MESH::MapMesh &mesh) {
                 throw std::invalid_argument(s);
         }
     }
+    /// link face to mark
+    for (auto &it : mesh.MARKS) {
+        auto &mark = it.second;
+        for (auto &it2 : mark.MARK_ELEM) {
+            auto &mark_elem = it2.second;
+            /// 2D - LINE only
+            auto &face_key = line_map.at(mark_elem.key);
+            auto &face = mesh.get_face(face_key);
+            face.mark_key = mark.name;
+            mark_elem.face_key = face_key;
+        }
+    }
 }
 
 TP_func
-void build_face_3d<std::string>(MESH::MapMesh &mesh) {
+void build_face_3d<MESH::MapMesh>(MESH::MapMesh &mesh) {
     /// 3D config - quad, tria
     std::unordered_map<std::string, std::string> quad_map, tria_map;
     for (auto &it : mesh.CELLS) {
         auto &cell = it.second;
         switch (cell.type) {
-            case GEOM::BRICK:
+            case GEOM::HEXAH:
                 generate_face(mesh, cell, GEOM::QUAD, 0, quad_map);
                 generate_face(mesh, cell, GEOM::QUAD, 1, quad_map);
                 generate_face(mesh, cell, GEOM::QUAD, 2, quad_map);
@@ -316,10 +336,10 @@ void build_face_3d<std::string>(MESH::MapMesh &mesh) {
                 generate_face(mesh, cell, GEOM::QUAD, 4, quad_map);
                 generate_face(mesh, cell, GEOM::QUAD, 5, quad_map);
                 break;
-            case GEOM::WEDGE:
+            case GEOM::PRISM:
                 generate_face(mesh, cell, GEOM::QUAD, 0, quad_map);
-                generate_face(mesh, cell, GEOM::QUAD, 1, quad_map);
-                generate_face(mesh, cell, GEOM::QUAD, 2, quad_map);
+                generate_face(mesh, cell, GEOM::TRIA, 1, tria_map);
+                generate_face(mesh, cell, GEOM::TRIA, 2, tria_map);
                 generate_face(mesh, cell, GEOM::TRIA, 3, tria_map);
                 generate_face(mesh, cell, GEOM::TRIA, 4, tria_map);
                 break;
@@ -331,8 +351,8 @@ void build_face_3d<std::string>(MESH::MapMesh &mesh) {
                 break;
             case GEOM::PYRAM:
                 generate_face(mesh, cell, GEOM::QUAD, 0, quad_map);
-                generate_face(mesh, cell, GEOM::TRIA, 1, tria_map);
-                generate_face(mesh, cell, GEOM::TRIA, 2, tria_map);
+                generate_face(mesh, cell, GEOM::QUAD, 1, quad_map);
+                generate_face(mesh, cell, GEOM::QUAD, 2, quad_map);
                 generate_face(mesh, cell, GEOM::TRIA, 3, tria_map);
                 generate_face(mesh, cell, GEOM::TRIA, 4, tria_map);
                 break;
@@ -342,18 +362,44 @@ void build_face_3d<std::string>(MESH::MapMesh &mesh) {
                 throw std::invalid_argument(s);
         }
     }
+    /// link face to mark
+    for (auto &it : mesh.MARKS) {
+        auto &mark = it.second;
+        for (auto &it2 : mark.MARK_ELEM) {
+            auto &mark_elem = it2.second;
+            switch (mark_elem.type) {
+                case GEOM::TRIA: {
+                    auto &face_key = tria_map.at(mark_elem.key);
+                    auto &face = mesh.get_face(face_key);
+                    face.mark_key = mark.name;
+                    mark_elem.face_key = face_key;
+                    break;
+                }
+                case GEOM::QUAD: {
+                    auto &face_key = quad_map.at(mark_elem.key);
+                    auto &face = mesh.get_face(face_key);
+                    face.mark_key = mark.name;
+                    mark_elem.face_key = face_key;
+                    break;
+                }
+                default:
+                    warn_println("Caught mark elem with unsupported geom type.");
+                    break;
+            }
+        }
+    }
 }
 
 /// for both Mesh
 
-TP_key
-void generate_face(MESH::Mesh<key_type> &mesh, MESH::Cell<key_type> &cell,
+TP_key_mesh
+void generate_face(mesh_type &mesh, MESH::Cell<key_type> &cell,
                    int face_type, int face_on_cell_key, std::unordered_map<std::string, key_type> &face_map) {
     key_vector node_set;
     for (int it : node_set_map[cell.type][face_on_cell_key]) node_set.push_back(cell.node_key[it]);
     node_set.shrink_to_fit();
     /// generate interface key in map.
-    std::string key = generate_face_key<key_type>(node_set);
+    std::string key = GEOM::generate_face_key<key_type>(node_set);
     /// check whether exist
     if (face_map.find(key) != face_map.end()) {
         /// exist
@@ -366,7 +412,7 @@ void generate_face(MESH::Mesh<key_type> &mesh, MESH::Cell<key_type> &cell,
         return;
     }
     /// not exist - create face
-    auto &face = create_face(mesh, cell, node_set, face_type, face_on_cell_key);
+    auto &face = create_face<key_type, mesh_type>(mesh, cell, node_set, face_type, face_on_cell_key);
     cell.face_key[face_on_cell_key] = face.key;
     /// register face in map
     face_map[key] = face.key;
@@ -397,37 +443,4 @@ TP_func MESH::Face<std::string> &create_face(MESH::MapMesh &mesh,
     face.node_key.resize(node_set.size());
     std::copy(node_set.begin(), node_set.end(), face.node_key.begin());
     return face;
-}
-
-TP_key
-std::string generate_face_key(key_vector &node_set) {
-    /// transfer 'string' to 'int' weight.
-    const int len = node_set.size();
-    key_vector node_set_cp(len);
-    std::vector<int> weight(len, 0);
-    std::copy(node_set.begin(), node_set.end(), node_set_cp.begin());
-    std::sort(node_set_cp.begin(), node_set_cp.end());
-    for (int i = 0; i < len; i++) {
-        weight[i] = std::find(node_set_cp.begin(), node_set_cp.end(), node_set[i]) - node_set_cp.begin();
-    }
-    /// find position where is min.
-    int pos = std::find(weight.begin(), weight.end(), 0) - weight.begin();
-    /// direction
-    bool direction;
-    int left_pos, right_pos;
-    left_pos = (pos == 0) ? (len - 1) : (pos - 1);
-    right_pos = (pos + 2 == len) ? 0 : (pos + 1);
-    direction = weight[right_pos] > weight[left_pos];
-    /// append key
-    int count = 0;
-    std::stringstream ss;
-    while (count < len) {
-        ss << node_set[pos] << ">";
-        pos = direction ? (pos + 1) : (pos - 1);
-        /// make valid range
-        if (pos < 0) pos += len;
-        if (pos >= len) pos -= len;
-        count++;
-    }
-    return ss.str();
 }

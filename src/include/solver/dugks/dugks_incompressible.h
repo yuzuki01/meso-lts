@@ -22,6 +22,15 @@ public:
     double RT{}, CFL{}, dt{}, half_dt{};
     double tau{};
     int D;
+    /// Macro Physical Variables
+    struct MacroVars {
+        double density = 0.0;
+        double temperature = 0.0;
+        double pressure = 0.0;
+        Vec3D velocity{0.0, 0.0, 0.0};
+        Vec3D heat_flux{0.0, 0.0, 0.0};
+    };
+
     /// Physical Formula
     inline double f_maxwell(double density, const Vec3D &particle_velocity, const Vec3D &flow_velocity) const;
     inline double f_maxwell(const MacroVars &macro_var, const Vec3D &particle_velocity) const;

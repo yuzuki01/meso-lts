@@ -3,63 +3,28 @@
 using namespace MESH;
 
 /// global vars
-std::unordered_map<std::string, int> MESH::MarkTypeID {
-        {"interface", MESH_BC_INTERFACE},
-        {"inlet", MESH_BC_INLET},
-        {"outlet", MESH_BC_OUTLET},
+std::unordered_map<std::string, int> MESH::MarkTypeID{
+        {"interface",       MESH_BC_INTERFACE},
+        {"inlet",           MESH_BC_INLET},
+        {"outlet",          MESH_BC_OUTLET},
         {"isothermal_wall", MESH_BC_ISOTHERMAL_WALL},
-        {"adiabat_wall", MESH_BC_ABDIABAT_WALL},
-        {"symmetry", MESH_BC_SYMMETRY},
-        {"periodic", MESH_BC_PERIODIC},
+        {"adiabat_wall",    MESH_BC_ABDIABAT_WALL},
+        {"symmetry",        MESH_BC_SYMMETRY},
+        {"periodic",        MESH_BC_PERIODIC},
 };
 
 /// Node
-TP_func Node<int>::Node(const std::vector<std::string> &init_strings) {
-    const int len = init_strings.size();
-    if (len >= 3) {
-        key = stoi(init_strings[0]) - 1;
-        position.x = stod(init_strings[1]);
-        position.y = stod(init_strings[2]);
-        if (len >= 4) {
-            position.z = stod(init_strings[3]);
-        } else {
-            position.z = 0.0;
-        }
-    } else {
-        throw std::invalid_argument("neu_node_formatter: invalid init_strings.size().");
-    }
-}
+TP_func Node<int>::Node(const int &node_key, const Vec3D &node_position) : key(node_key), position(node_position) {}
 
-TP_func Node<std::string>::Node(const std::vector<std::string> &init_strings) {
-    const int len = init_strings.size();
-    if (len >= 3) {
-        key = init_strings[0];
-        position.x = stod(init_strings[1]);
-        position.y = stod(init_strings[2]);
-        if (len >= 4) {
-            position.z = stod(init_strings[3]);
-        } else {
-            position.z = 0.0;
-        }
-    } else {
-        throw std::invalid_argument("neu_node_formatter: invalid init_strings.size().");
-    }
-}
+TP_func Node<std::string>::Node(const std::string &node_key, const Vec3D &node_position) : key(node_key), position(node_position) {}
 
 /// Cell
-TP_func Cell<int>::Cell(const std::vector<std::string> &init_strings) {
-    key = stoi(init_strings[0]) - 1;
-    type = stoi(init_strings[1]);
-    const int node_num = stoi(init_strings[2]);
-    for (int i = 0; i < node_num; i++) {
-        node_key.push_back(stoi(init_strings[i + 3]) - 1);
-    }
-    if (int(node_key.size()) != GEOM::node_num(type)) {
-        std::stringstream ss;
-        ss << "Cell<key=" << key << "> caught invalid node key set.";
-        error_println(ss.str());
-        throw std::invalid_argument("Cell caught invalid node key set.");
-    }
+TP_func Cell<int>::Cell(const int &cell_key, const int cell_type, const std::vector<int> &node_set) {
+    key = cell_key;
+    type = cell_type;
+    const int node_num = GEOM::node_num(type);
+    node_key.resize(node_num);
+    std::copy(node_set.begin(), node_set.end(), node_key.begin());
     volume = -1.0;
     have_shadow = false;
     face_num = GEOM::face_num(type);
@@ -67,19 +32,12 @@ TP_func Cell<int>::Cell(const std::vector<std::string> &init_strings) {
     position_square = -1.0;
 }
 
-TP_func Cell<std::string>::Cell(const std::vector<std::string> &init_strings) {
-    key = init_strings[0];
-    type = stoi(init_strings[1]);
-    const int node_num = stoi(init_strings[2]);
-    for (int i = 0; i < node_num; i++) {
-        node_key.push_back(init_strings[i + 3]);
-    }
-    if (int(node_key.size()) != GEOM::node_num(type)) {
-        std::stringstream ss;
-        ss << "Cell<key=" << key << "> caught invalid node key set.";
-        error_println(ss.str());
-        throw std::invalid_argument("Cell caught invalid node key set.");
-    }
+TP_func Cell<std::string>::Cell(const std::string &cell_key, const int cell_type, const std::vector<std::string> &node_set) {
+    key = cell_key;
+    type = cell_type;
+    const int node_num = GEOM::node_num(type);
+    node_key.resize(node_num);
+    std::copy(node_set.begin(), node_set.end(), node_key.begin());
     volume = -1.0;
     have_shadow = false;
     face_num = GEOM::face_num(type);
@@ -88,8 +46,8 @@ TP_func Cell<std::string>::Cell(const std::vector<std::string> &init_strings) {
 }
 
 TP_func Cell<int>::Cell(const Vec3D &particle_velocity, double weight,
-                                   const int &cell_key, const int &inv_key,
-                                   int on_layer_cell_id, int on_layer_cell_num) {
+                        const int &cell_key, const int &inv_key,
+                        int on_layer_cell_id, int on_layer_cell_num) {
     /// structural DVS
     key = cell_key;
     type = -1;
@@ -104,8 +62,8 @@ TP_func Cell<int>::Cell(const Vec3D &particle_velocity, double weight,
 }
 
 TP_func Cell<std::string>::Cell(const Vec3D &particle_velocity, double weight,
-           const std::string &cell_key, const std::string &inv_key,
-           int on_layer_cell_id, int on_layer_cell_num) {
+                                const std::string &cell_key, const std::string &inv_key,
+                                int on_layer_cell_id, int on_layer_cell_num) {
     /// structural DVS
     key = cell_key;
     type = -1;
@@ -159,34 +117,36 @@ TP_func std::string Face<std::string>::info() const {
 
 /// MarkElem
 TP_func MarkElem<int>::MarkElem(const std::vector<std::string> &init_strings) {
-    cell_key = stoi(init_strings[0]) - 1;
-    cell_type = stoi(init_strings[1]);
-    /// NOTE:   .neu index starts from 1
-    ///         std::vector index starts from 0
-    on_cell_face_id = stoi(init_strings[2]) - 1;
+    type = stoi(init_strings[0]);
+    const int node_num = GEOM::node_num(type);
+    node_set.resize(node_num, -1);
+    for (int i = 0; i < node_num; i++) {
+        node_set[i] = stoi(init_strings[i + 1]);
+    }
+    key = GEOM::generate_face_key(node_set);
 }
 
 TP_func MarkElem<std::string>::MarkElem(const std::vector<std::string> &init_strings) {
-    cell_key = init_strings[0];
-    cell_type = stoi(init_strings[1]);
-    /// NOTE:   .neu index starts from 1
-    ///         std::vector index starts from 0
-    on_cell_face_id = stoi(init_strings[2]) - 1;
+    type = stoi(init_strings[0]);
+    const int node_num = GEOM::node_num(type);
+    node_set.resize(node_num, STRING_NULL);
+    for (int i = 0; i < node_num; i++) {
+        node_set[i] = init_strings[i + 1];
+    }
+    key = GEOM::generate_face_key(node_set);
 }
 
 /// Mark
-Mark<int>::Mark(const string_vector &init_strings) {
-    const int len = init_strings.size();
-    if (len > 0) key = init_strings[0];
-    info_println("Read mark<" + key + "> from mesh file.");
-    if (len > 2) elem_num = stoi(init_strings[2]);
+Mark<int>::Mark(const std::string &mark_name, const int nelem) {
+    name = mark_name;
+    elem_num = nelem;
+    MARK_ELEM.reserve(elem_num);
 }
 
-Mark<std::string>::Mark(const string_vector &init_strings) {
-    const int len = init_strings.size();
-    if (len > 0) key = init_strings[0];
-    info_println("Read mark<" + key + "> from mesh file.");
-    if (len > 2) elem_num = stoi(init_strings[2]);
+Mark<std::string>::Mark(const std::string &mark_name, const int nelem) {
+    name = mark_name;
+    elem_num = nelem;
+    MARK_ELEM.reserve(elem_num);
 }
 
 void Mark<int>::shrink_to_fit() {
@@ -198,17 +158,17 @@ void Mark<std::string>::shrink_to_fit() {
     MARK_ELEM.rehash(REHASH_SIZE);
 }
 
-MarkElem<int> & Mark<int>::get_elem(const int &_key) {
+MarkElem<int> &Mark<int>::get_elem(const int &_key) {
     return MARK_ELEM[_key];
 }
 
-MarkElem<std::string> & Mark<std::string>::get_elem(const std::string &_key) {
+MarkElem<std::string> &Mark<std::string>::get_elem(const std::string &_key) {
     return MARK_ELEM.at(_key);
 }
 
 void Mark<int>::info() const {
     std::stringstream ss;
-    ss << "  Mark<" << key <<">\n"
+    ss << "  Mark<" << name << ">\n"
        << "     - elements: " << elem_num << "\n"
        << "     - type: " << type << "\n"
        << "     - density: " << density << " temperature: " << temperature << "\n"
@@ -218,7 +178,7 @@ void Mark<int>::info() const {
 
 void Mark<std::string>::info() const {
     std::stringstream ss;
-    ss << "  Mark<" << key <<">\n"
+    ss << "  Mark<" << name << ">\n"
        << "     - elements: " << elem_num << "\n"
        << "     - type: " << type << "\n"
        << "     - density: " << density << " temperature: " << temperature << "\n"
@@ -229,7 +189,7 @@ void Mark<std::string>::info() const {
 /// Mesh
 ///     Basic mesh:
 int BasicMesh::dimension() const {
-    return NDFCD;
+    return NDIME;
 }
 
 void BasicMesh::info() {
@@ -251,7 +211,7 @@ void BasicMesh::info() {
        << "  type: " << type_name << "\n"
        << "  mesh data:";
     info_println(ss.str());
-    data_int_println({"node", "cell", "face", "mark"}, {NUMNP, NELEM, -1, NBSETS});
+    data_int_println({"node", "cell", "face", "mark"}, {NPOIN, NELEM, -1, NMARK});
     data_double_println({"max-magnitude", "min-size"}, {max_discrete_velocity, min_mesh_size});
 }
 
@@ -274,7 +234,7 @@ void BasicMesh::update_min_mesh_size(double value) {
 
 ///     ListMesh
 void ListMesh::load(const std::string &file_path) {
-    neuReader reader(file_path);
+    su2Reader reader(file_path);
     if (!reader.is_file_open()) throw std::invalid_argument("open mesh file failed.");
     reader.parse(*this);
 }
@@ -296,22 +256,9 @@ void ListMesh::build() {
     }
 }
 
-void ListMesh::set_mesh_params(const std::vector<std::string> &init_strings) {
-    NUMNP = stoi(init_strings[0]);
-    NELEM = stoi(init_strings[1]);
-    NGRPS = stoi(init_strings[2]);
-    NBSETS = stoi(init_strings[3]);
-    NDFCD = stoi(init_strings[4]);
-    NDFVL = stoi(init_strings[5]);
-    // reserve
-    NODES.reserve(NUMNP);
-    CELLS.reserve(NELEM);
-    MARKS.reserve(NBSETS);
-}
-
 void ListMesh::set_mark(const BoundaryParam &bc_param) {
     for (auto &mark : MARKS) {
-        if (mark.key == bc_param.name) {
+        if (mark.name == bc_param.name) {
             // match
             mark.type = bc_param.type;
             mark.density = bc_param.density;
@@ -322,7 +269,7 @@ void ListMesh::set_mark(const BoundaryParam &bc_param) {
                 face.boundary_type = MESH::MarkTypeID.at(mark.type);
             }
             std::stringstream ss;
-            ss << "Set mark params for Mark<" << mark.key << ">";
+            ss << "Set mark params for Mark<" << mark.name << ">";
             info_println(ss.str());
             return;
         }
@@ -334,8 +281,8 @@ void ListMesh::set_mark(const BoundaryParam &bc_param) {
 }
 
 int ListMesh::node_num() {
-    NUMNP = NODES.size();
-    return NUMNP;
+    NPOIN = NODES.size();
+    return NPOIN;
 }
 
 int ListMesh::cell_num() {
@@ -347,19 +294,19 @@ int ListMesh::face_num() const {
     return FACES.size();
 }
 
-Node<int> & ListMesh::get_node(const int &_key) {
+Node<int> &ListMesh::get_node(const int &_key) {
     return NODES[_key];
 }
 
-Cell<int> & ListMesh::get_cell(const int &_key) {
+Cell<int> &ListMesh::get_cell(const int &_key) {
     return CELLS[_key];
 }
 
-Face<int> & ListMesh::get_face(const int &_key) {
+Face<int> &ListMesh::get_face(const int &_key) {
     return FACES[_key];
 }
 
-Mark<int> & ListMesh::get_mark(const int &_key) {
+Mark<int> &ListMesh::get_mark(const int &_key) {
     return MARKS[_key];
 }
 
@@ -392,7 +339,7 @@ void ListMesh::info() const {
        << "  type: " << type_name << "\n"
        << "  mesh data:";
     info_println(ss.str());
-    data_int_println({"node", "cell", "face", "mark"}, {NUMNP, NELEM, int(FACES.size()), NBSETS});
+    data_int_println({"node", "cell", "face", "mark"}, {NPOIN, NELEM, int(FACES.size()), NMARK});
     data_double_println({"max-magnitude", "min-size"}, {max_discrete_velocity, min_mesh_size});
     if (type == MESH_TYPE_NORMAL) {
         info_println("  mark info:");
@@ -402,7 +349,7 @@ void ListMesh::info() const {
 
 ///     MapMesh
 void MapMesh::load(const std::string &file_path) {
-    neuReader reader(file_path);
+    su2Reader reader(file_path);
     if (!reader.is_file_open()) throw std::invalid_argument("open mesh file failed.");
     reader.parse(*this);
 }
@@ -424,22 +371,6 @@ void MapMesh::build() {
     }
 }
 
-void MapMesh::set_mesh_params(const std::vector<std::string> &init_strings) {
-    NUMNP = stoi(init_strings[0]);
-    NELEM = stoi(init_strings[1]);
-    NGRPS = stoi(init_strings[2]);
-    NBSETS = stoi(init_strings[3]);
-    NDFCD = stoi(init_strings[4]);
-    NDFVL = stoi(init_strings[5]);
-    // reserve
-    NodeKey.reserve(NUMNP);
-    CellKey.reserve(NELEM);
-    MarkKey.reserve(NBSETS);
-    NODES.reserve(NUMNP);
-    CELLS.reserve(NELEM);
-    MARKS.reserve(NBSETS);
-}
-
 void MapMesh::set_mark(const BoundaryParam &bc_param) {
     for (auto &it : MARKS) {
         auto &mark_key = it.first;
@@ -456,7 +387,7 @@ void MapMesh::set_mark(const BoundaryParam &bc_param) {
                 face.boundary_type = MESH::MarkTypeID.at(mark.type);
             }
             std::stringstream ss;
-            ss << "Set mark params for Mark<" << mark.key << ">";
+            ss << "Set mark params for Mark<" << mark.name << ">";
             info_println(ss.str());
             return;
         }
@@ -468,8 +399,8 @@ void MapMesh::set_mark(const BoundaryParam &bc_param) {
 }
 
 int MapMesh::node_num() {
-    NUMNP = NodeKey.size();
-    return NUMNP;
+    NPOIN = NodeKey.size();
+    return NPOIN;
 }
 
 int MapMesh::cell_num() {
@@ -481,19 +412,19 @@ int MapMesh::face_num() const {
     return FaceKey.size();
 }
 
-Node<std::string> & MapMesh::get_node(const std::string &_key) {
+Node<std::string> &MapMesh::get_node(const std::string &_key) {
     return NODES.at(_key);
 }
 
-Cell<std::string> & MapMesh::get_cell(const std::string &_key) {
+Cell<std::string> &MapMesh::get_cell(const std::string &_key) {
     return CELLS.at(_key);
 }
 
-Face<std::string> & MapMesh::get_face(const std::string &_key) {
+Face<std::string> &MapMesh::get_face(const std::string &_key) {
     return FACES.at(_key);
 }
 
-Mark<std::string> & MapMesh::get_mark(const std::string &_key) {
+Mark<std::string> &MapMesh::get_mark(const std::string &_key) {
     return MARKS.at(_key);
 }
 
@@ -531,7 +462,7 @@ void MapMesh::info() const {
        << "  type: " << type_name << "\n"
        << "  mesh data:";
     info_println(ss.str());
-    data_int_println({"node", "cell", "face", "mark"}, {NUMNP, NELEM, int(FaceKey.size()), NBSETS});
+    data_int_println({"node", "cell", "face", "mark"}, {NPOIN, NELEM, int(FaceKey.size()), NMARK});
     data_double_println({"max-magnitude", "min-size"}, {max_discrete_velocity, min_mesh_size});
     if (type == MESH_TYPE_NORMAL) {
         info_println("  mark info:");

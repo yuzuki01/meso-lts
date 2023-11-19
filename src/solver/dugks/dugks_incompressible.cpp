@@ -329,7 +329,7 @@ void Scheme::do_save() {
     string_vector values;
     if (phy_mesh.dimension() == 2) values = {"density", "velocity-x", "velocity-y"};
     else values = {"density", "velocity-x", "velocity-y", "velocity-z"};
-    MeshWriter<int> writer(ss.str(), phy_mesh);
+    MeshWriter<MESH::ListMesh> writer(ss.str(), phy_mesh);
     writer.write_head(values);
     writer.write_node();
 

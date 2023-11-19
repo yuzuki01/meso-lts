@@ -1,6 +1,6 @@
 #include "mesh.h"
 
-TP_func MeshWriter<int>::MeshWriter(std::string _path, MESH::Mesh<int> &_mesh)
+TP_func MeshWriter<MESH::ListMesh>::MeshWriter(std::string _path, MESH::ListMesh &_mesh)
         : path(std::move(_path)), mesh(_mesh) {
     fp.open(path, std::ios::out | std::ios::trunc);
     is_file_open = fp.is_open();
@@ -11,7 +11,7 @@ TP_func MeshWriter<int>::MeshWriter(std::string _path, MESH::Mesh<int> &_mesh)
     }
 }
 
-TP_func MeshWriter<std::string>::MeshWriter(std::string _path, MESH::Mesh<std::string> &_mesh)
+TP_func MeshWriter<MESH::MapMesh>::MeshWriter(std::string _path, MESH::MapMesh &_mesh)
         : path(std::move(_path)), mesh(_mesh) {
     fp.open(path, std::ios::out | std::ios::trunc);
     is_file_open = fp.is_open();
@@ -22,23 +22,23 @@ TP_func MeshWriter<std::string>::MeshWriter(std::string _path, MESH::Mesh<std::s
     }
 }
 
-TP_func bool MeshWriter<int>::is_open() const {
+TP_func bool MeshWriter<MESH::ListMesh>::is_open() const {
     return is_file_open;
 }
 
-TP_func bool MeshWriter<std::string>::is_open() const {
+TP_func bool MeshWriter<MESH::MapMesh>::is_open() const {
     return is_file_open;
 }
 
-TP_func void MeshWriter<int>::close() {
+TP_func void MeshWriter<MESH::ListMesh>::close() {
     fp.close();
 }
 
-TP_func void MeshWriter<std::string>::close() {
+TP_func void MeshWriter<MESH::MapMesh>::close() {
     fp.close();
 }
 
-TP_func void MeshWriter<int>::write_head(const string_vector &values) {
+TP_func void MeshWriter<MESH::ListMesh>::write_head(const string_vector &values) {
     string_vector value_names;
     const int D = mesh.dimension();
     if (D == 2) value_names = {"X", "Y"};
@@ -58,7 +58,7 @@ TP_func void MeshWriter<int>::write_head(const string_vector &values) {
        << std::endl;
 }
 
-TP_func void MeshWriter<std::string>::write_head(const string_vector &values) {
+TP_func void MeshWriter<MESH::MapMesh>::write_head(const string_vector &values) {
     string_vector value_names;
     const int D = mesh.dimension();
     if (D == 2) value_names = {"X", "Y"};
@@ -78,7 +78,7 @@ TP_func void MeshWriter<std::string>::write_head(const string_vector &values) {
        << std::endl;
 }
 
-TP_func void MeshWriter<int>::write_node() {
+TP_func void MeshWriter<MESH::ListMesh>::write_node() {
     int count;
     fp << std::endl;
     // write node
@@ -114,7 +114,7 @@ TP_func void MeshWriter<int>::write_node() {
     fp << std::endl;
 }
 
-TP_func void MeshWriter<std::string>::write_node() {
+TP_func void MeshWriter<MESH::MapMesh>::write_node() {
     int count;
     fp << std::endl;
     // write node
@@ -153,10 +153,10 @@ TP_func void MeshWriter<std::string>::write_node() {
     fp << std::endl;
 }
 
-TP_func void MeshWriter<int>::write_data(const std::vector<double> &data) {
+TP_func void MeshWriter<MESH::ListMesh>::write_data(const std::vector<double> &data) {
     int count = 0;
     fp << std::endl << "## cell value" << std::endl;
-    for (auto & cell : mesh.CELLS) {
+    for (auto &cell : mesh.CELLS) {
         fp << "\t" << std::setprecision(DATA_PRECISION) << data[cell.key];
         if (count++ >= LINE_DATA_NUM) {
             fp << std::endl;
@@ -165,10 +165,10 @@ TP_func void MeshWriter<int>::write_data(const std::vector<double> &data) {
     }
 }
 
-TP_func void MeshWriter<std::string>::write_data(const std::unordered_map<std::string, double> &data) {
+TP_func void MeshWriter<MESH::MapMesh>::write_data(const std::unordered_map<std::string, double> &data) {
     int count = 0;
     fp << std::endl << "## cell value" << std::endl;
-    for (auto & cell_key : mesh.CellKey) {
+    for (auto &cell_key : mesh.CellKey) {
         fp << "\t" << std::setprecision(DATA_PRECISION) << data.at(cell_key);
         if (count++ >= LINE_DATA_NUM) {
             fp << std::endl;
@@ -177,7 +177,7 @@ TP_func void MeshWriter<std::string>::write_data(const std::unordered_map<std::s
     }
 }
 
-TP_func void MeshWriter<int>::write_geom() {
+TP_func void MeshWriter<MESH::ListMesh>::write_geom() {
     fp << std::endl << "# geom" << std::endl;
     for (auto &cell : mesh.CELLS) {
         switch (cell.type) {
@@ -189,29 +189,29 @@ TP_func void MeshWriter<int>::write_geom() {
                 fp << " " << mesh.NODES[cell.node_key[0]].key + 1 << " " << mesh.NODES[cell.node_key[1]].key + 1
                    << " " << mesh.NODES[cell.node_key[2]].key + 1 << " " << mesh.NODES[cell.node_key[3]].key + 1;
                 break;
-            case GEOM::BRICK:
-                fp << " " << mesh.NODES[cell.node_key[0]].key + 1 << " " << mesh.NODES[cell.node_key[1]].key + 1
-                   << " " << mesh.NODES[cell.node_key[3]].key + 1 << " " << mesh.NODES[cell.node_key[2]].key + 1
-                   << " " << mesh.NODES[cell.node_key[4]].key + 1 << " " << mesh.NODES[cell.node_key[5]].key + 1
-                   << " " << mesh.NODES[cell.node_key[7]].key + 1 << " " << mesh.NODES[cell.node_key[6]].key + 1;
-                break;
-            case GEOM::WEDGE:
-                fp << " " << mesh.NODES[cell.node_key[0]].key + 1 << " " << mesh.NODES[cell.node_key[1]].key + 1
-                   << " " << mesh.NODES[cell.node_key[2]].key + 1 << " " << mesh.NODES[cell.node_key[2]].key + 1
-                   << " " << mesh.NODES[cell.node_key[3]].key + 1 << " " << mesh.NODES[cell.node_key[4]].key + 1
-                   << " " << mesh.NODES[cell.node_key[5]].key + 1 << " " << mesh.NODES[cell.node_key[5]].key + 1;
-                break;
             case GEOM::TETRA:
                 fp << " " << mesh.NODES[cell.node_key[0]].key + 1 << " " << mesh.NODES[cell.node_key[1]].key + 1
                    << " " << mesh.NODES[cell.node_key[2]].key + 1 << " " << mesh.NODES[cell.node_key[2]].key + 1
                    << " " << mesh.NODES[cell.node_key[3]].key + 1 << " " << mesh.NODES[cell.node_key[3]].key + 1
                    << " " << mesh.NODES[cell.node_key[3]].key + 1 << " " << mesh.NODES[cell.node_key[3]].key + 1;
                 break;
-            case GEOM::PYRAM:
+            case GEOM::HEXAH:
                 fp << " " << mesh.NODES[cell.node_key[0]].key + 1 << " " << mesh.NODES[cell.node_key[1]].key + 1
-                   << " " << mesh.NODES[cell.node_key[3]].key + 1 << " " << mesh.NODES[cell.node_key[2]].key + 1
+                   << " " << mesh.NODES[cell.node_key[2]].key + 1 << " " << mesh.NODES[cell.node_key[3]].key + 1
+                   << " " << mesh.NODES[cell.node_key[4]].key + 1 << " " << mesh.NODES[cell.node_key[5]].key + 1
+                   << " " << mesh.NODES[cell.node_key[6]].key + 1 << " " << mesh.NODES[cell.node_key[7]].key + 1;
+                break;
+            case GEOM::PRISM:
+                fp << " " << mesh.NODES[cell.node_key[0]].key + 1 << " " << mesh.NODES[cell.node_key[1]].key + 1
+                   << " " << mesh.NODES[cell.node_key[2]].key + 1 << " " << mesh.NODES[cell.node_key[3]].key + 1
                    << " " << mesh.NODES[cell.node_key[4]].key + 1 << " " << mesh.NODES[cell.node_key[4]].key + 1
                    << " " << mesh.NODES[cell.node_key[4]].key + 1 << " " << mesh.NODES[cell.node_key[4]].key + 1;
+                break;
+            case GEOM::PYRAM:
+                fp << " " << mesh.NODES[cell.node_key[0]].key + 1 << " " << mesh.NODES[cell.node_key[1]].key + 1
+                   << " " << mesh.NODES[cell.node_key[2]].key + 1 << " " << mesh.NODES[cell.node_key[2]].key + 1
+                   << " " << mesh.NODES[cell.node_key[3]].key + 1 << " " << mesh.NODES[cell.node_key[4]].key + 1
+                   << " " << mesh.NODES[cell.node_key[5]].key + 1 << " " << mesh.NODES[cell.node_key[5]].key + 1;
                 break;
             default:
                 fp << " unsupported type.";
@@ -220,7 +220,7 @@ TP_func void MeshWriter<int>::write_geom() {
     }
 }
 
-TP_func void MeshWriter<std::string>::write_geom() {
+TP_func void MeshWriter<MESH::MapMesh>::write_geom() {
     std::unordered_map<std::string, int> node_id, cell_id;
     for (int i = 0; i < mesh.node_num(); i++) node_id[mesh.NodeKey[i]] = i + 1;
     fp << std::endl << "# geom" << std::endl;
@@ -229,36 +229,36 @@ TP_func void MeshWriter<std::string>::write_geom() {
         auto &cell = it.second;
         switch (cell.type) {
             case GEOM::TRIA:
-                fp << " " << node_id[cell.node_key[0]] << " " << node_id[cell.node_key[1]]
-                   << " " << node_id[cell.node_key[2]] << " " << node_id[cell.node_key[2]];
+                fp << " " << node_id[cell.node_key[0]] + 1 << " " << node_id[cell.node_key[1]] + 1
+                   << " " << node_id[cell.node_key[2]] + 1 << " " << node_id[cell.node_key[2]] + 1;
                 break;
             case GEOM::QUAD:
-                fp << " " << node_id[cell.node_key[0]] << " " << node_id[cell.node_key[1]]
-                   << " " << node_id[cell.node_key[2]] << " " << node_id[cell.node_key[3]];
-                break;
-            case GEOM::BRICK:
-                fp << " " << node_id[cell.node_key[0]] << " " << node_id[cell.node_key[1]]
-                   << " " << node_id[cell.node_key[3]] << " " << node_id[cell.node_key[2]]
-                   << " " << node_id[cell.node_key[4]] << " " << node_id[cell.node_key[5]]
-                   << " " << node_id[cell.node_key[7]] << " " << node_id[cell.node_key[6]];
-                break;
-            case GEOM::WEDGE:
-                fp << " " << node_id[cell.node_key[0]] << " " << node_id[cell.node_key[1]]
-                   << " " << node_id[cell.node_key[2]] << " " << node_id[cell.node_key[2]]
-                   << " " << node_id[cell.node_key[3]] << " " << node_id[cell.node_key[4]]
-                   << " " << node_id[cell.node_key[5]] << " " << node_id[cell.node_key[5]];
+                fp << " " << node_id[cell.node_key[0]] + 1 << " " << node_id[cell.node_key[1]] + 1
+                   << " " << node_id[cell.node_key[2]] + 1 << " " << node_id[cell.node_key[3]] + 1;
                 break;
             case GEOM::TETRA:
-                fp << " " << node_id[cell.node_key[0]] << " " << node_id[cell.node_key[1]]
-                   << " " << node_id[cell.node_key[2]] << " " << node_id[cell.node_key[2]]
-                   << " " << node_id[cell.node_key[3]] << " " << node_id[cell.node_key[3]]
-                   << " " << node_id[cell.node_key[3]] << " " << node_id[cell.node_key[3]];
+                fp << " " << node_id[cell.node_key[0]] + 1 << " " << node_id[cell.node_key[1]] + 1
+                   << " " << node_id[cell.node_key[2]] + 1 << " " << node_id[cell.node_key[2]] + 1
+                   << " " << node_id[cell.node_key[3]] + 1 << " " << node_id[cell.node_key[3]] + 1
+                   << " " << node_id[cell.node_key[3]] + 1 << " " << node_id[cell.node_key[3]] + 1;
+                break;
+            case GEOM::HEXAH:
+                fp << " " << node_id[cell.node_key[0]] + 1 << " " << node_id[cell.node_key[1]] + 1
+                   << " " << node_id[cell.node_key[2]] + 1 << " " << node_id[cell.node_key[3]] + 1
+                   << " " << node_id[cell.node_key[4]] + 1 << " " << node_id[cell.node_key[5]] + 1
+                   << " " << node_id[cell.node_key[6]] + 1 << " " << node_id[cell.node_key[7]] + 1;
+                break;
+            case GEOM::PRISM:
+                fp << " " << node_id[cell.node_key[0]] + 1 << " " << node_id[cell.node_key[1]] + 1
+                   << " " << node_id[cell.node_key[2]] + 1 << " " << node_id[cell.node_key[3]] + 1
+                   << " " << node_id[cell.node_key[4]] + 1 << " " << node_id[cell.node_key[4]] + 1
+                   << " " << node_id[cell.node_key[4]] + 1 << " " << node_id[cell.node_key[4]] + 1;
                 break;
             case GEOM::PYRAM:
-                fp << " " << node_id[cell.node_key[0]] << " " << node_id[cell.node_key[1]]
-                   << " " << node_id[cell.node_key[3]] << " " << node_id[cell.node_key[2]]
-                   << " " << node_id[cell.node_key[4]] << " " << node_id[cell.node_key[4]]
-                   << " " << node_id[cell.node_key[4]] << " " << node_id[cell.node_key[4]];
+                fp << " " << node_id[cell.node_key[0]] + 1 << " " << node_id[cell.node_key[1]] + 1
+                   << " " << node_id[cell.node_key[2]] + 1 << " " << node_id[cell.node_key[2]] + 1
+                   << " " << node_id[cell.node_key[3]] + 1 << " " << node_id[cell.node_key[4]] + 1
+                   << " " << node_id[cell.node_key[5]] + 1 << " " << node_id[cell.node_key[5]] + 1;
                 break;
             default:
                 fp << " unsupported type.";
