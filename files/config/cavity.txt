@@ -5,7 +5,7 @@
 # 算例信息
 case-info:
     name        incompressible-cavity       # 算例名称
-    phy_mesh    cavity.neu                  # 物理网格文件
+    phy_mesh    cavity.su2                  # 物理网格文件
     dvs_mesh    GaussHermit                 # 使用结构生成网格
     solver      dugks@incompressible        # 求解器名称
     thread      10                          # OpenMP 并行数

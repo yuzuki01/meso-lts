@@ -5,16 +5,7 @@ using SCell = Scheme::Cell;
 using SFace = Scheme::Face;
 
 /// Solver Constructor
-Scheme::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : config(_config), parser(_parser) {
-    /// Logger
-    logger(config.solver);
-    /// File
-    create_dir("./result/" + config.name);
-    /// Parser
-    max_step = parser.parse_param<int>("max_step", 1e5);
-    save_interval = parser.parse_param<int>("save_interval", 1000);
-    step = parser.parse_param<int>("continue_step", 0);
-    is_crashed = false;
+Scheme::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : BasicSolver(_config, _parser) {
     /// Read config
     Rho = config.get<double>("density");
     Re = config.get<double>("Re");
@@ -23,10 +14,9 @@ Scheme::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : conf
     T = config.get<double>("temperature");
     L = config.get<double>("length");
     CFL = config.get<double>("CFL");
-
+    /// Mesh
     phy_mesh.load("./mesh/" + config.phy_mesh);
     phy_mesh.build();
-    config.set_mesh_mark(phy_mesh);
     D = phy_mesh.dimension();
     if (config.dvs_mesh == MESH_GAUSS_HERMIT) {
         int gp;
@@ -38,7 +28,7 @@ Scheme::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : conf
     }
 }
 
-void Scheme::info() {
+void Scheme::info() const {
     phy_mesh.info();
     dvs_mesh.info();
 }
@@ -116,7 +106,7 @@ void SCell::update_f_t() {
     double Adt_V;
     for (auto &face_key : mesh_cell_ptr->face_key) {
         auto &face = solver.get_face(face_key);
-        auto &mesh_face = solver.phy_mesh.get_face(face_key);
+        auto &mesh_face = *face.mesh_face_ptr;
         auto &nv = (mesh_face.on_cell_key == mesh_cell_ptr->key) ? mesh_face.on_cell_nv : mesh_face.inv_cell_nv;
         Adt_V = mesh_face.area / mesh_cell_ptr->volume * solver.dt;
         for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
@@ -277,7 +267,11 @@ void Scheme::init() {
     tau = (Ma * L) / (Re * sqrt(RT));
     dt = CFL * phy_mesh.min_mesh_size / dvs_mesh.max_discrete_velocity;
     half_dt = dt / 2.0;
-
+    /// Boundary
+    if (!config.set_mesh_mark(phy_mesh)) {
+        continue_to_run = false;
+        return;
+    }
     logger << "solver info:";
     logger.note();
     data_double_println({"density", "temperature", "length", "R"},

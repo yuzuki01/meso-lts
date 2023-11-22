@@ -1,7 +1,7 @@
 /**************************************
  * meso  - SOLVER module              *
  *  contains:                         *
- *         numerical, dugks solvers   *
+ *         numerical, boltzmann solvers   *
  *               Nov 11, 2023  by MYC *
  **************************************/
 
@@ -24,7 +24,8 @@
 #include "solver/basic_solver.h"    // basic
 // #include "solver/dvm_mesh.h"        // dvm wrapped mesh
 
-#include "solver/navier-stokes/simple_incompressible.h"
-#include "solver/dugks/dugks_incompressible.h"
+/// Boltzmann
+#include "solver/boltzmann/gks.h"
+#include "solver/boltzmann/dugks_incompressible.h"
 
 #endif  // HEADER_SOLVER

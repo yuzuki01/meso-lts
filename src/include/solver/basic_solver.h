@@ -14,4 +14,7 @@ public:
 
     explicit BasicSolver(ConfigReader &_config, ArgParser &_parser);
     void init();
+    void info();
+    void do_save();
+    void do_step();
 };

@@ -13,9 +13,6 @@ meso 网格
 不同的网格类通过模板函数实现了通用接口
 
 ```c++
-#define ListMesh Mesh<int>
-#define MapMesh Mesh<std::string>
-
 MESH::ListMesh list_mesh;
 MESH::MapMesh map_mesh;
 ```
@@ -141,7 +138,7 @@ ConfigReader config("./config/<your_config_file>");
 /// other codes
 
 // DVS mesh
-MESH::Mesh<int> dvs_mesh = MESH::MapMesh(MESH_TYPE_NO_FACE);
+MESH::ListMesh dvs_mesh = MESH::ListMesh(MESH_TYPE_NO_FACE, "GaussHermit");
 
 D = phy_mesh.dimension();               // dimension
 R = config.get<double>("R");            // gas constant

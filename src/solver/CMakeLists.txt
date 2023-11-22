@@ -22,7 +22,7 @@ set(PROJECT_HOME_PATH ${PROJECT_SOURCE_DIR}/../..)
 
 file(GLOB SRC
         ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/dugks/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/boltzmann/*.cpp
         )
 include_directories(${PROJECT_HOME_PATH}/src/include)
 

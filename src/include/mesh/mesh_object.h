@@ -259,7 +259,7 @@ public:
 
     void build();
 
-    void set_mark(const BoundaryParam &bc_param);
+    bool set_mark(const BoundaryParam &bc_param);
 
     void info() const;
 
@@ -313,7 +313,7 @@ public:
 
     void build();
 
-    void set_mark(const BoundaryParam &bc_param);
+    bool set_mark(const BoundaryParam &bc_param);
 
     void info() const;
 

@@ -1,27 +1,20 @@
-#ifndef SOLVER_DUGKS_INCOMPRESSIBLE
-#define SOLVER_DUGKS_INCOMPRESSIBLE
+#ifndef SOLVER_DUGKS_SHAKHOV
+#define SOLVER_DUGKS_SHAKHOV
 
-class DUGKS_INCOMPRESSIBLE {
+class DUGKS_SHAKHOV : public BasicSolver {
 public:
-    ConfigReader &config;
-    ArgParser &parser;
-    Logger logger;
-
-    bool is_crashed, continue_to_run = false;
-    int step, save_interval, max_step;
-
     /// Constructor
-    using Scheme = DUGKS_INCOMPRESSIBLE;
-    explicit DUGKS_INCOMPRESSIBLE(ConfigReader &_config, ArgParser &_parser);
-    /// MapMesh
-    MESH::ListMesh phy_mesh = MESH::ListMesh(MESH_TYPE_NORMAL, config.phy_mesh);
-    MESH::ListMesh dvs_mesh = MESH::ListMesh(MESH_TYPE_NO_FACE, config.dvs_mesh);
+    using Scheme = DUGKS_SHAKHOV;
+    explicit DUGKS_SHAKHOV(ConfigReader &_config, ArgParser &_parser);
+    /// Mesh
+    MESH::ListMesh phy_mesh{MESH_TYPE_NORMAL, config.phy_mesh};
+    MESH::ListMesh dvs_mesh{MESH_TYPE_NO_FACE, config.dvs_mesh};
     /// Physical
     double Re, Ma;
     double R, T, Rho, L;
     double RT{}, CFL{}, dt{}, half_dt{};
     double tau{};
-    int D;
+    int D, K;
     /// Macro Physical Variables
     struct MacroVars {
         double density = 0.0;
@@ -32,8 +25,11 @@ public:
     };
 
     /// Physical Formula
-    inline double f_maxwell(double density, const Vec3D &particle_velocity, const Vec3D &flow_velocity) const;
-    inline double f_maxwell(const MacroVars &macro_var, const Vec3D &particle_velocity) const;
+    inline double g_maxwell(double density, double temperature,
+                            const Vec3D &macro_velocity, const Vec3D &particle_velocity) const;
+    inline double g_shakhov(double g_m, const Vec3D &particle_velocity, const Vec3D heat_flux) const;
+    inline double h_maxwell(double g_m, double temperature) const;
+    inline double h_shakhov(double g_m, const Vec3D &particle_velocity, const Vec3D heat_flux) const;
 
     using DistributionFunction = std::vector<double>;
     /// Scheme Cell
@@ -44,8 +40,10 @@ public:
         /// 最小二乘法
         LeastSquare lsp;
         /// 分布函数
-        DistributionFunction f_t{}, f_bp{};
-        std::vector<Vec3D> slope_f{};
+        DistributionFunction g_t{}, g_bp{};
+        DistributionFunction h_t{}, h_bp{};
+        std::vector<Vec3D> slope_g{};
+        std::vector<Vec3D> slope_h{};
         /// 宏观量
         MacroVars macro_vars{};
         /// 构造函数
@@ -63,7 +61,8 @@ public:
         Scheme &solver;
         MESH::Face<int> *mesh_face_ptr;
         /// 分布函数
-        DistributionFunction f{}, f_b{};
+        DistributionFunction g{}, g_b{};
+        DistributionFunction h{}, h_b{};
         /// 宏观量
         MacroVars macro_vars{};
         /// 构造函数
@@ -82,11 +81,9 @@ public:
 
     /// Solver function
     void init();
-    void info();
+    void info() const;
     void do_step();
     void do_save();
-    void do_residual();
-    void do_crashed(Scheme::Cell &cell);
 };
 
-#endif  // SOLVER_DUGKS_INCOMPRESSIBLE
+#endif //SOLVER_DUGKS_SHAKHOV

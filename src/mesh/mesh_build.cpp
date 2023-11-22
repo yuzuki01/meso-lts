@@ -154,7 +154,6 @@ void build_face_2d<MESH::ListMesh>(MESH::ListMesh &mesh) {
         }
     }
     /// link face to mark
-    debug_println("link face to mark");
     for (int mark_key = 0; mark_key < mesh.MARKS.size(); mark_key++) {
         auto &mark = mesh.get_mark(mark_key);
         for (auto &mark_elem : mark.MARK_ELEM) {

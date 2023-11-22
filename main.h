@@ -9,8 +9,12 @@ template <class SOLVER>
 int handle_solver(ConfigReader &config, ArgParser &parser)  {
     config.info();
     SOLVER solver(config, parser);
-    solver.info();
     solver.init();
+    if (!solver.continue_to_run) {
+        warn_println("Solver init failed.");
+        return -1;
+    }
+    solver.info();
     solver.do_save();
     while (solver.continue_to_run) {
         solver.do_step();

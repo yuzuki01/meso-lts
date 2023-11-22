@@ -256,7 +256,7 @@ void ListMesh::build() {
     }
 }
 
-void ListMesh::set_mark(const BoundaryParam &bc_param) {
+bool ListMesh::set_mark(const BoundaryParam &bc_param) {
     for (auto &mark : MARKS) {
         if (mark.name == bc_param.name) {
             // match
@@ -271,13 +271,14 @@ void ListMesh::set_mark(const BoundaryParam &bc_param) {
             std::stringstream ss;
             ss << "Set mark params for Mark<" << mark.name << ">";
             info_println(ss.str());
-            return;
+            return true;
         }
     }
     // not match
     std::stringstream ss;
     ss << "Mark<" << bc_param.name << "> params have not been read from mesh file.";
     warn_println(ss.str());
+    return false;
 }
 
 int ListMesh::node_num() {
@@ -371,7 +372,7 @@ void MapMesh::build() {
     }
 }
 
-void MapMesh::set_mark(const BoundaryParam &bc_param) {
+bool MapMesh::set_mark(const BoundaryParam &bc_param) {
     for (auto &it : MARKS) {
         auto &mark_key = it.first;
         auto &mark = it.second;
@@ -389,13 +390,14 @@ void MapMesh::set_mark(const BoundaryParam &bc_param) {
             std::stringstream ss;
             ss << "Set mark params for Mark<" << mark.name << ">";
             info_println(ss.str());
-            return;
+            return true;
         }
     }
     // not match
     std::stringstream ss;
     ss << "Mark<" << bc_param.name << "> params have not been read from mesh file.";
     warn_println(ss.str());
+    return false;
 }
 
 int MapMesh::node_num() {

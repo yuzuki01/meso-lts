@@ -133,8 +133,12 @@ template<> int ConfigReader::get<int>(const std::string &_key) {
     return stoi(s);
 }
 
-void ConfigReader::set_mesh_mark(MESH::ListMesh &mesh) {
-    for (auto &bc : mark_sets) mesh.set_mark(bc);
+bool ConfigReader::set_mesh_mark(MESH::ListMesh &mesh) {
+    bool flag = true;
+    for (auto &bc : mark_sets) {
+        if (!mesh.set_mark(bc)) flag = false;
+    }
+    return flag;
 }
 
 void ConfigReader::set_mesh_mark(MESH::MapMesh &mesh) {
