@@ -10,7 +10,7 @@ public:
     MESH::ListMesh phy_mesh{MESH_TYPE_NORMAL, config.phy_mesh};
     MESH::ListMesh dvs_mesh{MESH_TYPE_NO_FACE, config.dvs_mesh};
     /// Physical
-    double Re, Ma;
+    double Re, Ma, Kn;
     double R, T, Rho, L;
     double RT{}, CFL{}, dt{}, half_dt{};
     double tau{};

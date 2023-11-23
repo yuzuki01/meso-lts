@@ -1,13 +1,26 @@
 /***********************************
  *            Math Lib             *
  ***********************************
- *  1. 3D Vector                   *
- *                                 *
+ *  1. 3D Vector <-                *
+ *  2. 3 x 3 Matrix                *
  ***********************************/
 
 #include "core.h"
 
 /// 3D Vec3D
+
+double Vec3D::operator[](int i) const {
+    switch (i) {
+        case 0:
+            return x;
+        case 1:
+            return y;
+        case 2:
+            return z;
+        default:
+            throw std::out_of_range("Index out of range for Vec3D.");
+    }
+}
 
 double &Vec3D::operator[](int i) {
     switch (i) {

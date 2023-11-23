@@ -14,6 +14,7 @@ public:
 
     ~Vec3D() = default;
 
+    double operator[](int i) const;
     double &operator[](int i);                      // 赋值
     Vec3D &operator=(const Vec3D &other);
 
@@ -40,3 +41,21 @@ public:
 
 Vec3D operator*(double k, const Vec3D &v);            // 乘于系数
 double operator*(const Vec3D &v1, const Vec3D &v2);   // 点乘
+
+/// 3D Matrix
+class Mat3D {
+public:
+    double _matrix[3][3]{0.0};
+    ~Mat3D() = default;
+    Mat3D() = default;
+    explicit Mat3D(double every);    // 矩阵各个值设置为 every
+    explicit Mat3D(std::initializer_list<double>);
+
+    double det() const;
+    Mat3D T();                              // 转置
+    Mat3D I();                              // 矩阵的逆
+    Vec3D operator*(const Vec3D &_vec);     // Mat * Vec    矩阵乘于列向量
+    Mat3D operator*(const Mat3D &_mat);     // 矩阵乘法
+
+    void info() const;
+};

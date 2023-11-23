@@ -2,8 +2,7 @@
 #include "mesh.h"
 #include "solver.h"
 
-#include "sample.h"
-
+#include "test.h"
 
 template <class SOLVER>
 int handle_solver(ConfigReader &config, ArgParser &parser)  {

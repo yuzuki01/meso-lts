@@ -22,18 +22,12 @@ endif()
 # head file
 include_directories(./src/include)
 
-# sample
-file(GLOB SAMPLE_SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/sample/*.cpp
-        )
-
 # .exe output dir
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build)
 
 add_executable(${PROJECT_NAME}
         main.cpp
         main.h
-        ${SAMPLE_SRC}    # sample
         )
 
 # .dll

@@ -31,6 +31,7 @@ bool ArgParser::parse_switch(const std::string &target) {
     }
 }
 
+
 template<> std::string ArgParser::parse_param<std::string>(const std::string &target,
         const std::string &_default) {
     auto it = _value.find("--" + target);
@@ -39,6 +40,14 @@ template<> std::string ArgParser::parse_param<std::string>(const std::string &ta
     } else {
         return _value["--" + target];
     }
+}
+
+template<> bool ArgParser::parse_param<bool>(const std::string &target, const bool &_default) {
+    auto it = _value.find("--" + target);
+    if (it == _value.end()) return _default;
+    auto &it_value = _value["--" + target];
+    if (it_value == "true" || it_value == "True") return true;
+    return false;
 }
 
 template<> int ArgParser::parse_param<int>(const std::string &target,

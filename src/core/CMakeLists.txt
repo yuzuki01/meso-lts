@@ -20,7 +20,10 @@ endif()
 
 set(PROJECT_HOME_PATH ${PROJECT_SOURCE_DIR}/../..)
 
-file(GLOB SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
+file(GLOB SRC
+        ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/mesomath/*.cpp
+        )
 include_directories(${PROJECT_HOME_PATH}/src/include)
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_HOME_PATH}/build)     # output .dll file to ~/build

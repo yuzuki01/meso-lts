@@ -115,6 +115,10 @@ std::string ConfigReader::operator[](const std::string &key) {
     return STRING_NULL;
 }
 
+template<> std::string ConfigReader::get<std::string>(const std::string &_key) {
+    return this->operator[](_key);
+}
+
 template<> double ConfigReader::get<double>(const std::string &_key) {
     std::string s = this->operator[](_key);
     if (s == STRING_NULL) {
@@ -131,6 +135,16 @@ template<> int ConfigReader::get<int>(const std::string &_key) {
         return 0;
     }
     return stoi(s);
+}
+
+template<> bool ConfigReader::get<bool>(const std::string &_key) {
+    std::string s = this->operator[](_key);
+    if (s == STRING_NULL) {
+        warn_println("ConfigReader cannot find key: " + _key + "<int>, return 0");
+        return false;
+    }
+    if (s == "true" || s == "True") return true;
+    return false;
 }
 
 bool ConfigReader::set_mesh_mark(MESH::ListMesh &mesh) {
