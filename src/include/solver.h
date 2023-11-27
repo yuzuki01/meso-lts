@@ -25,7 +25,7 @@
 // #include "solver/dvm_mesh.h"        // dvm wrapped mesh
 
 /// Boltzmann
-#include "solver/boltzmann/gks.h"
+// #include "solver/boltzmann/gks.h"
 #include "solver/boltzmann/dugks_incompressible.h"
 #include "solver/boltzmann/dugks_shakhov.h"
 
