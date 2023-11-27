@@ -27,5 +27,6 @@
 /// Boltzmann
 #include "solver/boltzmann/gks.h"
 #include "solver/boltzmann/dugks_incompressible.h"
+#include "solver/boltzmann/dugks_shakhov.h"
 
 #endif  // HEADER_SOLVER

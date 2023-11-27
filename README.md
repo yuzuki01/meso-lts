@@ -16,7 +16,7 @@ DUGKS 求解器
      
  - mesh 中重构了网格对象
    
-    - 固定网格 ```MESH::Mesh<int> ``` 和可变网格 ```MESH::Mesh<std::string>```
+    - 固定网格 ```MESH::ListMesh ``` 和可变网格 ```MESH::MapMesh```
     
     - 适用于高阶格式的次相邻网格 ```std::vector<key_type> second_near_cell_key```
     

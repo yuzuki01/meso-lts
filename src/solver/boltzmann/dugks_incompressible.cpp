@@ -291,8 +291,8 @@ void Scheme::init() {
             cell.f_t[it2.key] = f_maxwell(Rho, it2.position, {0.0, 0.0, 0.0});
             cell.f_bp[it2.key] = 0.0;
             cell.slope_f[it2.key] = {0.0, 0.0, 0.0};
-            cell.get_macro_var();
         }
+        cell.get_macro_var();
     }
     logger << "    scheme-objects: cell - ok.";
     logger.info();

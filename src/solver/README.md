@@ -19,7 +19,9 @@ public:
     ArgParser &parser;
     // 通用参数
     int step{}, max_step{}, save_interval{};
-    bool is_crashed{}, continue_to_run{};
+    bool is_crashed{}, continue_to_run{}; 
+    double stop_at_specific_time{};
+    double simulate_time{}, stop_time{};
 
     explicit BasicSolver(ConfigReader &_config, ArgParser &_parser);
     void init();

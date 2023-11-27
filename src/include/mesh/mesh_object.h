@@ -69,9 +69,10 @@ public:
     /// for structural DVS - mirror-reflect
     int on_layer_id{}, layer_cell_num{};
     /// Geom parameters
-    int face_num;                       /// number of interface
-    bool have_shadow;                   /// shadow cell
-    key_type shadow_cell_key{};         /// key of shadow cell
+    int face_num;                           /// number of interfaces
+    int ghost_cell_num = 0;                 /// number of ghost cells
+    key_type near_ghost_cell_key;
+    key_vector second_near_ghost_cell_key{};        /// key of second-near ghost cells
     Vec3D position = {0.0, 0.0, 0.0};
     double position_square;             /// equal to position * position
     double volume;                      /// volume of cell

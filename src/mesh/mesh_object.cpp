@@ -26,7 +26,6 @@ TP_func Cell<int>::Cell(const int &cell_key, const int cell_type, const std::vec
     node_key.resize(node_num);
     std::copy(node_set.begin(), node_set.end(), node_key.begin());
     volume = -1.0;
-    have_shadow = false;
     face_num = GEOM::face_num(type);
     face_key.resize(face_num, -1);
     position_square = -1.0;
@@ -39,7 +38,6 @@ TP_func Cell<std::string>::Cell(const std::string &cell_key, const int cell_type
     node_key.resize(node_num);
     std::copy(node_set.begin(), node_set.end(), node_key.begin());
     volume = -1.0;
-    have_shadow = false;
     face_num = GEOM::face_num(type);
     face_key.resize(face_num, STRING_NULL);
     position_square = -1.0;
@@ -52,7 +50,6 @@ TP_func Cell<int>::Cell(const Vec3D &particle_velocity, double weight,
     key = cell_key;
     type = -1;
     volume = weight;
-    have_shadow = false;
     inv_cell_key = inv_key;
     position = particle_velocity;
     on_layer_id = on_layer_cell_id;
@@ -68,7 +65,6 @@ TP_func Cell<std::string>::Cell(const Vec3D &particle_velocity, double weight,
     key = cell_key;
     type = -1;
     volume = weight;
-    have_shadow = false;
     inv_cell_key = inv_key;
     position = particle_velocity;
     on_layer_id = on_layer_cell_id;
@@ -269,7 +265,7 @@ bool ListMesh::set_mark(const BoundaryParam &bc_param) {
                 face.boundary_type = MESH::MarkTypeID.at(mark.type);
             }
             std::stringstream ss;
-            ss << "Set mark params for Mark<" << mark.name << ">";
+            ss << "Set mark params for Mesh<" << name << ">::Mark<" << mark.name << ">";
             info_println(ss.str());
             return true;
         }

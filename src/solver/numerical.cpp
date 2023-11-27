@@ -122,3 +122,18 @@ LeastSquare generate_least_square(const std::string &cell_key, MESH::MapMesh &me
     }
 }
 
+
+/// limiter ventaka
+double ventaka_phi(const Ventaka &_limiter, double omega) {
+    if (_limiter.delta_ij == 0.0) return 1.0;
+    double a, aa, ab, bb;
+    if (_limiter.delta_ij > 0.0) {
+        a =_limiter.Wi_max - _limiter.Wi;
+    } else {
+        a = _limiter.Wi_min - _limiter.Wi;
+    }
+    aa = a * a;
+    bb = _limiter.delta_ij * _limiter.delta_ij;
+    ab = a * _limiter.delta_ij;
+    return (aa + 2.0 * ab + omega) / (aa + 2.0 * bb + ab + omega);
+}

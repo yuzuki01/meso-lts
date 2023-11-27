@@ -21,7 +21,6 @@ void LoggerInit();
 class Logger {
 protected:
     std::string prefix{};
-    std::string path{};
     std::stringstream ss{};
 public:
 
@@ -30,8 +29,6 @@ public:
     Logger &operator()(const std::string &logger_name);
 
     explicit Logger(const std::string &logger_name);
-
-    Logger(const std::string &logger_name, const std::string &file_path);
 
     Logger &operator<<(const std::string &_text);
 

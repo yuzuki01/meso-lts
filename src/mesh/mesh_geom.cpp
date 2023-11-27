@@ -250,7 +250,7 @@ Vec3D GEOM::face_position(const MESH::Face<int> &face, MESH::ListMesh &mesh) {
         auto &node = mesh.get_node(node_key);
         position += node.position;
     }
-    return position / double(face.node_key.size());
+    return position / double(node_num(face.type));
 }
 
 TP_func
@@ -260,7 +260,7 @@ Vec3D GEOM::face_position(const MESH::Face<std::string> &face, MESH::MapMesh &me
         auto &node = mesh.get_node(node_key);
         position += node.position;
     }
-    return position / double(face.node_key.size());
+    return position / double(node_num(face.type));
 }
 
 TP_func
@@ -270,7 +270,7 @@ Vec3D GEOM::cell_position(const MESH::Cell<int> &cell, MESH::ListMesh &mesh) {
         auto &node = mesh.get_node(node_key);
         position += node.position;
     }
-    return position / double(cell.node_key.size());
+    return position / double(node_num(cell.type));
 }
 
 TP_func
@@ -280,7 +280,7 @@ Vec3D GEOM::cell_position(const MESH::Cell<std::string> &cell, MESH::MapMesh &me
         auto &node = mesh.get_node(node_key);
         position += node.position;
     }
-    return position / double(cell.node_key.size());
+    return position / double(node_num(cell.type));
 }
 
 TP_func

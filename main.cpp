@@ -7,26 +7,37 @@ int main(int argc, char** argv) {
     debug_mode = parser.parse_switch("debug");
 
     std::string parsed_string;
+
+    /// mesh
+    parsed_string = parser.parse_param<std::string>("parse_mesh", STRING_NULL);
+    if (parsed_string != STRING_NULL) return handle_parse_mesh(parsed_string);
+
     /// case
     parsed_string = parser.parse_param<std::string>("case", STRING_NULL);
     if (parsed_string != STRING_NULL) {
         ConfigReader config("./config/" + parsed_string);
         if (config.solver == "dugks@incompressible") return handle_solver<DUGKS_INCOMPRESSIBLE>(config, parser);
+        if (config.solver == "dugks@shakhov") return handle_solver<DUGKS_SHAKHOV>(config, parser);
     }
-    /// sample
-    if (parser.parse_switch("test")) return test();
 
     if (debug_mode) debug_println("exit");
 
     return 0;
 }
 
-int test() {
-    Mat3D a{3.0, 2.0, 8.0, 0.0, 2.0, 0.0, 6.0, 0.0, 1.0};
-    Mat3D b{1.0, 0.0, 0.0, 0.0, 2.0, 6.0, 1.0, 0.0, 3.0};
-    std::cout << "a.det = " << a.det() << std::endl;
-    std::cout << "Det(a.I * b) = " << (a.I() * b).det() << std::endl;
-    auto it = a.I();
-    it.info();
+int handle_parse_mesh(const std::string &path) {
+    MESH::ListMesh mesh(MESH_TYPE_NORMAL, "parsed_mesh");
+    mesh.load(path);
+    mesh.build();
+    mesh.info();
+    /// output
+    MeshWriter<MESH::ListMesh> writer{"./mesh.dat", mesh};
+    writer.write_head({"volume"});
+    writer.write_node();
+    std::vector<double> data(mesh.cell_num());
+    for (int i = 0; i < mesh.cell_num(); i++) data[i] = mesh.CELLS[i].volume;
+    writer.write_data(data);
+    writer.write_geom();
+    writer.close();
     return 0;
 }

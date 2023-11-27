@@ -20,19 +20,11 @@ std::string logo = "******************************\n"
 
 Logger::Logger(const std::string &logger_name) {
     ss.str("");
-    path.clear();
     prefix = logger_name;
-}
-
-Logger::Logger(const std::string &logger_name, const std::string &file_path) {
-    ss.str("");
-    prefix = logger_name;
-    path = file_path;
 }
 
 Logger &Logger::operator()(const std::string &logger_name) {
     ss.str("");
-    path.clear();
     prefix = logger_name;
     return *this;
 }

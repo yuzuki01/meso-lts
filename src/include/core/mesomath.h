@@ -54,8 +54,8 @@ public:
     double det() const;
     Mat3D T();                              // 转置
     Mat3D I();                              // 矩阵的逆
-    Vec3D operator*(const Vec3D &_vec);     // Mat * Vec    矩阵乘于列向量
-    Mat3D operator*(const Mat3D &_mat);     // 矩阵乘法
+    Vec3D operator*(const Vec3D &_vec);     // Mat * Vec 矩阵乘于列向量
+    Mat3D operator*(const Mat3D &_mat);     // 矩阵乘法 this * _mat
 
     void info() const;
 };

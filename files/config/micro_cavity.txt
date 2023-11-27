@@ -1,13 +1,13 @@
 ###################################
-# 这是一个不可压缩方腔流动的示例配置文件 #
+#  这是一个稀薄方腔流动的示例配置文件   #
 ###################################
 
 # 算例信息
 case-info:
-    name        incompressible-cavity       # 算例名称
-    phy_mesh    cavity.su2                  # 物理网格文件
-    dvs_mesh    GaussHermit                 # 使用结构生成网格
-    solver      dugks@incompressible        # 求解器名称
+    name        micro-cavity                # 算例名称
+    phy_mesh    cavity_40x40.su2            # 物理网格文件
+    dvs_mesh    dvs_100x100.su2             # 使用结构生成网格
+    solver      dugks@shakhov               # 求解器名称
     thread      10                          # OpenMP 并行数
 :end
 
@@ -15,8 +15,9 @@ case-info:
 # 通过 config.get<TYPE>("NAME", DEFAULT) 获取
 def:
     # 流体力学无量纲量
-    Re              400                     # Reynolds 数
-    Ma              0.1414213562373095      # Mach 数
+    Kn              1.0                     # Knudsen 数
+    Ma              0.162478                # Mach 数
+    Pr              0.666667                # Prandtl 数
     # CFL 条件
     CFL             0.9                     # CFL 数
 
@@ -25,9 +26,14 @@ def:
     temperature     1.0                     # 温度
     length          1.0                     # 特征长度
     density         1.0                     # 密度
+    K               0                       # 内部自由度
+    # vhs
+    vhs_index       0.5                     # VHS 模型温度指数
 
-    # GaussHermit 网格点数
-    gauss_point     3
+    # 限制器
+    zero_gradient   False
+    limiter_switch  False
+    ventaka_K       0.1
 :end
 
 # 边界定义文本块
@@ -35,7 +41,7 @@ boundary:
     name            lid                     # 边界名称，和网格文件内命名一致
     type            isothermal_wall         # 类型：等温壁面
     temperature     1.0                     # 壁面温度
-    velocity-x      0.1                     # 默认为 0
+    velocity-x      0.14832144283054066     # 默认为 0
 :end
 
 # 边界定义文本块
