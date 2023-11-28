@@ -37,7 +37,7 @@ class CMakeProject:
         if os.name == "nt":
             for file in [it for it in os.listdir(self.output_path) if it.endswith(".dll.a")]:
                 path = "{output_path:s}/{file:s}".format(output_path=self.output_path, file=file)
-                print(Fore.YELLOW + "Delete - %s" % path + Style.RESET_ALL)
+                print("Delete - %s" % path)
                 os.remove(path)
 
     def _clean(self):
@@ -48,15 +48,13 @@ class CMakeProject:
         )
 
     def build(self):
-        print(Fore.CYAN + "[Python] Build cmake project: %s" % self.target_name + Style.RESET_ALL)
+        print("[Python] Build cmake project: %s" % self.target_name)
         self._make()
         self._clean()
         self._build()
 
 
 if __name__ == '__main__':
-    init(autoreset=True)
-
     Core = CMakeProject('./src/core', 'core')
     Mesh = CMakeProject('./src/mesh', 'mesh')
     Solver = CMakeProject('./src/solver', 'solver')

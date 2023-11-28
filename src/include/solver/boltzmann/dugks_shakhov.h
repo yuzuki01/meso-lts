@@ -14,7 +14,7 @@ public:
     double R, T0, Rho0, L0, vhs_index, CFL;
     double dt{}, half_dt{}, miu0{}, Cv{}, gamma{};
     int D, K;
-    bool limiter_switch, zero_gradient;
+    bool limiter_switch, zero_gradient, boundary_zero_gradient;
     double ventaka_k{};
     /// Macro Physical Variables
     struct MacroVars {

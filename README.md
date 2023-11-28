@@ -1,33 +1,121 @@
 # Meso
 
-DUGKS 求解器
+- [快速构建](#快速构建)
+    - Python 脚本快速构建
+    - CMake 命令行构建
+- [运行方式](#运行方式)
+    - su2 网格
+    - 配置文件
+    - 启动参数
+- [项目结构](#项目结构)
+    - core
+    - mesh
+    - solver
 
-重构前<a href="https://github.com/yuzuki01/meso">代码</a>已经不再维护，仅供参考
+---
 
-## 重大更新(Nov 14, 2023)
+非结构网格前处理 + DUGKS 求解器
 
-重构了 core 模块和 mesh 模块。
+重构前代码(<a href="https://github.com/yuzuki01/meso-archive">meso-archive</a>)已经不再维护，仅供参考
 
- - core 中内置了新模块
-   
-    - 启动参数解释器 ArgParser 对象
-      
-    - 日志输出 Logger 对象 (替换了原来的 pprint)
-     
- - mesh 中重构了网格对象
-   
-    - 固定网格 ```MESH::ListMesh ``` 和可变网格 ```MESH::MapMesh```
-    
-    - 适用于高阶格式的次相邻网格 ```std::vector<key_type> second_near_cell_key```
-    
- - 重构后求解器仅有用于验证的 dugks@incompressible
+---
+#快速构建
 
-## bug
+在 Windows 10 和 Ubuntu 22.04 LTS 上成功构建:
 
-### Nov 14,2023 可变网格的输出仍有几何关系上的错误
+|依赖|成功构建版本|是否必需|
+|:---:|:---:|:---:|
+|gcc|13.2.0|√|
+|CMake|3.25|√|
+|Python|3.9.10|×<p>通用构建脚本使用 Python 编写</p>|
 
-## 未来计划
+使用构建脚本快速构建（推荐）
 
- - Lagrange 粒子追踪器 (for DPM)
+```
+python build.py
+```
 
- - 可变网格的网格单元增减接口 (for VoF)
+使用命令行构建
+```
+git clone https://github.com/yuzuki01/meso-lts.git
+
+# 进入项目根目录
+cd meso-lts
+
+# Windows 选取 <your_generator> 为 "CodeBlocks - MinGW Makefiles"
+# Linux 选取 <your_generator> 为 "CodeBlocks - Unix Makefiles"
+# 构建 Core 模块
+cmake -DCMAKE_BUILD_TYPE=MinSizeRel -G <your_generator> -S ./src/core -B ./src/core/cmake-build-minsizerel
+cmake --build ./src/core/cmake-build-minsizerel --target clean -- -j 12
+cmake --build ./src/core/cmake-build-minsizerel --target all -- -j 12
+
+# 构建 Mesh 模块
+cmake -DCMAKE_BUILD_TYPE=MinSizeRel -G <your_generator> -S ./src/mesh -B ./src/mesh/cmake-build-minsizerel
+cmake --build ./src/mesh/cmake-build-minsizerel --target clean -- -j 12
+cmake --build ./src/mesh/cmake-build-minsizerel --target all -- -j 12
+
+# 构建 Solver 模块
+cmake -DCMAKE_BUILD_TYPE=MinSizeRel -G <your_generator> -S ./src/solver -B ./src/solver/cmake-build-minsizerel
+cmake --build ./src/solver/cmake-build-minsizerel --target clean -- -j 12
+cmake --build ./src/solver/cmake-build-minsizerel --target all -- -j 12
+
+# 构建可执行文件
+cmake -DCMAKE_BUILD_TYPE=MinSizeRel -G <your_generator> -S . -B ./cmake-build-minsizerel
+cmake --build ./cmake-build-minsizerel --target clean -- -j 12
+cmake --build ./cmake-build-minsizerel --target all -- -j 12
+```
+
+快速启动
+```
+# 如果当前目录在项目根目录，则进入构建目录
+cd build
+# 调用帮助指令
+meso -h
+```
+
+#运行方式
+
+##su2 网格
+
+meso 读取的是.su2网格
+
+首先准备好.su2网格，[顶盖驱动方腔网格](files/mesh/cavity.su2)作为测试文件，储存在 ./files/mesh/ 中
+
+在构建出的可执行文件 meso.exe 的目录下找到 mesh 文件夹，这是求解器寻找网格文件的地方，拷贝顶盖驱动方腔网格到这个文件夹
+
+##配置文件
+
+[顶盖驱动方腔配置文件](files/config/cavity.txt)作为测试文件，存储在 ./files/config/ 中
+
+在构建出的可执行文件 meso.exe 的目录下找到 config 文件夹，这是求解器寻找配置文件的地方，拷贝顶盖驱动方腔配置文件到这个文件夹
+
+##运行求解器
+
+在构建出的可执行文件 meso.exe 的目录下，打开终端执行
+
+```
+meso --case cavity.txt --max_step 50000 --save_interval 1000
+```
+
+之后在 result 文件夹下可以得到计算结果的 tecplot 文件
+
+![img](files/cavity_demo.png)
+
+#项目结构
+
+---
+
+![image](files/meso%20structure.png)
+
+---
+
+##Core
+[learn more](src/core/README.md)
+
+##Mesh
+[learn more](src/mesh/README.md)
+
+##Solver
+[learn more](src/solver/README.md)
+
+#

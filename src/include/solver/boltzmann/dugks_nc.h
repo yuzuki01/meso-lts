@@ -1,37 +1,38 @@
-#ifndef SOLVER_DUGKS_INCOMPRESSIBLE
-#define SOLVER_DUGKS_INCOMPRESSIBLE
+#ifndef SOLVER_DUGKS_NC
+#define SOLVER_DUGKS_NC
 
-class DUGKS_INCOMPRESSIBLE : public BasicSolver {
+class DUGKS_NC : public BasicSolver {
 public:
     /// Constructor
-    using Scheme = DUGKS_INCOMPRESSIBLE;
-    explicit DUGKS_INCOMPRESSIBLE(ConfigReader &_config, ArgParser &_parser);
+    using Scheme = DUGKS_NC;
+    explicit DUGKS_NC(ConfigReader &_config, ArgParser &_parser);
     /// Mesh
     MESH::ListMesh phy_mesh{MESH_TYPE_NORMAL, config.phy_mesh};
-    MESH::ListMesh dvs_mesh{MESH_TYPE_NO_FACE, config.dvs_mesh};
+    MESH::ListMesh dvs_mesh{MESH_TYPE_NO_FACE, "GaussHermit"};
     /// Physical
-    double Re, Ma;
-    double R, T, Rho, L;
+    double Re, Ma, Ra, Pr;
+    double R, T0, dT, Rho0, L;
     double RT{}, CFL{}, dt{}, half_dt{};
-    double tau{};
+    double tau_f{}, tau_g{}, beta_g{};
     int D;
     /// Macro Physical Variables
     struct MacroVars {
-        double density = 0.0, old_density=0.0;
+        double density = 0.0;
         double temperature = 0.0;
         Vec3D velocity{0.0, 0.0, 0.0};
+        Vec3D heat_flux{0.0, 0.0, 0.0};
     };
 
     /// Physical Formula
     inline double f_maxwell(double density, const Vec3D &particle_velocity, const Vec3D &flow_velocity) const;
-    inline double f_maxwell(const MacroVars &macro_var, const Vec3D &particle_velocity) const;
+    inline double g_maxwell(double temperature, const Vec3D &particle_velocity, const Vec3D &);
 
     using DistributionFunction = std::vector<double>;
     /// Scheme Cell
     class Cell {
     public:
         Scheme &solver;
-        MESH::Cell<int> &mesh_cell;
+        MESH::Cell<int> *mesh_cell_ptr;
         /// 最小二乘法
         LeastSquare lsp;
         /// 分布函数
@@ -52,7 +53,7 @@ public:
     class Face {
     public:
         Scheme &solver;
-        MESH::Face<int> &mesh_face;
+        MESH::Face<int> *mesh_face_ptr;
         /// 分布函数
         DistributionFunction f{}, f_b{};
         /// 宏观量
@@ -76,7 +77,6 @@ public:
     void info() const;
     void do_step();
     void do_save();
-    void do_residual();
 };
 
-#endif  // SOLVER_DUGKS_INCOMPRESSIBLE
+#endif  // SOLVER_DUGKS_NC

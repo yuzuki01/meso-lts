@@ -19,6 +19,11 @@ Scheme::DUGKS_SHAKHOV(ConfigReader &_config, ArgParser &_parser) : BasicSolver(_
     K = config.get<int>("K");
     limiter_switch = config.get<bool>("limiter_switch");
     zero_gradient = config.get<bool>("zero_gradient");
+    boundary_zero_gradient = config.get<bool>("boundary_zero_gradient");
+    if (boundary_zero_gradient) {
+        logger << "set boundary-zero-gradient.";
+        logger.highlight();
+    }
     if (zero_gradient) {
         limiter_switch = false;
         logger << "set zero-gradient.";
@@ -200,6 +205,11 @@ void SFace::get_f_b() {
         if (it.position * nv >= 0.0) {
             Vec3D r_ij = mesh_face.position - on_cell.mesh_cell.position;
             double g_i = on_cell.g_bp[p], h_i = on_cell.h_bp[p];
+            if (solver.boundary_zero_gradient) {
+                g_b[p] = g_i;
+                h_b[p] = h_i;
+                continue;
+            }
             if (solver.limiter_switch) {
                 Ventaka limiter_g{g_i, g_i, g_i, r_ij * on_cell.slope_g[p]},
                         limiter_h{h_i, h_i, h_i, r_ij * on_cell.slope_h[p]};
@@ -222,6 +232,11 @@ void SFace::get_f_b() {
         } else {
             Vec3D r_ij = mesh_face.position - inv_cell.mesh_cell.position;
             double g_i = inv_cell.g_bp[p], h_i = inv_cell.h_bp[p];
+            if (solver.boundary_zero_gradient) {
+                g_b[p] = g_i;
+                h_b[p] = h_i;
+                continue;
+            }
             if (solver.limiter_switch) {
                 Ventaka limiter_g{g_i, g_i, g_i, r_ij * inv_cell.slope_g[p]},
                         limiter_h{h_i, h_i, h_i, r_ij * inv_cell.slope_h[p]};
