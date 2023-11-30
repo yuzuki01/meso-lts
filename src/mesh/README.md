@@ -2,22 +2,52 @@
 
 meso 网格
 
-## 模块
+---
 
-### 对象定义
+## 目录
+ 
+ - [网格分类](#网格分类)
+ - [宏定义](#宏定义)
+ - [网格对象](#网格对象)
+    - [网格结点](#网格结点)
+    - [网格单元](#网格单元)
+    - [网格界面](#网格界面)
+ - [网格生成器](#网格生成器)
+    - [Gauss-Hermit型DVS](#Gauss-Hermit型DVS)
+
+---
+
+## 网格分类
 
 当前网格分类：
 
- - 固定网格 `MESH::ListMesh` ，其容器为 `std::vector<MESH::OBJECT<int>>`
+- 固定网格 `MESH::ListMesh` ，其容器为 `std::vector<MESH::OBJECT<int>>`
 
- - 可变网格 `MESH::MapMesh` ，其容器为 `std::unordered_map<std::string, MESH::OBJECT<std::string>>`
+- 可变网格 `MESH::MapMesh` ，其容器为 `std::unordered_map<std::string, MESH::OBJECT<std::string>>`
 
 不同的网格类通过模板函数实现了通用接口
+
+---
+
+## 宏定义
+
+定义了三个与网格模板相关的宏，其中 `key_type` 表示网格对象的 `key` 值的类型。
+
+`key_type` 的类型为固定网格 `int` ，可变网格 `std::string` 。
 
 ```c++
 #define TP_key template <class key_type>
 #define std::vector<key_type> key_vector
 #define std::vector<std::string> string_vector
+```
+
+---
+
+## 网格对象
+
+### 网格结点
+
+```c++
 /// 网格结点
 TP_key
 class MESH::Node {
@@ -31,7 +61,11 @@ public:
     // 按照 su2 格式构造
     explicit Node(const string_vector &init_strings);
 };
+```
 
+### 网格单元
+
+```c++
 /// 网格单元
 TP_key
 class MESH::Cell {
@@ -71,7 +105,11 @@ public:
          const key_type &cell_key, const key_type &inv_cell_key,
          int on_layer_cell_id, int on_layer_cell_num);
 };
+```
 
+### 网格界面
+
+```c++
 /// 网格界面
 TP_key
 class MESH::Face {
@@ -129,7 +167,7 @@ public:
 
 ## 网格生成器
 
-### 生成 Gauss-Hermit 型 DVS
+### Gauss-Hermit型DVS
 
 生成 Gauss-Hermit 结构型速度空间的函数。其中 `gauss_point` 按照一维情况来给，函数会自动根据网格文件的维数来生成对应的结构型速度空间网格。
 
