@@ -58,10 +58,12 @@ if __name__ == '__main__':
     Core = CMakeProject('./src/core', 'core')
     Mesh = CMakeProject('./src/mesh', 'mesh')
     Solver = CMakeProject('./src/solver', 'solver')
+    API = CMakeProject('./src/api', 'api')
     # 可执行文件
     Meso = CMakeProject('.', 'meso')
 
     Core.build()
     Mesh.build()
     Solver.build()
+    API.build()
     Meso.build()

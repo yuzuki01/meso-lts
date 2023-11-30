@@ -36,6 +36,7 @@ link_directories(${LIBRARY_OUTPUT_PATH})
 target_link_libraries(${PROJECT_NAME} ${LIBRARY_OUTPUT_PATH}/core${SHARED_LIBRARY_SUFFIX})  # link core.dll
 target_link_libraries(${PROJECT_NAME} ${LIBRARY_OUTPUT_PATH}/mesh${SHARED_LIBRARY_SUFFIX})  # link mesh.dll
 target_link_libraries(${PROJECT_NAME} ${LIBRARY_OUTPUT_PATH}/solver${SHARED_LIBRARY_SUFFIX})  # link solver.dll
+target_link_libraries(${PROJECT_NAME} ${LIBRARY_OUTPUT_PATH}/api${SHARED_LIBRARY_SUFFIX})  # link api.dll
 
 # check openMp
 FIND_PACKAGE(OpenMP REQUIRED)

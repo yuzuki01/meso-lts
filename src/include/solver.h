@@ -1,7 +1,7 @@
 /**************************************
  * meso  - SOLVER module              *
  *  contains:                         *
- *         numerical, boltzmann solvers   *
+ *     numerical, boltzmann solvers   *
  *               Nov 11, 2023  by MYC *
  **************************************/
 
