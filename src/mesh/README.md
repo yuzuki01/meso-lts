@@ -6,18 +6,13 @@ meso 网格
 
 ### 对象定义
 
-当前网格分类固定网格（MESH::ListMesh，容器 std::vector）和可变网格（MESH::MapMesh 容器 std::unordered_map）
+当前网格分类：
 
-可变网格支持网格几何对象的增减
+ - 固定网格 `MESH::ListMesh` ，其容器为 `std::vector<MESH::OBJECT<int>>`
+
+ - 可变网格 `MESH::MapMesh` ，其容器为 `std::unordered_map<std::string, MESH::OBJECT<std::string>>`
 
 不同的网格类通过模板函数实现了通用接口
-
-```c++
-MESH::ListMesh list_mesh;
-MESH::MapMesh map_mesh;
-```
-
-其对应的网格几何对象也不同
 
 ```c++
 #define TP_key template <class key_type>
@@ -33,7 +28,7 @@ public:
     Vec3D position = {0.0, 0.0, 0.0};
     // 按照 cpp 结构构造
     explicit Node(const key_type &node_key, const Vec3D &node_position);
-    // 按照 Gambit 格式构造
+    // 按照 su2 格式构造
     explicit Node(const string_vector &init_strings);
 };
 
@@ -41,7 +36,7 @@ public:
 TP_key
 class MESH::Cell {
 public:
-    // Gambit 几何体类型
+    // su2 几何体类型
     int type;
     // key 值
     key_type key;
@@ -69,7 +64,7 @@ public:
     key_vector near_cell_key;
     // 次相邻单元的 key 相量    for high-order scheme
     key_vector second_near_cell_key;
-    /// 按照 Gambit 格式构造
+    /// 按照 su2 格式构造
     explicit Cell(const string_vector &init_strings);
     /// 结构速度空间构造函数
     Cell(const Vec3D &particle_velocity, double weight,
@@ -81,7 +76,7 @@ public:
 TP_key
 class MESH::Face {
 public:
-    // Gambit 几何体类型
+    // su2 几何体类型
     int type;
     // key 值
     key_type key;
@@ -92,21 +87,23 @@ public:
 
     /// 几何参数
     /**
-     * on_cell 表示正向 inv_cell 表示反向
-     *  界面为边界时，由于只有一个相邻单元(MESH::Cell)
-     *  此时：
-     *      on_cell_key == inv_cell_key
-     *      on_cell_face == inv_cell_face
-     *      on_cell_nv == -inv_cell_nv
+     * on_cell 表示正向 inv_cell 表示反向，正反向的判断仅取决于界面构建时的顺序，无特殊含义。
+     *  界面为边界时，由于只有一个相邻单元(MESH::Cell)，
+     *  on_cell 对应的值绝对代表了界面所附着的唯一的网格单元
+     *  且此时有如下的一些变量关系：
+     *      on_cell_key == inv_cell_key         反向单元就是正向单元
+     *      on_cell_face == inv_cell_face       反向单元就是正向单元
+     *      on_cell_nv == -inv_cell_nv          法向量依旧存在取反关系
      *      on_cell_nv 为单元格心向外的界面法向量
      *      inv_cell_nv 为边界指向流体域的界面法向量
      */
-    key_type on_cell_key;
-    int on_cell_face;
-    Vec3D on_cell_nv;
-    key_type inv_cell_key;
-    int inv_cell_face;
-    Vec3D inv_cell_nv;
+    
+    key_type on_cell_key;   // 正向单元的 key 值
+    int on_cell_face;       // 正向单元上的界面编号
+    Vec3D on_cell_nv;       // 正向单元指向外的界面法向量
+    key_type inv_cell_key;  // 反向单元的 key 值
+    int inv_cell_face;      // 反向单元上的界面编号
+    Vec3D inv_cell_nv;      // 反向单元指向外的界面法向量
     // 面积
     double area;
     // 坐标
@@ -119,6 +116,7 @@ public:
     Face();
     
     // get item
+    // 模板函数统一调用接口
     Node<key_type> &get_node(const key_type &_key);
 
     Cell<key_type> &get_cell(const key_type &_key);
@@ -132,6 +130,11 @@ public:
 ## 网格生成器
 
 ### 生成 Gauss-Hermit 型 DVS
+
+生成 Gauss-Hermit 结构型速度空间的函数。其中 `gauss_point` 按照一维情况来给，函数会自动根据网格文件的维数来生成对应的结构型速度空间网格。
+
+如： `dvs_mesh = GENERATOR::gauss_hermit(3, 2, RT);` 则是生成 D2Q9 ，且气体常数和温度乘积为 `RT` 的网格。
+
 ```c++
 ConfigReader config("./config/<your_config_file>");
 

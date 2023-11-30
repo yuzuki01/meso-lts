@@ -20,7 +20,7 @@
 
 ---
 
-#快速构建
+# 快速构建
 
 在 Windows 10 和 Ubuntu 22.04 LTS 上成功构建:
 
@@ -30,13 +30,13 @@
 |CMake|3.25|√|
 |Python|3.9.10|×<p>通用构建脚本使用 Python 编写</p>|
 
-##使用构建脚本快速构建（推荐）
+## 使用构建脚本快速构建（推荐）
 
 ```
 python build.py
 ```
 
-##使用命令行构建
+## 使用命令行构建
 ```
 git clone https://github.com/yuzuki01/meso-lts.git
 
@@ -66,7 +66,7 @@ cmake --build ./cmake-build-minsizerel --target clean -- -j 12
 cmake --build ./cmake-build-minsizerel --target all -- -j 12
 ```
 
-##快速启动
+## 快速启动
 ```
 # 如果当前目录在项目根目录，则进入构建目录
 cd build
@@ -74,9 +74,9 @@ cd build
 meso -h
 ```
 
-#运行方式
+# 运行方式
 
-##su2 网格
+## su2 网格
 
 meso 读取的是.su2网格
 
@@ -84,13 +84,13 @@ meso 读取的是.su2网格
 
 在构建出的可执行文件 meso.exe 的目录下找到 mesh 文件夹，这是求解器寻找网格文件的地方，拷贝顶盖驱动方腔网格到这个文件夹
 
-##配置文件
+## 配置文件
 
 [顶盖驱动方腔配置文件](files/config/cavity.txt)作为测试文件，存储在 ./files/config/ 中
 
 在构建出的可执行文件 meso.exe 的目录下找到 config 文件夹，这是求解器寻找配置文件的地方，拷贝顶盖驱动方腔配置文件到这个文件夹
 
-##运行求解器
+## 运行求解器
 
 在构建出的可执行文件 meso.exe 的目录下，打开终端执行
 
@@ -102,7 +102,7 @@ meso --case cavity.txt --max_step 50000 --save_interval 1000
 
 ![img](files/cavity_demo.png)
 
-#项目结构
+# 项目结构
 
 ---
 
@@ -110,14 +110,14 @@ meso --case cavity.txt --max_step 50000 --save_interval 1000
 
 ---
 
-##Core模块
+## Core模块
 
 [README](src/core/README.md)
 
-##Mesh模块
+## Mesh模块
 
 [README](src/mesh/README.md)
 
-##Solver模块
+## Solver模块
 
 [README](src/solver/README.md)

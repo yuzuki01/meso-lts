@@ -1,12 +1,12 @@
-#meso/mesh
+# meso/mesh
 
 meso 求解器
 
-##数值方法
+## 数值方法
 
-###最小二乘法求梯度
+### 最小二乘法求梯度
 
-####最小二乘法数据结构体
+#### 最小二乘法数据结构体
 
 ```c++
 struct LeastSquare {
@@ -16,7 +16,7 @@ struct LeastSquare {
 };
 ```
 
-####调用方法
+#### 调用方法
 
 ```c++
 const int near_num = mesh_cell.near_cell_key.size();
@@ -33,9 +33,9 @@ const int near_num = mesh_cell.near_cell_key.size();
     }
 ```
 
-##创建自己的求解器
+## 创建自己的求解器
 
-###继承基类
+### 继承基类
 
 为了统一接口，自定义求解器需要通过继承求解器基类(BasicSolver)，重载基类中的函数来实现。
 
@@ -62,7 +62,7 @@ public:
 };
 ```
 
-###头文件声明
+### 头文件声明
 
 创建 MySolver 求解器的头文件。
 
