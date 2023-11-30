@@ -11,6 +11,7 @@
     - core
     - mesh
     - solver
+    - api
 
 ---
 
@@ -121,3 +122,7 @@ meso --case cavity.txt --max_step 50000 --save_interval 1000
 ## Solver模块
 
 [README](src/solver/README.md)
+
+## API模块
+
+[README](src/api/README.md)
