@@ -28,10 +28,10 @@ ConfigReader::ConfigReader(const std::string &file_path) : BasicReader("ConfigRe
                     }
                     if (data[0] == end_mark) break;  // break from while
                     if (data[0] == "name") name = data[1];
-                    if (data[0] == "phy_mesh") phy_mesh = data[1];
-                    if (data[0] == "dvs_mesh") dvs_mesh = data[1];
-                    if (data[0] == "solver") solver = data[1];
-                    if (data[0] == "thread") thread = stoi(data[1]);
+                    else if (data[0] == "phy_mesh") phy_mesh = data[1];
+                    else if (data[0] == "dvs_mesh") dvs_mesh = data[1];
+                    else if (data[0] == "solver") solver = data[1];
+                    else if (data[0] == "thread") thread = stoi(data[1]);
                     i++;
                 }
                 read_case = 0;

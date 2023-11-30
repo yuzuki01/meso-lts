@@ -2,9 +2,7 @@
 
 meso 核心
 
-## 模块
-
-### 参数解析器 Argparser
+## 参数解析器 Argparser
 ```c++
 int main() {
     /// 实例化解析器
@@ -23,7 +21,7 @@ int main() {
 }
 ```
 
-### 日志对象 Logger
+## 日志对象 Logger
 ```c++
 int main() {
     /// 日志初始化
@@ -45,15 +43,16 @@ int main() {
 }
 ```
 
-### 强制输出
+## 强制输出
 ```c++
 info_println("Hello, world!");
 note_println("Hello, world!");
 ```
 
-### 自定义数学库 mesomath.h
+## 自定义数学库 mesomath.h
 
-#### Vec3D
+### Vec3D
+
 ```c++
 /// 三维向量
 ///     vec1 = <1, 2, 3>
@@ -79,9 +78,29 @@ vec1.norm();
 double magnitude = vec2.magnitude();
 ```
 
-### 工具 utils
+### Mat3D
 
-#### split
+```c++
+/// 3x3矩阵
+/// mat1 = {
+//  1, 0, 0,
+//  0, 1, 0,
+//  0, 0, 1,
+// };
+Mat3D mat1{1,0,0,0,1,0,0,0,1};
+double det = mat1.det();    /// 计算行列式
+Mat3D tra_mat = mat1.T();    /// 转置
+Mat3D inv_mat = mat1.I();    /// 求逆
+Vec3D vec1{1,2,3};, vec2;
+vec2 = mat * vec1;          /// 矩阵乘于列向量
+Mat3D mat2{3,0,0,0,2,0,0,0,1};
+Mat3D mulpti_mat = mat1 * mat2; /// 矩阵 mat1 乘于 mat2
+```
+
+## 工具 utils
+
+### split
+
 ```c++
 /// .h
 #define string_vector std::vector<std::string>
@@ -100,7 +119,7 @@ for (auto &it : result) {
 }
 ```
 
-#### str_vec_cmp
+### str_vec_cmp
 ```c++
 string_vector line = {"a", "b", "c"};
 

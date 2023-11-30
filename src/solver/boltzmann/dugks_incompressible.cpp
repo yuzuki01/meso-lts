@@ -5,13 +5,14 @@ using SCell = Scheme::Cell;
 using SFace = Scheme::Face;
 
 /// Solver Constructor
-Scheme::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : BasicSolver(_config, _parser) {
+Scheme::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : BasicSolver(_config, _parser),
+check_point(*this) {
     /// Read config
-    Rho = config.get<double>("density");
+    Rho0 = config.get<double>("density");
     Re = config.get<double>("Re");
     Ma = config.get<double>("Ma");
     R = config.get<double>("R");
-    T = config.get<double>("temperature");
+    T0 = config.get<double>("temperature");
     L = config.get<double>("length");
     CFL = config.get<double>("CFL");
     /// Mesh
@@ -21,7 +22,7 @@ Scheme::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : Basi
     if (config.dvs_mesh == MESH_GAUSS_HERMIT) {
         int gp;
         gp = config.get<int>("gauss_point");
-        dvs_mesh = GENERATOR::gauss_hermit(gp, D, R * T);
+        dvs_mesh = GENERATOR::gauss_hermit(gp, D, R * T0);
     } else {
         dvs_mesh.load("./mesh/" + config.dvs_mesh);
         dvs_mesh.build();
@@ -39,7 +40,7 @@ SCell::Cell(MESH::Cell<int> & cell, Scheme & _solver) : mesh_cell(cell), solver(
     f_bp.resize(solver.dvs_mesh.cell_num(), 0.0);
     slope_f.resize(solver.dvs_mesh.cell_num(), {0.0, 0.0, 0.0});
     /// least square
-    update_least_square();
+    update_geom();
 }
 
 /// Scheme Face Constructor
@@ -55,14 +56,23 @@ double Scheme::f_maxwell(double density, const Vec3D &particle_velocity, const V
     return density * (1.0 + ku_RT + (ku_RT * ku_RT - uu_RT) / 2.0);
 }
 
-double Scheme::f_maxwell(const MacroVars &macro_var, const Vec3D &particle_velocity) const {
+double Scheme::f_maxwell(const PhysicalVar::MacroVars &macro_var, const Vec3D &particle_velocity) const {
     double uu_RT = macro_var.velocity * macro_var.velocity / RT;
     double ku_RT = macro_var.velocity * particle_velocity / RT;
     return macro_var.density * (1.0 + ku_RT + (ku_RT * ku_RT - uu_RT) / 2.0);
 }
 
 /// Cell Functions
-void SCell::update_least_square() {
+void SCell::init(const PhysicalVar::MacroVars &init_var) {
+    for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
+        auto &it = solver.dvs_mesh.get_cell(p);
+        f_t[p] = solver.f_maxwell(init_var, it.position);
+    }
+    get_macro_var();
+    update_geom();
+}
+
+void SCell::update_geom() {
     lsp = generate_least_square(mesh_cell.key, solver.phy_mesh);
 }
 
@@ -82,7 +92,7 @@ void SCell::get_grad_f_bp() {
             auto &near_cell = solver.get_cell(mesh_cell.near_cell_key[j]);
             Sfr += lsp.weight[j] * (near_cell.f_bp[p] - f_bp[p]) * lsp.dr[j];
         }
-        slope_f[p] = {lsp.Cx * Sfr, lsp.Cy * Sfr, lsp.Cz * Sfr};
+        slope_f[p] = lsp.C * Sfr;
         /// zero gradient
         // slope_f[p] = {0.0, 0.0, 0.0};
     }
@@ -251,7 +261,8 @@ void Scheme::do_step() {
     if (step >= max_step && !is_crashed) {
         continue_to_run = false;
         logger << "reach max_step=" << max_step;
-        logger.highlight();
+        logger.note();
+        do_residual();
         do_save();
         return;
     }
@@ -265,7 +276,7 @@ void Scheme::init() {
     /// if no init, then cannot run
     continue_to_run = true;
     /// Compute Params
-    RT = R * T;
+    RT = R * T0;
     tau = (Ma * L) / (Re * sqrt(RT));
     dt = CFL * phy_mesh.min_mesh_size / dvs_mesh.max_discrete_velocity;
     half_dt = dt / 2.0;
@@ -277,7 +288,7 @@ void Scheme::init() {
     logger << "solver info:";
     logger.note();
     data_double_println({"density", "temperature", "length", "R"},
-                        {Rho, T, L, R});
+                        {Rho0, T0, L, R});
     data_double_println({"tau", "CFL", "min-cell-size", "max-velocity"},
                         {tau, CFL, phy_mesh.min_mesh_size, dvs_mesh.max_discrete_velocity});
 
@@ -287,15 +298,25 @@ void Scheme::init() {
     for (auto &it : phy_mesh.CELLS) {
         CELLS.emplace_back(it, *this);
     }
-    for (auto &cell : CELLS) {
-        cell.update_least_square();
-        for (auto &it2 : dvs_mesh.CELLS) {
-            cell.f_t[it2.key] = f_maxwell(Rho, it2.position, {0.0, 0.0, 0.0});
-            cell.f_bp[it2.key] = 0.0;
-            cell.slope_f[it2.key] = {0.0, 0.0, 0.0};
+    std::string check_point_file = parser.parse_param<std::string>("check_point", STRING_NULL);
+    if (check_point_file == STRING_NULL) {
+        PhysicalVar::MacroVars init_var;
+        init_var.density = Rho0;
+        init_var.temperature = T0;
+        init_var.velocity = {0.0, 0.0, 0.0};
+        for (auto &mark : phy_mesh.MARKS) {
+            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
+                init_var.density = mark.density;
+                init_var.temperature = mark.temperature;
+                init_var.velocity = mark.velocity;
+                break;
+            }
         }
-        cell.get_macro_var();
+        check_point.init_field(init_var);
+    } else {
+        check_point.init_from_file(check_point_file);
     }
+
     logger << "    scheme-objects: cell - ok.";
     logger.info();
     for (auto &face : phy_mesh.FACES) {
@@ -354,6 +375,11 @@ void Scheme::do_save() {
     writer.write_geom();
     writer.close();
 
+    /// check point
+    std::stringstream ss2;
+    ss2 << "./result/" << config.name << "/" << config.name << ".check_point";
+    check_point.write_to_file(ss2.str());
+
     logger << "Save to file: " << ss.str();
     logger.highlight();
 }
@@ -382,5 +408,5 @@ void Scheme::do_residual() {
     residual = sqrt(sum1 / sum2);
     logger << "Residual at step=" << step;
     logger.info();
-    data_double_println({"density"}, {residual});
+    data_sci_double_println({"density"}, {residual});
 }

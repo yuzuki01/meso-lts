@@ -6,6 +6,8 @@ public:
     /// Constructor
     using Scheme = DUGKS_SHAKHOV;
     explicit DUGKS_SHAKHOV(ConfigReader &_config, ArgParser &_parser);
+    /// Check Point
+    CheckPoint<DUGKS_SHAKHOV> check_point;
     /// Mesh
     MESH::ListMesh phy_mesh{MESH_TYPE_NORMAL, config.phy_mesh};
     MESH::ListMesh dvs_mesh{MESH_TYPE_NO_FACE, config.dvs_mesh};
@@ -16,14 +18,6 @@ public:
     int D, K;
     bool limiter_switch, zero_gradient, boundary_zero_gradient;
     double ventaka_k{};
-    /// Macro Physical Variables
-    struct MacroVars {
-        double density = 0.0, old_density = 0.0;
-        double temperature = 0.0;
-        double energy = 0.0, old_energy = 0.0;
-        Vec3D velocity{0.0, 0.0, 0.0};
-        Vec3D heat_flux{0.0, 0.0, 0.0};
-    };
 
     /// Physical Formula
     inline double tau_f(double density, double temperature) const;
@@ -48,10 +42,11 @@ public:
         std::vector<Vec3D> slope_g{};
         std::vector<Vec3D> slope_h{};
         /// 宏观量
-        MacroVars macro_vars{};
+        PhysicalVar::MacroVars macro_vars{};
         /// 构造函数
         explicit Cell(MESH::Cell<int> &cell, Scheme &_solver);
         /// 算法函数
+        void init(const PhysicalVar::MacroVars &init_var);
         void get_f_bp();
         void get_grad_f_bp();
         void get_macro_var();
@@ -67,7 +62,7 @@ public:
         DistributionFunction g{}, g_b{};
         DistributionFunction h{}, h_b{};
         /// 宏观量
-        MacroVars macro_vars{};
+        PhysicalVar::MacroVars macro_vars{};
         /// 构造函数
         explicit Face(MESH::Face<int> &face, Scheme &_solver);
         /// 算法函数
@@ -79,8 +74,8 @@ public:
     /// Container
     std::vector<Cell> CELLS;
     std::vector<Face> FACES;
-    inline Cell & get_cell(const int &_key);
-    inline Face & get_face(const int &_key);
+    Cell & get_cell(const int &_key);
+    Face & get_face(const int &_key);
 
     /// Solver function
     void init();

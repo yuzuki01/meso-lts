@@ -1,10 +1,41 @@
-# meso/mesh
+#meso/mesh
 
 meso 求解器
 
-## 创建自己的求解器
+##数值方法
 
-### 1.继承基类
+###最小二乘法求梯度
+
+####最小二乘法数据结构体
+
+```c++
+struct LeastSquare {
+    std::vector<Vec3D> dr{};        // 矢径
+    std::vector<double> weight{};   // 权重
+    Mat3D C;                        // 矩阵
+};
+```
+
+####调用方法
+
+```c++
+const int near_num = mesh_cell.near_cell_key.size();
+    /// for (int p) is a loop for listing particles in Discrete Velocity Space (DVM only).
+    for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
+        Vec3D Sfr(0.0, 0.0, 0.0);   /// Sum of the vector: w_j * <df_j * dx, df_j * dy, df_j * dz>
+        for (int j = 0; j < near_num; j++) {
+            auto &near_cell = solver.get_cell(mesh_cell.near_cell_key[j]);
+            /// df = near_cell.f - this.f
+            Sfr += lsp.weight[j] * (near_cell.f_bp[p] - f_bp[p]) * lsp.dr[j];
+        }
+        /// lsp.C <=> a 3x3 matrix equals to 'Inv(A) * b' for 'A * slope = b'
+        slope_f[p] = lsp.C * Sfr;
+    }
+```
+
+##创建自己的求解器
+
+###继承基类
 
 为了统一接口，自定义求解器需要通过继承求解器基类(BasicSolver)，重载基类中的函数来实现。
 
@@ -31,7 +62,7 @@ public:
 };
 ```
 
-### 2.头文件声明
+###头文件声明
 
 创建 MySolver 求解器的头文件。
 

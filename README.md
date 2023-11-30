@@ -19,6 +19,7 @@
 重构前代码(<a href="https://github.com/yuzuki01/meso-archive">meso-archive</a>)已经不再维护，仅供参考
 
 ---
+
 #快速构建
 
 在 Windows 10 和 Ubuntu 22.04 LTS 上成功构建:
@@ -29,13 +30,13 @@
 |CMake|3.25|√|
 |Python|3.9.10|×<p>通用构建脚本使用 Python 编写</p>|
 
-使用构建脚本快速构建（推荐）
+##使用构建脚本快速构建（推荐）
 
 ```
 python build.py
 ```
 
-使用命令行构建
+##使用命令行构建
 ```
 git clone https://github.com/yuzuki01/meso-lts.git
 
@@ -65,7 +66,7 @@ cmake --build ./cmake-build-minsizerel --target clean -- -j 12
 cmake --build ./cmake-build-minsizerel --target all -- -j 12
 ```
 
-快速启动
+##快速启动
 ```
 # 如果当前目录在项目根目录，则进入构建目录
 cd build
@@ -109,13 +110,14 @@ meso --case cavity.txt --max_step 50000 --save_interval 1000
 
 ---
 
-##Core
-[learn more](src/core/README.md)
+##Core模块
 
-##Mesh
-[learn more](src/mesh/README.md)
+[README](src/core/README.md)
 
-##Solver
-[learn more](src/solver/README.md)
+##Mesh模块
 
-#
+[README](src/mesh/README.md)
+
+##Solver模块
+
+[README](src/solver/README.md)

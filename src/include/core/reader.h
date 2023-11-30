@@ -20,4 +20,8 @@ public:
     bool is_file_open() const;
 
     void print();
+
+    int line_num() const;
+
+    std::string & operator[](int index);
 };

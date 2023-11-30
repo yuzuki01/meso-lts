@@ -58,3 +58,11 @@ void BasicReader::print() {
         logger.warn();
     }
 }
+
+int BasicReader::line_num() const {
+    return lines.size();
+}
+
+std::string & BasicReader::operator[](int index) {
+    return lines[index];
+}

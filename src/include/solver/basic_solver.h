@@ -19,3 +19,14 @@ public:
     void do_save();
     void do_step();
 };
+
+/// Physical Var
+namespace PhysicalVar {
+    struct MacroVars {
+        double density = 0.0, old_density = 0.0;
+        double temperature = 0.0;
+        double energy = 0.0, old_energy = 0.0;
+        Vec3D velocity{0.0, 0.0, 0.0};
+        Vec3D heat_flux{0.0, 0.0, 0.0};
+    };
+}

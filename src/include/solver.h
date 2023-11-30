@@ -22,7 +22,7 @@
 #include "solver/numerical.h"
 /// Solver
 #include "solver/basic_solver.h"    // basic
-// #include "solver/dvm_mesh.h"        // dvm wrapped mesh
+#include "solver/check_point.h"
 
 /// Boltzmann
 // #include "solver/boltzmann/gks.h"

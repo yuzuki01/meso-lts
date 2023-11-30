@@ -5,7 +5,8 @@ using SCell = Scheme::Cell;
 using SFace = Scheme::Face;
 
 /// Solver Constructor
-Scheme::DUGKS_SHAKHOV(ConfigReader &_config, ArgParser &_parser) : BasicSolver(_config, _parser) {
+Scheme::DUGKS_SHAKHOV(ConfigReader &_config, ArgParser &_parser) : BasicSolver(_config, _parser),
+check_point(*this) {
     /// Read config
     Kn = config.get<double>("Kn");
     Ma = config.get<double>("Ma");
@@ -105,6 +106,17 @@ double Scheme::h_shakhov(double density, double temperature, const Vec3D &c, con
 }
 
 /// Cell Functions
+void SCell::init(const PhysicalVar::MacroVars &init_var) {
+    for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
+        auto &it = solver.dvs_mesh.get_cell(p);
+        Vec3D c = it.position - init_var.velocity;
+        g_t[p] = solver.g_shakhov(init_var.density, init_var.temperature, c, init_var.heat_flux);
+        h_t[p] = solver.h_shakhov(init_var.density, init_var.temperature, c, init_var.heat_flux);
+    }
+    get_macro_var();
+    update_geom();
+}
+
 void SCell::update_geom() {
     lsp = generate_least_square(mesh_cell.key, solver.phy_mesh);
     if (solver.limiter_switch) {
@@ -139,8 +151,8 @@ void SCell::get_grad_f_bp() {
             Sgr += lsp.weight[j] * (near_cell.g_bp[p] - g_bp[p]) * lsp.dr[j];
             Shr += lsp.weight[j] * (near_cell.h_bp[p] - h_bp[p]) * lsp.dr[j];
         }
-        slope_g[p] = {lsp.Cx * Sgr, lsp.Cy * Sgr, lsp.Cz * Sgr};
-        slope_h[p] = {lsp.Cx * Shr, lsp.Cy * Shr, lsp.Cz * Shr};
+        slope_g[p] = lsp.C * Sgr;
+        slope_h[p] = lsp.C * Shr;
         /// zero gradient
         // slope_g[p] = slope_h[p] = {0.0, 0.0, 0.0};
     }
@@ -444,6 +456,7 @@ void Scheme::do_step() {
         continue_to_run = false;
         logger << "reach max_step=" << max_step;
         logger.highlight();
+        do_residual();
         do_save();
         return;
     }
@@ -484,45 +497,29 @@ void Scheme::init() {
     for (auto &it : phy_mesh.CELLS) {
         CELLS.emplace_back(it, *this);
     }
-    Vec3D init_velocity{0.0, 0.0, 0.0};
-    double init_temperature = T0, init_density = Rho0;
-    for (auto &mark : phy_mesh.MARKS) {
-        if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
-            init_velocity = mark.velocity;
-            init_temperature = mark.temperature;
-            init_density = mark.density;
-            break;
+    std::string check_point_file = parser.parse_param<std::string>("check_point", STRING_NULL);
+    if (check_point_file == STRING_NULL) {
+        PhysicalVar::MacroVars init_var;
+        init_var.density = Rho0;
+        init_var.temperature = T0;
+        init_var.velocity = {0.0, 0.0, 0.0};
+        for (auto &mark : phy_mesh.MARKS) {
+            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
+                init_var.density = mark.density;
+                init_var.temperature = mark.temperature;
+                init_var.velocity = mark.velocity;
+                break;
+            }
         }
+        check_point.init_field(init_var);
+    } else {
+        check_point.init_from_file(check_point_file);
     }
-    for (auto &cell : CELLS) {
-        for (auto &it2 : dvs_mesh.CELLS) {
-            Vec3D c = it2.position - init_velocity;
-            double g_m = g_maxwell(init_density, init_temperature, c);
-            cell.g_t[it2.key] = g_m;
-            cell.slope_g[it2.key] = {0.0, 0.0, 0.0};
-            cell.h_t[it2.key] = h_maxwell(g_m, init_temperature);
-            cell.slope_h[it2.key] = {0.0, 0.0, 0.0};
-        }
-        cell.get_macro_var();
-        cell.macro_vars.old_density = cell.macro_vars.density;
-        cell.macro_vars.old_energy = cell.macro_vars.energy;
-        /// least-square & limiter
-        cell.update_geom();
-    }
+
     logger << "    scheme-objects: cell - ok.";
     logger.info();
     for (auto &face : phy_mesh.FACES) {
         FACES.emplace_back(face, *this);
-        /// face init
-        /*
-        auto &face = get_face(face_key);
-        for (auto & it2 : dvs_mesh.CELLS) {
-            auto &key = it2.first;
-            auto &particle = it2.second;
-            face.f[key] = 0.0;
-            face.f_b[key] = 0.0;
-        }
-         */
     }
     logger << "    scheme-objects: face - ok.";
     logger.info();
@@ -584,6 +581,11 @@ void Scheme::do_save() {
     writer.write_geom();
     writer.close();
 
+    /// check point
+    std::stringstream ss2;
+    ss2 << "./result/" << config.name << "/" << config.name << ".check_point";
+    check_point.write_to_file(ss2.str());
+
     logger << "Save to file: " << ss.str();
     logger.highlight();
 }
@@ -640,5 +642,5 @@ void Scheme::do_residual() {
     residual[1] = sqrt(sum1 / sum2);
     logger << "Residual at step=" << step;
     logger.info();
-    data_double_println({"density", "energy"}, residual);
+    data_sci_double_println({"density", "energy"}, residual);
 }
