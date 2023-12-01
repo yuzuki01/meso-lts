@@ -1,8 +1,8 @@
 #include "mesh.h"
 
 /// local function
-TP_key_mesh
-bool is_in_cell_tria(const Vec3D &p_center, const std::vector<key_type> &node_set, mesh_type &mesh) {
+TP_mesh
+bool is_in_cell_tria(const Vec3D &p_center, const std::vector<int> &node_set, mesh_type &mesh) {
     /// basic shape
     /// lp = u * l1 + v * l2
     double u, v, C;
@@ -16,35 +16,35 @@ bool is_in_cell_tria(const Vec3D &p_center, const std::vector<key_type> &node_se
     return u > 0.0 && v > 0.0 && (u + v) < 1.0;
 }
 
-TP_key_mesh
-bool is_in_cell_quad(const Vec3D &p_center, const std::vector<key_type> &node_set, mesh_type &mesh) {
-    return is_in_cell_tria<key_type, mesh_type>(p_center, {node_set[0], node_set[1], node_set[2]}, mesh) ||
-           is_in_cell_tria<key_type, mesh_type>(p_center, {node_set[0], node_set[3], node_set[2]}, mesh);
+TP_mesh
+bool is_in_cell_quad(const Vec3D &p_center, const std::vector<int> &node_set, mesh_type &mesh) {
+    return is_in_cell_tria<mesh_type>(p_center, {node_set[0], node_set[1], node_set[2]}, mesh) ||
+           is_in_cell_tria<mesh_type>(p_center, {node_set[0], node_set[3], node_set[2]}, mesh);
 }
 
-TP_key_mesh
-bool is_in_cell_hexah(const Vec3D &p_center, const std::vector<key_type> &node_set, mesh_type &mesh) {
+TP_mesh
+bool is_in_cell_hexah(const Vec3D &p_center, const std::vector<int> &node_set, mesh_type &mesh) {
     return false;
 }
 
-TP_key_mesh
-bool is_in_cell_pyram(const Vec3D &p_center, const std::vector<key_type> &node_set, mesh_type &mesh) {
+TP_mesh
+bool is_in_cell_pyram(const Vec3D &p_center, const std::vector<int> &node_set, mesh_type &mesh) {
     return false;
 }
 
-TP_key_mesh
-bool is_in_cell_tetra(const Vec3D &p_center, const std::vector<key_type> &node_set, mesh_type &mesh) {
+TP_mesh
+bool is_in_cell_tetra(const Vec3D &p_center, const std::vector<int> &node_set, mesh_type &mesh) {
     return false;
 }
 
-TP_key_mesh
-bool is_in_cell_prism(const Vec3D &p_center, const std::vector<key_type> &node_set, mesh_type &mesh) {
+TP_mesh
+bool is_in_cell_prism(const Vec3D &p_center, const std::vector<int> &node_set, mesh_type &mesh) {
     return false;
 }
 
-TP_key_mesh
-bool is_particle_in_cell(const Vec3D &p_center, MESH::Cell<key_type> &cell, mesh_type &mesh) {
-    std::vector<key_type> node_set(GEOM::node_num(cell.type));
+TP_mesh
+bool is_particle_in_cell(const Vec3D &p_center, MESH::Cell &cell, mesh_type &mesh) {
+    std::vector<int> node_set(GEOM::node_num(cell.type));
     switch (cell.type) {
         case GEOM::TRIA:
             return is_in_cell_tria(p_center, node_set, mesh);
@@ -64,10 +64,10 @@ bool is_particle_in_cell(const Vec3D &p_center, MESH::Cell<key_type> &cell, mesh
 }
 
 /// DPM::Particle
-TP_func bool DPM::Particle<int, MESH::StaticMesh>::is_in_cell(MESH::Cell<int> &cell) {
+TP_func bool DPM::Particle<MESH::StaticMesh>::is_in_cell(MESH::Cell &cell) {
     return is_particle_in_cell(position, cell, mesh);
 }
 
-TP_func bool DPM::Particle<std::string, MESH::MapMesh>::is_in_cell(MESH::Cell<std::string> &cell) {
+TP_func bool DPM::Particle<MESH::MapMesh>::is_in_cell(MESH::Cell &cell) {
     return is_particle_in_cell(position, cell, mesh);
 }

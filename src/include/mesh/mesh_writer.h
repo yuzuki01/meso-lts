@@ -11,7 +11,6 @@ public:
     void write_head(const string_vector &values);
     void write_node();
     void write_data(const std::vector<double> &data);
-    void write_data(const std::unordered_map<std::string ,double> &data);
     void write_geom();
     void close();
 };

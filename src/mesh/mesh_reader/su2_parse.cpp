@@ -143,13 +143,13 @@ void su2Reader::parse(MESH::MapMesh &mesh) {
                 }
                 {
                     Vec3D position{0.0,0.0,0.0};
-                    const int len = data.size();
+                    const int len = int(data.size());
                     if (len > 0) position.x = stod(data[0]);
                     if (len > 1) position.y = stod(data[1]);
                     if (len > 2 && mesh.NDIME == 3) position.z = stod(data[2]);
-                    std::string key = std::to_string(mesh.NodeKey.size());
+                    int key = int(mesh.NodeKey.size());
                     mesh.NodeKey.push_back(key);
-                    mesh.NODES.emplace(key, MESH::Node<std::string>(key, position));
+                    mesh.NODES.emplace(key, MESH::Node(key, position));
                 }
                 break;
             case 2:     // cell
@@ -166,13 +166,13 @@ void su2Reader::parse(MESH::MapMesh &mesh) {
                 {
                     int type = stoi(data[0]);
                     const int node_num = GEOM::node_num(type);
-                    std::vector<std::string> node_set(node_num, STRING_NULL);
+                    key_vector node_set(node_num, -1);
                     for (int k = 0; k < node_num; k++) {
-                        node_set[k] = data[k + 1];
+                        node_set[k] = stoi(data[k + 1]);
                     }
-                    std::string key = std::to_string(mesh.CellKey.size());
+                    int key = int(mesh.CellKey.size());
                     mesh.CellKey.push_back(key);
-                    mesh.CELLS.emplace(key, MESH::Cell<std::string>(key, type, node_set));
+                    mesh.CELLS.emplace(key, MESH::Cell(key, type, node_set));
                 }
                 break;
             case 3:     // mark
@@ -190,15 +190,15 @@ void su2Reader::parse(MESH::MapMesh &mesh) {
                         if (i >= lines.size()) break;
                         i++;
                     }
-                    mesh.MarkKey.push_back(mark_name);
-                    mesh.MARKS.emplace(mark_name, MESH::Mark<std::string>(mark_name, nelem));
+                    int key = int(mesh.MarkKey.size());
+                    mesh.MarkKey.push_back(key);
+                    mesh.MARKS.emplace(key, MESH::Mark(mark_name, nelem));
                     break;
                 }
                 {
                     auto &mark_key = mesh.MarkKey.back();
                     auto &mark = mesh.MARKS.at(mark_key);
-                    std::string key = std::to_string(mark.MarkElemKey.size());
-                    mark.MARK_ELEM.emplace(key, MESH::MarkElem<std::string>(data));
+                    mark.MARK_ELEM.emplace_back(data);
                 }
                 break;
             default:

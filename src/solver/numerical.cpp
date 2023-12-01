@@ -1,11 +1,11 @@
 #include "solver.h"
 
 TP_func
-LeastSquare generate_least_square(const int &cell_key, MESH::StaticMesh &mesh) {
+LeastSquare generate_least_square(int cell_key, MESH::StaticMesh &mesh) {
     LeastSquare result;
     const int dimension = mesh.dimension();
     auto &cell = mesh.get_cell(cell_key);
-    const int near_cell_num = cell.near_cell_key.size();
+    const int near_cell_num = int(cell.near_cell_key.size());
     double Sxx, Sxy, Sxz, Syy, Syz, Szz;
     result.dr.resize(near_cell_num);
     result.weight.resize(near_cell_num);
@@ -43,11 +43,11 @@ LeastSquare generate_least_square(const int &cell_key, MESH::StaticMesh &mesh) {
 }
 
 TP_func
-LeastSquare generate_least_square(const std::string &cell_key, MESH::MapMesh &mesh) {
+LeastSquare generate_least_square(int cell_key, MESH::MapMesh &mesh) {
     LeastSquare result;
     const int dimension = mesh.dimension();
     auto &cell = mesh.get_cell(cell_key);
-    const int near_cell_num = cell.near_cell_key.size();
+    const int near_cell_num = int(cell.near_cell_key.size());
     double Sxx, Sxy, Sxz, Syy, Syz, Szz;
     result.dr.resize(near_cell_num);
     result.weight.resize(near_cell_num);

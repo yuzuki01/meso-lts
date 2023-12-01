@@ -2,32 +2,32 @@
 
 
 /// 局部函数
-TP_key_mesh
-double geom_line_area(const std::vector<key_type> &node_keys, mesh_type &mesh);
+TP_mesh
+double geom_line_area(const key_vector &node_keys, mesh_type &mesh);
 
-TP_key_mesh
-double geom_tria_area(const std::vector<key_type> &node_keys, mesh_type &mesh);
+TP_mesh
+double geom_tria_area(const key_vector &node_keys, mesh_type &mesh);
 
-TP_key_mesh
-double geom_quad_area(const std::vector<key_type> &node_keys, mesh_type &mesh);
+TP_mesh
+double geom_quad_area(const key_vector &node_keys, mesh_type &mesh);
 
-TP_key_mesh
-double geom_tria_volume(const std::vector<key_type> &node_keys, mesh_type &mesh);
+TP_mesh
+double geom_tria_volume(const key_vector &node_keys, mesh_type &mesh);
 
-TP_key_mesh
-double geom_quad_volume(const std::vector<key_type> &node_keys, mesh_type &mesh);
+TP_mesh
+double geom_quad_volume(const key_vector &node_keys, mesh_type &mesh);
 
-TP_key_mesh
-double geom_tetra_volume(const std::vector<key_type> &node_keys, mesh_type &mesh);
+TP_mesh
+double geom_tetra_volume(const key_vector &node_keys, mesh_type &mesh);
 
-TP_key_mesh
-double geom_prism_volume(const std::vector<key_type> &node_keys, mesh_type &mesh);
+TP_mesh
+double geom_prism_volume(const key_vector &node_keys, mesh_type &mesh);
 
-TP_key_mesh
-double geom_pyram_volume(const std::vector<key_type> &node_keys, mesh_type &mesh);
+TP_mesh
+double geom_pyram_volume(const key_vector &node_keys, mesh_type &mesh);
 
-TP_key_mesh
-double geom_hexah_volume(const std::vector<key_type> &node_keys, mesh_type &mesh);
+TP_mesh
+double geom_hexah_volume(const key_vector &node_keys, mesh_type &mesh);
 
 
 /// 函数实现
@@ -73,52 +73,18 @@ int GEOM::face_num(const int elem_type) {
 }
 
 /// generate key
-TP_func
-std::string GEOM::generate_face_key<int>(std::vector<int> &node_set) {
+std::string GEOM::generate_face_key(key_vector &node_set) {
     /// transfer 'string' to 'int' weight.
-    const int len = node_set.size();
-    std::vector<int> node_set_cp(len);
-    std::vector<int> weight(len, 0);
+    const int len = int(node_set.size());
+    key_vector node_set_cp(len);
+    key_vector weight(len, 0);
     std::copy(node_set.begin(), node_set.end(), node_set_cp.begin());
     std::sort(node_set_cp.begin(), node_set_cp.end());
     for (int i = 0; i < len; i++) {
-        weight[i] = std::find(node_set_cp.begin(), node_set_cp.end(), node_set[i]) - node_set_cp.begin();
+        weight[i] = int(std::find(node_set_cp.begin(), node_set_cp.end(), node_set[i]) - node_set_cp.begin());
     }
     /// find position where is min.
-    int pos = std::find(weight.begin(), weight.end(), 0) - weight.begin();
-    /// direction
-    bool direction;
-    int left_pos, right_pos;
-    left_pos = (pos == 0) ? (len - 1) : (pos - 1);
-    right_pos = (pos + 2 == len) ? 0 : (pos + 1);
-    direction = weight[right_pos] > weight[left_pos];
-    /// append key
-    int count = 0;
-    std::stringstream ss;
-    while (count < len) {
-        ss << node_set[pos] << ">";
-        pos = direction ? (pos + 1) : (pos - 1);
-        /// make valid range
-        if (pos < 0) pos += len;
-        if (pos >= len) pos -= len;
-        count++;
-    }
-    return ss.str();
-}
-
-TP_func
-std::string GEOM::generate_face_key<std::string>(std::vector<std::string> &node_set) {
-    /// transfer 'string' to 'int' weight.
-    const int len = node_set.size();
-    std::vector<std::string> node_set_cp(len);
-    std::vector<int> weight(len, 0);
-    std::copy(node_set.begin(), node_set.end(), node_set_cp.begin());
-    std::sort(node_set_cp.begin(), node_set_cp.end());
-    for (int i = 0; i < len; i++) {
-        weight[i] = std::find(node_set_cp.begin(), node_set_cp.end(), node_set[i]) - node_set_cp.begin();
-    }
-    /// find position where is min.
-    int pos = std::find(weight.begin(), weight.end(), 0) - weight.begin();
+    int pos = int(std::find(weight.begin(), weight.end(), 0) - weight.begin());
     /// direction
     bool direction;
     int left_pos, right_pos;
@@ -146,7 +112,7 @@ double GEOM::vector_angles_2d(const Vec3D &_vec1, const Vec3D &_vec2) {
 }
 
 TP_func
-void GEOM::face_normal_vector(MESH::Face<int> &face, MESH::StaticMesh &mesh) {
+void GEOM::face_normal_vector(MESH::Face &face, MESH::StaticMesh &mesh) {
     Vec3D vcf = face.position - mesh.get_cell(face.on_cell_key).position;
     if (mesh.dimension() == 2) {
         /// 2D config
@@ -195,7 +161,7 @@ void GEOM::face_normal_vector(MESH::Face<int> &face, MESH::StaticMesh &mesh) {
 }
 
 TP_func
-void GEOM::face_normal_vector(MESH::Face<std::string> &face, MESH::MapMesh &mesh) {
+void GEOM::face_normal_vector(MESH::Face &face, MESH::MapMesh &mesh) {
     Vec3D vcf = face.position - mesh.get_cell(face.on_cell_key).position;
     if (mesh.dimension() == 2) {
         /// 2D config
@@ -244,7 +210,7 @@ void GEOM::face_normal_vector(MESH::Face<std::string> &face, MESH::MapMesh &mesh
 }
 
 TP_func
-Vec3D GEOM::face_position(const MESH::Face<int> &face, MESH::StaticMesh &mesh) {
+Vec3D GEOM::face_position(const MESH::Face &face, MESH::StaticMesh &mesh) {
     Vec3D position(0.0, 0.0, 0.0);
     for (auto &node_key : face.node_key) {
         auto &node = mesh.get_node(node_key);
@@ -254,7 +220,7 @@ Vec3D GEOM::face_position(const MESH::Face<int> &face, MESH::StaticMesh &mesh) {
 }
 
 TP_func
-Vec3D GEOM::face_position(const MESH::Face<std::string> &face, MESH::MapMesh &mesh) {
+Vec3D GEOM::face_position(const MESH::Face &face, MESH::MapMesh &mesh) {
     Vec3D position(0.0, 0.0, 0.0);
     for (auto &node_key : face.node_key) {
         auto &node = mesh.get_node(node_key);
@@ -264,7 +230,7 @@ Vec3D GEOM::face_position(const MESH::Face<std::string> &face, MESH::MapMesh &me
 }
 
 TP_func
-Vec3D GEOM::cell_position(const MESH::Cell<int> &cell, MESH::StaticMesh &mesh) {
+Vec3D GEOM::cell_position(const MESH::Cell &cell, MESH::StaticMesh &mesh) {
     Vec3D position(0.0, 0.0, 0.0);
     for (auto &node_key : cell.node_key) {
         auto &node = mesh.get_node(node_key);
@@ -274,7 +240,7 @@ Vec3D GEOM::cell_position(const MESH::Cell<int> &cell, MESH::StaticMesh &mesh) {
 }
 
 TP_func
-Vec3D GEOM::cell_position(const MESH::Cell<std::string> &cell, MESH::MapMesh &mesh) {
+Vec3D GEOM::cell_position(const MESH::Cell &cell, MESH::MapMesh &mesh) {
     Vec3D position(0.0, 0.0, 0.0);
     for (auto &node_key : cell.node_key) {
         auto &node = mesh.get_node(node_key);
@@ -284,14 +250,14 @@ Vec3D GEOM::cell_position(const MESH::Cell<std::string> &cell, MESH::MapMesh &me
 }
 
 TP_func
-double GEOM::face_area(const MESH::Face<int> &face, MESH::StaticMesh &mesh) {
+double GEOM::face_area(const MESH::Face &face, MESH::StaticMesh &mesh) {
     switch (face.type) {
         case LINE:
-            return geom_line_area<int, MESH::StaticMesh>(face.node_key, mesh);
+            return geom_line_area<MESH::StaticMesh>(face.node_key, mesh);
         case TETRA:
-            return geom_tria_area<int, MESH::StaticMesh>(face.node_key, mesh);
+            return geom_tria_area<MESH::StaticMesh>(face.node_key, mesh);
         case QUAD:
-            return geom_quad_area<int, MESH::StaticMesh>(face.node_key, mesh);
+            return geom_quad_area<MESH::StaticMesh>(face.node_key, mesh);
         default:
             std::string s = "GEOM::face_area() caught unsupported geom type.";
             warn_println(s);
@@ -300,14 +266,14 @@ double GEOM::face_area(const MESH::Face<int> &face, MESH::StaticMesh &mesh) {
 }
 
 TP_func
-double GEOM::face_area(const MESH::Face<std::string> &face, MESH::MapMesh &mesh) {
+double GEOM::face_area(const MESH::Face &face, MESH::MapMesh &mesh) {
     switch (face.type) {
         case LINE:
-            return geom_line_area<std::string, MESH::MapMesh>(face.node_key, mesh);
+            return geom_line_area<MESH::MapMesh>(face.node_key, mesh);
         case TETRA:
-            return geom_tria_area<std::string, MESH::MapMesh>(face.node_key, mesh);
+            return geom_tria_area<MESH::MapMesh>(face.node_key, mesh);
         case QUAD:
-            return geom_quad_area<std::string, MESH::MapMesh>(face.node_key, mesh);
+            return geom_quad_area<MESH::MapMesh>(face.node_key, mesh);
         default:
             std::string s = "GEOM::face_area() caught unsupported geom type.";
             warn_println(s);
@@ -316,20 +282,20 @@ double GEOM::face_area(const MESH::Face<std::string> &face, MESH::MapMesh &mesh)
 }
 
 TP_func
-double GEOM::cell_volume(const MESH::Cell<int> &cell, MESH::StaticMesh &mesh) {
+double GEOM::cell_volume(const MESH::Cell &cell, MESH::StaticMesh &mesh) {
     switch (cell.type) {
         case TRIA:
-            return geom_tria_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
+            return geom_tria_volume<MESH::StaticMesh>(cell.node_key, mesh);
         case QUAD:
-            return geom_quad_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
+            return geom_quad_volume<MESH::StaticMesh>(cell.node_key, mesh);
         case TETRA:
-            return geom_tetra_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
+            return geom_tetra_volume<MESH::StaticMesh>(cell.node_key, mesh);
         case PYRAM:
-            return geom_pyram_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
+            return geom_pyram_volume<MESH::StaticMesh>(cell.node_key, mesh);
         case PRISM:
-            return geom_prism_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
+            return geom_prism_volume<MESH::StaticMesh>(cell.node_key, mesh);
         case HEXAH:
-            return geom_hexah_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
+            return geom_hexah_volume<MESH::StaticMesh>(cell.node_key, mesh);
         default:
             std::string s = "GEOM::cell_volume() caught unsupported geom type.";
             warn_println(s);
@@ -338,20 +304,20 @@ double GEOM::cell_volume(const MESH::Cell<int> &cell, MESH::StaticMesh &mesh) {
 }
 
 TP_func
-double GEOM::cell_volume(const MESH::Cell<std::string> &cell, MESH::MapMesh &mesh) {
+double GEOM::cell_volume(const MESH::Cell &cell, MESH::MapMesh &mesh) {
     switch (cell.type) {
         case TRIA:
-            return geom_tria_volume<std::string, MESH::MapMesh>(cell.node_key, mesh);
+            return geom_tria_volume<MESH::MapMesh>(cell.node_key, mesh);
         case QUAD:
-            return geom_quad_volume<std::string, MESH::MapMesh>(cell.node_key, mesh);
+            return geom_quad_volume<MESH::MapMesh>(cell.node_key, mesh);
         case TETRA:
-            return geom_tetra_volume<std::string, MESH::MapMesh>(cell.node_key, mesh);
+            return geom_tetra_volume<MESH::MapMesh>(cell.node_key, mesh);
         case PYRAM:
-            return geom_pyram_volume<std::string, MESH::MapMesh>(cell.node_key, mesh);
+            return geom_pyram_volume<MESH::MapMesh>(cell.node_key, mesh);
         case PRISM:
-            return geom_prism_volume<std::string, MESH::MapMesh>(cell.node_key, mesh);
+            return geom_prism_volume<MESH::MapMesh>(cell.node_key, mesh);
         case HEXAH:
-            return geom_hexah_volume<std::string, MESH::MapMesh>(cell.node_key, mesh);
+            return geom_hexah_volume<MESH::MapMesh>(cell.node_key, mesh);
         default:
             std::string s = "GEOM::cell_volume() caught unsupported geom type.";
             warn_println(s);
@@ -360,16 +326,16 @@ double GEOM::cell_volume(const MESH::Cell<std::string> &cell, MESH::MapMesh &mes
 }
 
 /// 局部函数实现
-TP_key_mesh
-double geom_line_area(const std::vector<key_type> &node_keys, mesh_type &mesh) {
+TP_mesh
+double geom_line_area(const key_vector &node_keys, mesh_type &mesh) {
     /// basic shape
     auto &n0 = mesh.get_node(node_keys[0]),
             &n1 = mesh.get_node(node_keys[1]);
     return (n0.position - n1.position).magnitude();
 }
 
-TP_key_mesh
-double geom_tria_area(const std::vector<key_type> &node_keys, mesh_type &mesh) {
+TP_mesh
+double geom_tria_area(const key_vector &node_keys, mesh_type &mesh) {
     /// basic shape
     auto &n0 = mesh.get_node(node_keys[0]),
             &n1 = mesh.get_node(node_keys[1]),
@@ -378,14 +344,14 @@ double geom_tria_area(const std::vector<key_type> &node_keys, mesh_type &mesh) {
     return (v01 ^ v02).magnitude() / 2.0;
 }
 
-TP_key_mesh
-double geom_quad_area(const std::vector<key_type> &node_keys, mesh_type &mesh) {
-    return geom_tria_area<key_type, mesh_type>({node_keys[0], node_keys[1], node_keys[2]}, mesh)
-           + geom_tria_area<key_type, mesh_type>({node_keys[0], node_keys[3], node_keys[2]}, mesh);
+TP_mesh
+double geom_quad_area(const key_vector &node_keys, mesh_type &mesh) {
+    return geom_tria_area<mesh_type>({node_keys[0], node_keys[1], node_keys[2]}, mesh)
+           + geom_tria_area<mesh_type>({node_keys[0], node_keys[3], node_keys[2]}, mesh);
 }
 
-TP_key_mesh
-double geom_tria_volume(const std::vector<key_type> &node_keys, mesh_type &mesh) {
+TP_mesh
+double geom_tria_volume(const key_vector &node_keys, mesh_type &mesh) {
     /// basic shape
     auto &n0 = mesh.get_node(node_keys[0]),
             &n1 = mesh.get_node(node_keys[1]),
@@ -394,15 +360,15 @@ double geom_tria_volume(const std::vector<key_type> &node_keys, mesh_type &mesh)
     return (v01 ^ v02).magnitude() / 2.0;
 }
 
-TP_key_mesh
-double geom_quad_volume(const std::vector<key_type> &node_keys, mesh_type &mesh) {
+TP_mesh
+double geom_quad_volume(const key_vector &node_keys, mesh_type &mesh) {
     /// basic shape
-    return geom_tria_volume<key_type, mesh_type>({node_keys[0], node_keys[1], node_keys[3]}, mesh)
-           + geom_tria_volume<key_type, mesh_type>({node_keys[2], node_keys[1], node_keys[3]}, mesh);
+    return geom_tria_volume<mesh_type>({node_keys[0], node_keys[1], node_keys[3]}, mesh)
+           + geom_tria_volume<mesh_type>({node_keys[2], node_keys[1], node_keys[3]}, mesh);
 }
 
-TP_key_mesh
-double geom_tetra_volume(const std::vector<key_type> &node_keys, mesh_type &mesh) {
+TP_mesh
+double geom_tetra_volume(const key_vector &node_keys, mesh_type &mesh) {
     /// basic shape
     /// top point - 0
     /// bottom tria - 1, 2, 3
@@ -416,27 +382,27 @@ double geom_tetra_volume(const std::vector<key_type> &node_keys, mesh_type &mesh
     return fabs(v01 * (v02 ^ v03)) / 6.0;
 }
 
-TP_key_mesh
-double geom_prism_volume(const std::vector<key_type> &node_keys, mesh_type &mesh) {
+TP_mesh
+double geom_prism_volume(const key_vector &node_keys, mesh_type &mesh) {
     /// top point - 4
     /// bottom quad - 0, 1, 2, 3
-    return geom_tetra_volume<key_type, mesh_type>({node_keys[0], node_keys[1], node_keys[3], node_keys[4]}, mesh)
-           + geom_tetra_volume<key_type, mesh_type>({node_keys[2], node_keys[1], node_keys[3], node_keys[4]}, mesh);
+    return geom_tetra_volume<mesh_type>({node_keys[0], node_keys[1], node_keys[3], node_keys[4]}, mesh)
+           + geom_tetra_volume<mesh_type>({node_keys[2], node_keys[1], node_keys[3], node_keys[4]}, mesh);
 }
 
-TP_key_mesh
-double geom_pyram_volume(const std::vector<key_type> &node_keys, mesh_type &mesh) {
+TP_mesh
+double geom_pyram_volume(const key_vector &node_keys, mesh_type &mesh) {
     /// top - tria 0, 1, 2
     /// bottom - tria 3, 4, 5
-    return geom_prism_volume<key_type, mesh_type>(
+    return geom_prism_volume<mesh_type>(
             {node_keys[0], node_keys[2], node_keys[4], node_keys[3], node_keys[2]}, mesh)
-           + geom_tetra_volume<key_type, mesh_type>({node_keys[2], node_keys[3], node_keys[4], node_keys[5]}, mesh);
+           + geom_tetra_volume<mesh_type>({node_keys[2], node_keys[3], node_keys[4], node_keys[5]}, mesh);
 }
 
-TP_key_mesh
-double geom_hexah_volume(const std::vector<key_type> &node_keys, mesh_type &mesh) {
-    return geom_pyram_volume<key_type, mesh_type>({node_keys[0], node_keys[1], node_keys[3],
+TP_mesh
+double geom_hexah_volume(const key_vector &node_keys, mesh_type &mesh) {
+    return geom_pyram_volume<mesh_type>({node_keys[0], node_keys[1], node_keys[3],
                                                    node_keys[4], node_keys[5], node_keys[7]}, mesh)
-           + geom_pyram_volume<key_type, mesh_type>({node_keys[2], node_keys[1], node_keys[3],
+           + geom_pyram_volume<mesh_type>({node_keys[2], node_keys[1], node_keys[3],
                                                      node_keys[6], node_keys[5], node_keys[7]}, mesh);
 }

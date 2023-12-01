@@ -165,18 +165,6 @@ TP_func void MeshWriter<MESH::StaticMesh>::write_data(const std::vector<double> 
     }
 }
 
-TP_func void MeshWriter<MESH::MapMesh>::write_data(const std::unordered_map<std::string, double> &data) {
-    int count = 0;
-    fp << std::endl << "## cell value" << std::endl;
-    for (auto &cell_key : mesh.CellKey) {
-        fp << "\t" << std::setprecision(DATA_PRECISION) << data.at(cell_key);
-        if (count++ >= LINE_DATA_NUM) {
-            fp << std::endl;
-            count = 0;
-        }
-    }
-}
-
 TP_func void MeshWriter<MESH::StaticMesh>::write_geom() {
     fp << std::endl << "# geom" << std::endl;
     for (auto &cell : mesh.CELLS) {
@@ -221,7 +209,7 @@ TP_func void MeshWriter<MESH::StaticMesh>::write_geom() {
 }
 
 TP_func void MeshWriter<MESH::MapMesh>::write_geom() {
-    std::unordered_map<std::string, int> node_id, cell_id;
+    std::unordered_map<int, int> node_id, cell_id;
     for (int i = 0; i < mesh.node_num(); i++) node_id[mesh.NodeKey[i]] = i + 1;
     fp << std::endl << "# geom" << std::endl;
     for (auto &it : mesh.CELLS) {

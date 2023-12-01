@@ -9,8 +9,8 @@ struct LeastSquare {
     Mat3D C;
 };
 
-TP_key_mesh
-LeastSquare generate_least_square(const key_type &cell_key, mesh_type &mesh);
+TP_mesh
+LeastSquare generate_least_square(int cell_key, mesh_type &mesh);
 
 /// Ventaka limiter
 struct Ventaka {

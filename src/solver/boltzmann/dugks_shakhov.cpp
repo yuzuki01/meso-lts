@@ -49,7 +49,7 @@ void Scheme::info() const {
 }
 
 /// Scheme Cell Constructor
-SCell::Cell(MESH::Cell<int> & cell, Scheme &_solver) : mesh_cell (cell), solver(_solver) {
+SCell::Cell(MESH::Cell & cell, Scheme &_solver) : mesh_cell (cell), solver(_solver) {
     const int dvs_num = solver.dvs_mesh.cell_num();
     g_t.resize(dvs_num, 0.0);
     g_bp.resize(dvs_num, 0.0);
@@ -62,7 +62,7 @@ SCell::Cell(MESH::Cell<int> & cell, Scheme &_solver) : mesh_cell (cell), solver(
 }
 
 /// Scheme Face Constructor
-SFace::Face(MESH::Face<int> & face, Scheme &_solver) : mesh_face (face), solver(_solver) {
+SFace::Face(MESH::Face & face, Scheme &_solver) : mesh_face (face), solver(_solver) {
     const int dvs_num = solver.dvs_mesh.cell_num();
     g.resize(dvs_num, 0.0);
     g_b.resize(dvs_num, 0.0);

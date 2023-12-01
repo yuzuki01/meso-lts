@@ -35,14 +35,14 @@ void Scheme::info() const {
 }
 
 /// Scheme Cell Constructor
-SCell::Cell(MESH::Cell<int> & cell, Scheme & _solver) : mesh_cell(cell), solver(_solver) {
+SCell::Cell(MESH::Cell & cell, Scheme & _solver) : mesh_cell(cell), solver(_solver) {
     f_t.resize(solver.dvs_mesh.cell_num(), 0.0);
     f_bp.resize(solver.dvs_mesh.cell_num(), 0.0);
     slope_f.resize(solver.dvs_mesh.cell_num(), {0.0, 0.0, 0.0});
 }
 
 /// Scheme Face Constructor
-SFace::Face(MESH::Face<int> & face, Scheme & _solver) : mesh_face(face), solver(_solver) {
+SFace::Face(MESH::Face & face, Scheme & _solver) : mesh_face(face), solver(_solver) {
     f.resize(solver.dvs_mesh.cell_num(), 0.0);
     f_b.resize(solver.dvs_mesh.cell_num(), 0.0);
 }

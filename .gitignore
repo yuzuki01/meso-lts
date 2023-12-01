@@ -1,5 +1,10 @@
 /.idea
-/src/core/.idea/
-/src/mesh/.idea/
-/src/solver/.idea/
+/src/core/.idea
+/src/core/cmake-build-minsizerel
+/src/mesh/.idea
+/src/mesh/cmake-build-minsizerel
+/src/solver/.idea
+/src/solver/cmake-build-minsizerel
+/src/api
+/src/api/cmake-build-minsizerel
 /build

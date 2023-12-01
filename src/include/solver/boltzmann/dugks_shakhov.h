@@ -31,7 +31,7 @@ public:
     class Cell {
     public:
         Scheme &solver;
-        MESH::Cell<int> &mesh_cell;
+        MESH::Cell &mesh_cell;
         /// 最小二乘法
         LeastSquare lsp;
         /// Limiter
@@ -44,7 +44,7 @@ public:
         /// 宏观量
         PhysicalVar::MacroVars macro_vars{};
         /// 构造函数
-        explicit Cell(MESH::Cell<int> &cell, Scheme &_solver);
+        explicit Cell(MESH::Cell &cell, Scheme &_solver);
         /// 算法函数
         void get_f_bp();
         void get_grad_f_bp();
@@ -56,14 +56,14 @@ public:
     class Face {
     public:
         Scheme &solver;
-        MESH::Face<int> &mesh_face;
+        MESH::Face &mesh_face;
         /// 分布函数
         DistributionFunction g{}, g_b{};
         DistributionFunction h{}, h_b{};
         /// 宏观量
         PhysicalVar::MacroVars macro_vars{};
         /// 构造函数
-        explicit Face(MESH::Face<int> &face, Scheme &_solver);
+        explicit Face(MESH::Face &face, Scheme &_solver);
         /// 算法函数
         void get_f_b();
         void get_macro_var();
