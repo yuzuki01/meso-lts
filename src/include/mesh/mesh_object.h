@@ -1,3 +1,5 @@
+#include <utility>
+
 /**
  * included by mesh.h
  */
@@ -79,7 +81,7 @@ public:
     void shrink_to_fit();
 
     /// su2 format              TYPE | NODES | (ID)
-    explicit Cell(int cell_key, const int cell_type, const key_vector &node_set);
+    explicit Cell(int cell_key, int cell_type, const key_vector &node_set);
 
     /// structural DVS mesh
     Cell(const Vec3D &particle_velocity, double weight,
@@ -159,7 +161,7 @@ public:
     Vec3D velocity = {0.0, 0.0, 0.0};
 
     /// su2
-    explicit Mark(const std::string &mark_name, const int nelem);
+    explicit Mark(const std::string &mark_name, int nelem);
 
     void shrink_to_fit();
 
@@ -217,7 +219,7 @@ public:
 
     explicit StaticMesh(int mesh_type) : BasicMesh(mesh_type) {};
 
-    StaticMesh(int mesh_type, std::string mesh_name) : BasicMesh(mesh_type, mesh_name) {};
+    StaticMesh(int mesh_type, std::string mesh_name) : BasicMesh(mesh_type, std::move(mesh_name)) {};
 
     void load(const std::string &file_path);
 
@@ -271,7 +273,7 @@ public:
 
     explicit MapMesh(int mesh_type) : BasicMesh(mesh_type) {};
 
-    MapMesh(int mesh_type, std::string mesh_name) : BasicMesh(mesh_type, mesh_name) {};
+    MapMesh(int mesh_type, std::string mesh_name) : BasicMesh(mesh_type, std::move(mesh_name)) {};
 
     void load(const std::string &file_path);
 
