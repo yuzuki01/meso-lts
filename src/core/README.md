@@ -6,7 +6,7 @@ meso 核心
 
 ## 目录
 
- - [Argparser](#Argparser)
+ - [ArgParser](#Argparser)
  - [Logger](#Logger)
  - [格式输出](#格式输出)
  - [自定义数学库](#MesoMath)
@@ -29,7 +29,7 @@ meso 核心
 ```c++
 int main() {
     /// 实例化解析器
-    Argparser parse(argc, argv);
+    ArgParser parse(argc, argv);
     
     /// 解析启动参数 --max_step <value> 解析失败则返回 "100"
     auto it1 = parser.parse_param("max_step", "100");

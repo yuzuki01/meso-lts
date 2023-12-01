@@ -401,7 +401,7 @@ void Scheme::do_residual() {
         double a, b;
         a = cell.macro_vars.density * cell.mesh_cell.volume;
         b = cell.macro_vars.old_density * cell.mesh_cell.volume;
-        sum1 += fabs(a * a - b * b);
+        sum1 += fabs((a - b) * (a - b));
         sum2 += fabs(b * b);
         cell.macro_vars.old_density = cell.macro_vars.density;
     }
