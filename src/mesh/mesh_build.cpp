@@ -47,14 +47,14 @@ std::unordered_map<int, std::vector<std::vector<int>>> node_set_map = {
 TP_mesh
 void build_face_2d(mesh_type &mesh);
 /// explicit init
-TP_func void build_face_2d<MESH::ListMesh>(MESH::ListMesh &mesh);
+TP_func void build_face_2d<MESH::StaticMesh>(MESH::StaticMesh &mesh);
 /// explicit init
 TP_func void build_face_2d<MESH::MapMesh>(MESH::MapMesh &mesh);
 
 TP_mesh
 void build_face_3d(mesh_type &mesh);
 /// explicit init
-TP_func void build_face_3d<MESH::ListMesh>(MESH::ListMesh &mesh);
+TP_func void build_face_3d<MESH::StaticMesh>(MESH::StaticMesh &mesh);
 /// explicit init
 TP_func void build_face_3d<MESH::MapMesh>(MESH::MapMesh &mesh);
 
@@ -68,8 +68,8 @@ MESH::Face<key_type> &create_face(mesh_type &mesh, MESH::Cell<key_type> &on_cell
                                   int face_type, int face_on_cell_key);
 
 /// 函数实现
-/// for ListMesh only
-void MESH::ListMesh::build_geom() {
+/// for StaticMesh only
+void MESH::StaticMesh::build_geom() {
     /// cell
     for (auto &cell : CELLS) {
         cell.position = GEOM::cell_position(cell, *this);
@@ -83,7 +83,7 @@ void MESH::ListMesh::build_geom() {
         /// face
         for (auto &face : FACES) {
             face.position = GEOM::face_position(face, *this);
-            face.area = GEOM::face_area<int, MESH::ListMesh>(face, *this);
+            face.area = GEOM::face_area<int, MESH::StaticMesh>(face, *this);
             GEOM::face_normal_vector(face, *this);
         }
         info_println(" - build geom: face - ok.");
@@ -123,7 +123,7 @@ void MESH::ListMesh::build_geom() {
     note_println("Build geom - ok.");
 }
 
-void MESH::ListMesh::build_face() {
+void MESH::StaticMesh::build_face() {
     const int D = dimension();
     if (D == 2) build_face_2d(*this);
     else if (D == 3) build_face_3d(*this);
@@ -131,7 +131,7 @@ void MESH::ListMesh::build_face() {
 }
 
 TP_func
-void build_face_2d<MESH::ListMesh>(MESH::ListMesh &mesh) {
+void build_face_2d<MESH::StaticMesh>(MESH::StaticMesh &mesh) {
     /// 2D config - LINE only
     std::unordered_map<std::string, int> line_map;
     for (auto &cell : mesh.CELLS) {
@@ -167,7 +167,7 @@ void build_face_2d<MESH::ListMesh>(MESH::ListMesh &mesh) {
 }
 
 TP_func
-void build_face_3d<MESH::ListMesh>(MESH::ListMesh &mesh) {
+void build_face_3d<MESH::StaticMesh>(MESH::StaticMesh &mesh) {
     /// 3D config - quad, tria
     std::unordered_map<std::string, int> quad_map, tria_map;
     for (auto &cell : mesh.CELLS) {
@@ -417,7 +417,7 @@ void generate_face(mesh_type &mesh, MESH::Cell<key_type> &cell,
     face_map[key] = face.key;
 }
 
-TP_func MESH::Face<int> &create_face(MESH::ListMesh &mesh,
+TP_func MESH::Face<int> &create_face(MESH::StaticMesh &mesh,
                                      MESH::Cell<int> &on_cell, std::vector<int> &node_set,
                                      int face_type, int face_on_cell_key) {
     int face_key = mesh.face_num();

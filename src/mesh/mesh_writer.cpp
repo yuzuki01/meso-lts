@@ -1,6 +1,6 @@
 #include "mesh.h"
 
-TP_func MeshWriter<MESH::ListMesh>::MeshWriter(std::string _path, MESH::ListMesh &_mesh)
+TP_func MeshWriter<MESH::StaticMesh>::MeshWriter(std::string _path, MESH::StaticMesh &_mesh)
         : path(std::move(_path)), mesh(_mesh) {
     fp.open(path, std::ios::out | std::ios::trunc);
     is_file_open = fp.is_open();
@@ -22,7 +22,7 @@ TP_func MeshWriter<MESH::MapMesh>::MeshWriter(std::string _path, MESH::MapMesh &
     }
 }
 
-TP_func bool MeshWriter<MESH::ListMesh>::is_open() const {
+TP_func bool MeshWriter<MESH::StaticMesh>::is_open() const {
     return is_file_open;
 }
 
@@ -30,7 +30,7 @@ TP_func bool MeshWriter<MESH::MapMesh>::is_open() const {
     return is_file_open;
 }
 
-TP_func void MeshWriter<MESH::ListMesh>::close() {
+TP_func void MeshWriter<MESH::StaticMesh>::close() {
     fp.close();
 }
 
@@ -38,7 +38,7 @@ TP_func void MeshWriter<MESH::MapMesh>::close() {
     fp.close();
 }
 
-TP_func void MeshWriter<MESH::ListMesh>::write_head(const string_vector &values) {
+TP_func void MeshWriter<MESH::StaticMesh>::write_head(const string_vector &values) {
     string_vector value_names;
     const int D = mesh.dimension();
     if (D == 2) value_names = {"X", "Y"};
@@ -78,7 +78,7 @@ TP_func void MeshWriter<MESH::MapMesh>::write_head(const string_vector &values) 
        << std::endl;
 }
 
-TP_func void MeshWriter<MESH::ListMesh>::write_node() {
+TP_func void MeshWriter<MESH::StaticMesh>::write_node() {
     int count;
     fp << std::endl;
     // write node
@@ -153,7 +153,7 @@ TP_func void MeshWriter<MESH::MapMesh>::write_node() {
     fp << std::endl;
 }
 
-TP_func void MeshWriter<MESH::ListMesh>::write_data(const std::vector<double> &data) {
+TP_func void MeshWriter<MESH::StaticMesh>::write_data(const std::vector<double> &data) {
     int count = 0;
     fp << std::endl << "## cell value" << std::endl;
     for (auto &cell : mesh.CELLS) {
@@ -177,7 +177,7 @@ TP_func void MeshWriter<MESH::MapMesh>::write_data(const std::unordered_map<std:
     }
 }
 
-TP_func void MeshWriter<MESH::ListMesh>::write_geom() {
+TP_func void MeshWriter<MESH::StaticMesh>::write_geom() {
     fp << std::endl << "# geom" << std::endl;
     for (auto &cell : mesh.CELLS) {
         switch (cell.type) {

@@ -78,7 +78,7 @@ public:
     using Scheme = MySolver;
     explicit MySolver(ConfigReader &_config, ArgParser &_parser);
     /// Mesh
-    MESH::ListMesh mesh = MESH::ListMesh(MESH_TYPE_NORMAL, config.phy_mesh);
+    MESH::StaticMesh mesh = MESH::StaticMesh(MESH_TYPE_NORMAL, config.phy_mesh);
     /// Physical
     double Re, Ma;  // any other param you need
     double R, T, Rho, L;

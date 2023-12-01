@@ -64,7 +64,7 @@ bool is_particle_in_cell(const Vec3D &p_center, MESH::Cell<key_type> &cell, mesh
 }
 
 /// DPM::Particle
-TP_func bool DPM::Particle<int, MESH::ListMesh>::is_in_cell(MESH::Cell<int> &cell) {
+TP_func bool DPM::Particle<int, MESH::StaticMesh>::is_in_cell(MESH::Cell<int> &cell) {
     return is_particle_in_cell(position, cell, mesh);
 }
 

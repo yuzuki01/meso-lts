@@ -7,8 +7,8 @@ public:
     using Scheme = DUGKS_NC;
     explicit DUGKS_NC(ConfigReader &_config, ArgParser &_parser);
     /// Mesh
-    MESH::ListMesh phy_mesh{MESH_TYPE_NORMAL, config.phy_mesh};
-    MESH::ListMesh dvs_mesh{MESH_TYPE_NO_FACE, "GaussHermit"};
+    MESH::StaticMesh phy_mesh{MESH_TYPE_NORMAL, config.phy_mesh};
+    MESH::StaticMesh dvs_mesh{MESH_TYPE_NO_FACE, "GaussHermit"};
     /// Physical
     double Re, Ma, Ra, Pr;
     double R, T0, dT, Rho0, L;

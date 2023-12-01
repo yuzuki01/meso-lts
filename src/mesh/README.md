@@ -21,7 +21,7 @@ meso 网格
 
 当前网格分类：
 
-- 固定网格 `MESH::ListMesh` ，其容器为 `std::vector<MESH::OBJECT<int>>`
+- 固定网格 `MESH::StaticMesh` ，其容器为 `std::vector<MESH::OBJECT<int>>`
 
 - 可变网格 `MESH::MapMesh` ，其容器为 `std::unordered_map<std::string, MESH::OBJECT<std::string>>`
 
@@ -181,7 +181,7 @@ ConfigReader config("./config/<your_config_file>");
 /// other codes
 
 // DVS mesh
-MESH::ListMesh dvs_mesh = MESH::ListMesh(MESH_TYPE_NO_FACE, "GaussHermit");
+MESH::StaticMesh dvs_mesh = MESH::StaticMesh(MESH_TYPE_NO_FACE, "GaussHermit");
 
 D = phy_mesh.dimension();               // dimension
 R = config.get<double>("R");            // gas constant

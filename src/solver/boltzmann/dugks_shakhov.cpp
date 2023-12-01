@@ -140,8 +140,8 @@ void SCell::get_grad_f_bp() {
             Sgr += lsp.weight[j] * (near_cell.g_bp[p] - g_bp[p]) * lsp.dr[j];
             Shr += lsp.weight[j] * (near_cell.h_bp[p] - h_bp[p]) * lsp.dr[j];
         }
-        slope_g[p] = {lsp.Cx * Sgr, lsp.Cy * Sgr, lsp.Cz * Sgr};
-        slope_h[p] = {lsp.Cx * Shr, lsp.Cy * Shr, lsp.Cz * Shr};
+        slope_g[p] = lsp.C * Sgr;
+        slope_h[p] = lsp.C * Shr;
         /// zero gradient
         // slope_g[p] = slope_h[p] = {0.0, 0.0, 0.0};
     }
@@ -539,7 +539,7 @@ void Scheme::do_save() {
     string_vector values;
     if (phy_mesh.dimension() == 2) values = {"density", "temperature", "velocity-x", "velocity-y", "heat_flux-x", "heat_flux-y"};
     else values = {"density", "temperature", "velocity-x", "velocity-y", "velocity-z", "heat_flux-x", "heat_flux-y", "heat_flux-z"};
-    MeshWriter<MESH::ListMesh> writer(ss.str(), phy_mesh);
+    MeshWriter<MESH::StaticMesh> writer(ss.str(), phy_mesh);
     writer.write_head(values);
     writer.write_node();
 
@@ -634,12 +634,12 @@ void Scheme::do_residual() {
         double a, b;
         a = cell.macro_vars.energy * cell.mesh_cell.volume;
         b = cell.macro_vars.old_energy * cell.mesh_cell.volume;
-        sum1 += fabs((a-b)*(a-b));
+        sum1 += fabs((a - b) * (a - b));
         sum2 += fabs(b * b);
         cell.macro_vars.old_energy = cell.macro_vars.energy;
     }
     residual[1] = sqrt(sum1 / sum2);
     logger << "Residual at step=" << step;
     logger.info();
-    data_double_println({"density", "energy"}, residual);
+    data_sci_double_println({"density", "energy"}, residual);
 }

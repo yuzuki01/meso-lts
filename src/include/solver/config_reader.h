@@ -21,6 +21,6 @@ public:
     std::string operator[](const std::string &key);
     template<class T> T get(const std::string &_key);
 
-    bool set_mesh_mark(MESH::ListMesh &mesh);
+    bool set_mesh_mark(MESH::StaticMesh &mesh);
     void set_mesh_mark(MESH::MapMesh &mesh);
 };

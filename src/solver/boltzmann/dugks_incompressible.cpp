@@ -39,8 +39,6 @@ SCell::Cell(MESH::Cell<int> & cell, Scheme & _solver) : mesh_cell(cell), solver(
     f_t.resize(solver.dvs_mesh.cell_num(), 0.0);
     f_bp.resize(solver.dvs_mesh.cell_num(), 0.0);
     slope_f.resize(solver.dvs_mesh.cell_num(), {0.0, 0.0, 0.0});
-    /// least square
-    update_least_square();
 }
 
 /// Scheme Face Constructor
@@ -92,7 +90,7 @@ void SCell::get_grad_f_bp() {
             auto &near_cell = solver.get_cell(mesh_cell.near_cell_key[j]);
             Sfr += lsp.weight[j] * (near_cell.f_bp[p] - f_bp[p]) * lsp.dr[j];
         }
-        slope_f[p] = {lsp.Cx * Sfr, lsp.Cy * Sfr, lsp.Cz * Sfr};
+        slope_f[p] = lsp.C * Sfr;
         /// zero gradient
         // slope_f[p] = {0.0, 0.0, 0.0};
     }
@@ -262,6 +260,7 @@ void Scheme::do_step() {
         continue_to_run = false;
         logger << "reach max_step=" << max_step;
         logger.highlight();
+        do_residual();
         do_save();
         return;
     }
@@ -297,33 +296,39 @@ void Scheme::init() {
     for (auto &it : phy_mesh.CELLS) {
         CELLS.emplace_back(it, *this);
     }
-    PhysicalVar::MacroVars init_var;
-    init_var.density = Rho0;
-    init_var.temperature = T0;
-    init_var.velocity = {0.0, 0.0, 0.0};
-    for (auto &mark : phy_mesh.MARKS) {
-        if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
-            init_var.density = mark.density;
-            init_var.temperature = mark.temperature;
-            init_var.velocity = mark.velocity;
-            break;
+
+    std::string check_point_file = parser.parse_param<std::string>("check_point", STRING_NULL);
+    if (check_point_file == STRING_NULL) {
+        PhysicalVar::MacroVars init_var{};
+        init_var.density = Rho0;
+        init_var.temperature = T0;
+        init_var.velocity = {0.0, 0.0, 0.0};
+        for (auto &mark : phy_mesh.MARKS) {
+            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
+                init_var.density = mark.density;
+                init_var.temperature = mark.temperature;
+                init_var.velocity = mark.velocity;
+                break;
+            }
         }
+        for (auto &mark : phy_mesh.MARKS) {
+            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
+                init_var.density = mark.density;
+                init_var.temperature = mark.temperature;
+                init_var.velocity = mark.velocity;
+                break;
+            }
+        }
+        check_point.init_field(init_var);
+    } else {
+        check_point.init_from_file(check_point_file);
     }
-    check_point.init_field(init_var);
+
     logger << "    scheme-objects: cell - ok.";
     logger.info();
     for (auto &face : phy_mesh.FACES) {
         FACES.emplace_back(face, *this);
         /// face init
-        /*
-        auto &face = get_face(face_key);
-        for (auto & it2 : dvs_mesh.CELLS) {
-            auto &key = it2.first;
-            auto &particle = it2.second;
-            face.f[key] = 0.0;
-            face.f_b[key] = 0.0;
-        }
-         */
     }
     logger << "    scheme-objects: face - ok.";
     logger.info();
@@ -339,7 +344,7 @@ void Scheme::do_save() {
     string_vector values;
     if (phy_mesh.dimension() == 2) values = {"density", "velocity-x", "velocity-y"};
     else values = {"density", "velocity-x", "velocity-y", "velocity-z"};
-    MeshWriter<MESH::ListMesh> writer(ss.str(), phy_mesh);
+    MeshWriter<MESH::StaticMesh> writer(ss.str(), phy_mesh);
     writer.write_head(values);
     writer.write_node();
 
@@ -394,12 +399,12 @@ void Scheme::do_residual() {
         double a, b;
         a = cell.macro_vars.density * cell.mesh_cell.volume;
         b = cell.macro_vars.old_density * cell.mesh_cell.volume;
-        sum1 += fabs((a-b)*(a-b));
+        sum1 += fabs((a - b) * (a - b));
         sum2 += fabs(b * b);
         cell.macro_vars.old_density = cell.macro_vars.density;
     }
     residual = sqrt(sum1 / sum2);
     logger << "Residual at step=" << step;
     logger.info();
-    data_double_println({"density"}, {residual});
+    data_sci_double_println({"density"}, {residual});
 }

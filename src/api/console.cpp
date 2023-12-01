@@ -1,12 +1,12 @@
 #include "api.h"
 
 int handle_parse_mesh(const std::string &path) {
-    MESH::ListMesh mesh(MESH_TYPE_NORMAL, "parsed_mesh");
+    MESH::StaticMesh mesh(MESH_TYPE_NORMAL, "parsed_mesh");
     mesh.load(path);
     mesh.build();
     mesh.info();
     /// output
-    MeshWriter<MESH::ListMesh> writer{"./mesh.dat", mesh};
+    MeshWriter<MESH::StaticMesh> writer{"./mesh.dat", mesh};
     writer.write_head({"volume"});
     writer.write_node();
     std::vector<double> data(mesh.cell_num());

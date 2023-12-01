@@ -146,7 +146,7 @@ double GEOM::vector_angles_2d(const Vec3D &_vec1, const Vec3D &_vec2) {
 }
 
 TP_func
-void GEOM::face_normal_vector(MESH::Face<int> &face, MESH::ListMesh &mesh) {
+void GEOM::face_normal_vector(MESH::Face<int> &face, MESH::StaticMesh &mesh) {
     Vec3D vcf = face.position - mesh.get_cell(face.on_cell_key).position;
     if (mesh.dimension() == 2) {
         /// 2D config
@@ -244,7 +244,7 @@ void GEOM::face_normal_vector(MESH::Face<std::string> &face, MESH::MapMesh &mesh
 }
 
 TP_func
-Vec3D GEOM::face_position(const MESH::Face<int> &face, MESH::ListMesh &mesh) {
+Vec3D GEOM::face_position(const MESH::Face<int> &face, MESH::StaticMesh &mesh) {
     Vec3D position(0.0, 0.0, 0.0);
     for (auto &node_key : face.node_key) {
         auto &node = mesh.get_node(node_key);
@@ -264,7 +264,7 @@ Vec3D GEOM::face_position(const MESH::Face<std::string> &face, MESH::MapMesh &me
 }
 
 TP_func
-Vec3D GEOM::cell_position(const MESH::Cell<int> &cell, MESH::ListMesh &mesh) {
+Vec3D GEOM::cell_position(const MESH::Cell<int> &cell, MESH::StaticMesh &mesh) {
     Vec3D position(0.0, 0.0, 0.0);
     for (auto &node_key : cell.node_key) {
         auto &node = mesh.get_node(node_key);
@@ -284,14 +284,14 @@ Vec3D GEOM::cell_position(const MESH::Cell<std::string> &cell, MESH::MapMesh &me
 }
 
 TP_func
-double GEOM::face_area(const MESH::Face<int> &face, MESH::ListMesh &mesh) {
+double GEOM::face_area(const MESH::Face<int> &face, MESH::StaticMesh &mesh) {
     switch (face.type) {
         case LINE:
-            return geom_line_area<int, MESH::ListMesh>(face.node_key, mesh);
+            return geom_line_area<int, MESH::StaticMesh>(face.node_key, mesh);
         case TETRA:
-            return geom_tria_area<int, MESH::ListMesh>(face.node_key, mesh);
+            return geom_tria_area<int, MESH::StaticMesh>(face.node_key, mesh);
         case QUAD:
-            return geom_quad_area<int, MESH::ListMesh>(face.node_key, mesh);
+            return geom_quad_area<int, MESH::StaticMesh>(face.node_key, mesh);
         default:
             std::string s = "GEOM::face_area() caught unsupported geom type.";
             warn_println(s);
@@ -316,20 +316,20 @@ double GEOM::face_area(const MESH::Face<std::string> &face, MESH::MapMesh &mesh)
 }
 
 TP_func
-double GEOM::cell_volume(const MESH::Cell<int> &cell, MESH::ListMesh &mesh) {
+double GEOM::cell_volume(const MESH::Cell<int> &cell, MESH::StaticMesh &mesh) {
     switch (cell.type) {
         case TRIA:
-            return geom_tria_volume<int, MESH::ListMesh>(cell.node_key, mesh);
+            return geom_tria_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
         case QUAD:
-            return geom_quad_volume<int, MESH::ListMesh>(cell.node_key, mesh);
+            return geom_quad_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
         case TETRA:
-            return geom_tetra_volume<int, MESH::ListMesh>(cell.node_key, mesh);
+            return geom_tetra_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
         case PYRAM:
-            return geom_pyram_volume<int, MESH::ListMesh>(cell.node_key, mesh);
+            return geom_pyram_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
         case PRISM:
-            return geom_prism_volume<int, MESH::ListMesh>(cell.node_key, mesh);
+            return geom_prism_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
         case HEXAH:
-            return geom_hexah_volume<int, MESH::ListMesh>(cell.node_key, mesh);
+            return geom_hexah_volume<int, MESH::StaticMesh>(cell.node_key, mesh);
         default:
             std::string s = "GEOM::cell_volume() caught unsupported geom type.";
             warn_println(s);

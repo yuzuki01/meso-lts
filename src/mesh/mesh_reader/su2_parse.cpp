@@ -2,7 +2,7 @@
 
 /// su2 mesh
 TP_func
-void su2Reader::parse(MESH::ListMesh &mesh) {
+void su2Reader::parse(MESH::StaticMesh &mesh) {
     int read_case = 0;
     for (int i = 0; i < int(lines.size()); i++) {
         auto data = split(lines[i]);

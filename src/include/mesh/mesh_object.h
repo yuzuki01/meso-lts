@@ -33,7 +33,7 @@ namespace MESH {
 
     class BasicMesh;    // basic mesh class
     /// Mesh
-    class ListMesh;
+    class StaticMesh;
     class MapMesh;
 
     extern std::unordered_map<std::string, int> MarkTypeID;
@@ -239,8 +239,8 @@ public:
     void info();
 };
 
-/// ListMesh
-class MESH::ListMesh : public BasicMesh {
+/// StaticMesh
+class MESH::StaticMesh : public BasicMesh {
 public:
     /**
      * Container
@@ -250,11 +250,11 @@ public:
     std::vector<Face<int>> FACES{};
     std::vector<Mark<int>> MARKS{};
 
-    ListMesh() = default;
+    StaticMesh() = default;
 
-    explicit ListMesh(int mesh_type) : BasicMesh(mesh_type) {};
+    explicit StaticMesh(int mesh_type) : BasicMesh(mesh_type) {};
 
-    ListMesh(int mesh_type, std::string mesh_name) : BasicMesh(mesh_type, mesh_name) {};
+    StaticMesh(int mesh_type, std::string mesh_name) : BasicMesh(mesh_type, mesh_name) {};
 
     void load(const std::string &file_path);
 

@@ -27,11 +27,11 @@ ConfigReader::ConfigReader(const std::string &file_path) : BasicReader("ConfigRe
                         continue;
                     }
                     if (data[0] == end_mark) break;  // break from while
-                    if (data[0] == "name") name = data[1];
-                    if (data[0] == "phy_mesh") phy_mesh = data[1];
-                    if (data[0] == "dvs_mesh") dvs_mesh = data[1];
-                    if (data[0] == "solver") solver = data[1];
-                    if (data[0] == "thread") thread = stoi(data[1]);
+                    else if (data[0] == "name") name = data[1];
+                    else if (data[0] == "phy_mesh") phy_mesh = data[1];
+                    else if (data[0] == "dvs_mesh") dvs_mesh = data[1];
+                    else if (data[0] == "solver") solver = data[1];
+                    else if (data[0] == "thread") thread = stoi(data[1]);
                     i++;
                 }
                 read_case = 0;
@@ -72,13 +72,13 @@ ConfigReader::ConfigReader(const std::string &file_path) : BasicReader("ConfigRe
                         continue;
                     }
                     if (data[0] == end_mark) break;  // break from while
-                    if (data[0] == "name") bc_param.name = data[1];
-                    if (data[0] == "type") bc_param.type = data[1];
-                    if (data[0] == "density") bc_param.density = stod(data[1]);
-                    if (data[0] == "temperature") bc_param.temperature = stod(data[1]);
-                    if (data[0] == "velocity-x") bc_param.velocity.x = stod(data[1]);
-                    if (data[0] == "velocity-y") bc_param.velocity.y = stod(data[1]);
-                    if (data[0] == "velocity-z") bc_param.velocity.z = stod(data[1]);
+                    else if (data[0] == "name") bc_param.name = data[1];
+                    else if (data[0] == "type") bc_param.type = data[1];
+                    else if (data[0] == "density") bc_param.density = stod(data[1]);
+                    else if (data[0] == "temperature") bc_param.temperature = stod(data[1]);
+                    else if (data[0] == "velocity-x") bc_param.velocity.x = stod(data[1]);
+                    else if (data[0] == "velocity-y") bc_param.velocity.y = stod(data[1]);
+                    else if (data[0] == "velocity-z") bc_param.velocity.z = stod(data[1]);
                     i++;
                 }
                 mark_sets.push_back(bc_param);
@@ -147,7 +147,7 @@ template<> bool ConfigReader::get<bool>(const std::string &_key) {
     return false;
 }
 
-bool ConfigReader::set_mesh_mark(MESH::ListMesh &mesh) {
+bool ConfigReader::set_mesh_mark(MESH::StaticMesh &mesh) {
     bool flag = true;
     for (auto &bc : mark_sets) {
         if (!mesh.set_mark(bc)) flag = false;

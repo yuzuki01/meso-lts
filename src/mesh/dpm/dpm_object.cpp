@@ -3,7 +3,7 @@
 
 using namespace DPM;
 
-TP_func bool Particle<int, MESH::ListMesh>::is_in_cell(const int &cell_key) {
+TP_func bool Particle<int, MESH::StaticMesh>::is_in_cell(const int &cell_key) {
     return is_in_cell(mesh.get_cell(cell_key));
 }
 

@@ -9,8 +9,8 @@ public:
     /// Check Point
     CheckPoint<DUGKS_INCOMPRESSIBLE> check_point;
     /// Mesh
-    MESH::ListMesh phy_mesh{MESH_TYPE_NORMAL, config.phy_mesh};
-    MESH::ListMesh dvs_mesh{MESH_TYPE_NO_FACE, config.dvs_mesh};
+    MESH::StaticMesh phy_mesh{MESH_TYPE_NORMAL, config.phy_mesh};
+    MESH::StaticMesh dvs_mesh{MESH_TYPE_NO_FACE, config.dvs_mesh};
     /// Physical
     double Re, Ma;
     double R, T0, Rho0, L;

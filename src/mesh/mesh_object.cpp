@@ -228,14 +228,14 @@ void BasicMesh::update_min_mesh_size(double value) {
 }
 
 
-///     ListMesh
-void ListMesh::load(const std::string &file_path) {
+///     StaticMesh
+void StaticMesh::load(const std::string &file_path) {
     su2Reader reader(file_path);
     if (!reader.is_file_open()) throw std::invalid_argument("open mesh file failed.");
     reader.parse(*this);
 }
 
-void ListMesh::build() {
+void StaticMesh::build() {
     switch (type) {
         case MESH_TYPE_NORMAL:
             build_face();
@@ -252,7 +252,7 @@ void ListMesh::build() {
     }
 }
 
-bool ListMesh::set_mark(const BoundaryParam &bc_param) {
+bool StaticMesh::set_mark(const BoundaryParam &bc_param) {
     for (auto &mark : MARKS) {
         if (mark.name == bc_param.name) {
             // match
@@ -277,37 +277,37 @@ bool ListMesh::set_mark(const BoundaryParam &bc_param) {
     return false;
 }
 
-int ListMesh::node_num() {
+int StaticMesh::node_num() {
     NPOIN = NODES.size();
     return NPOIN;
 }
 
-int ListMesh::cell_num() {
+int StaticMesh::cell_num() {
     NELEM = CELLS.size();
     return NELEM;
 }
 
-int ListMesh::face_num() const {
+int StaticMesh::face_num() const {
     return FACES.size();
 }
 
-Node<int> &ListMesh::get_node(const int &_key) {
+Node<int> &StaticMesh::get_node(const int &_key) {
     return NODES[_key];
 }
 
-Cell<int> &ListMesh::get_cell(const int &_key) {
+Cell<int> &StaticMesh::get_cell(const int &_key) {
     return CELLS[_key];
 }
 
-Face<int> &ListMesh::get_face(const int &_key) {
+Face<int> &StaticMesh::get_face(const int &_key) {
     return FACES[_key];
 }
 
-Mark<int> &ListMesh::get_mark(const int &_key) {
+Mark<int> &StaticMesh::get_mark(const int &_key) {
     return MARKS[_key];
 }
 
-void ListMesh::shrink_to_fit() {
+void StaticMesh::shrink_to_fit() {
     NODES.shrink_to_fit();
     CELLS.shrink_to_fit();
     FACES.shrink_to_fit();
@@ -317,7 +317,7 @@ void ListMesh::shrink_to_fit() {
     for (auto &mark : MARKS) mark.shrink_to_fit();
 }
 
-void ListMesh::info() const {
+void StaticMesh::info() const {
     if (name == MESH_KEY_NULL) return;
     std::string type_name;
     switch (type) {

@@ -17,12 +17,12 @@ std::unordered_map<int, std::vector<double>> gauss_hermit_weights{
  *     - GH 型积分的权重                           *
  *************************************************/
 
-MESH::ListMesh GENERATOR::gauss_hermit(int gauss_point, int dimension, double RT) {
+MESH::StaticMesh GENERATOR::gauss_hermit(int gauss_point, int dimension, double RT) {
     std::stringstream mesh_name;
     int Q = 1;
     for (int i = 0; i < dimension; i++) Q *= gauss_point;
     mesh_name << "D" << dimension << "Q" << Q;
-    MESH::ListMesh mesh;
+    MESH::StaticMesh mesh;
     mesh.name = mesh_name.str();
     auto &points = gauss_hermit_points[gauss_point];
     auto &weights = gauss_hermit_weights[gauss_point];
