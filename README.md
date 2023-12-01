@@ -81,7 +81,7 @@ meso -h
 
 meso 读取的是.su2网格
 
-首先准备好.su2网格，[顶盖驱动方腔网格](files/mesh/cavity.su2)作为测试文件，储存在 ./files/mesh/ 中
+首先准备好.su2网格，[顶盖驱动方腔网格](files/mesh/cavity_hybrid.su2)作为测试文件，储存在 ./files/mesh/ 中
 
 在构建出的可执行文件 meso.exe 的目录下找到 mesh 文件夹，这是求解器寻找网格文件的地方，拷贝顶盖驱动方腔网格到这个文件夹
 

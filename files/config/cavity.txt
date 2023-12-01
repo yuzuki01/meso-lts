@@ -5,7 +5,7 @@
 # 算例信息
 case-info:
     name        incompressible-cavity       # 算例名称
-    phy_mesh    cavity.su2                  # 物理网格文件
+    phy_mesh    cavity_hybrid.su2           # 物理网格文件
     dvs_mesh    GaussHermit                 # 使用结构生成网格
     solver      dugks@incompressible        # 求解器名称
     thread      10                          # OpenMP 并行数
@@ -18,7 +18,7 @@ def:
     Re              400                     # Reynolds 数
     Ma              0.1414213562373095      # Mach 数
     # CFL 条件
-    CFL             0.9                     # CFL 数
+    CFL             0.8                     # CFL 数
 
     # 无量纲物理参数
     R               0.5                     # 气体常数

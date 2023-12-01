@@ -1,0 +1,5 @@
+/.idea
+/src/core/.idea/
+/src/mesh/.idea/
+/src/solver/.idea/
+/build
