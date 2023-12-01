@@ -89,14 +89,14 @@ meso 读取的是.su2网格
 
 [顶盖驱动方腔配置文件](files/config/cavity.txt)作为测试文件，存储在 ./files/config/ 中
 
-在构建出的可执行文件 meso.exe 的目录下找到 config 文件夹，这是求解器寻找配置文件的地方，拷贝顶盖驱动方腔配置文件到这个文件夹
+在构建出的可执行文件 meso.exe 的目录下找到 config 文件夹，拷贝顶盖驱动方腔配置文件到这个文件夹
 
 ## 运行求解器
 
 在构建出的可执行文件 meso.exe 的目录下，打开终端执行
 
 ```
-meso --case cavity.txt --max_step 50000 --save_interval 1000
+meso --case ./config/cavity.txt --max_step 50000 --save_interval 1000
 ```
 
 之后在 result 文件夹下可以得到计算结果的 tecplot 文件

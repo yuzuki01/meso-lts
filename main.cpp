@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
     /// case
     parsed_string = parser.parse_param<std::string>("case", STRING_NULL);
     if (parsed_string != STRING_NULL) {
-        ConfigReader config("./config/" + parsed_string);
+        ConfigReader config(parsed_string);
         if (config.solver == "dugks@incompressible") return handle_solver<DUGKS_INCOMPRESSIBLE>(config, parser);
         if (config.solver == "dugks@shakhov") return handle_solver<DUGKS_SHAKHOV>(config, parser);
     }
