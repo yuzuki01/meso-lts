@@ -57,8 +57,6 @@ SCell::Cell(MESH::Cell & cell, Scheme &_solver) : mesh_cell (cell), solver(_solv
     h_t.resize(dvs_num, 0.0);
     h_bp.resize(dvs_num, 0.0);
     slope_h.resize(dvs_num, {0.0, 0.0, 0.0});
-    /// least square
-    update_geom();
 }
 
 /// Scheme Face Constructor
@@ -106,6 +104,17 @@ double Scheme::h_shakhov(double density, double temperature, const Vec3D &c, con
 }
 
 /// Cell Functions
+void SCell::init(PhysicalVar::MacroVars init_var) {
+    for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
+        auto &it = solver.dvs_mesh.get_cell(p);
+        Vec3D c = it.position - init_var.velocity;
+        g_t[p] = solver.g_shakhov(init_var.density, init_var.temperature, c, init_var.heat_flux);
+        h_t[p] = solver.h_shakhov(init_var.density, init_var.temperature, c, init_var.heat_flux);
+    }
+    get_macro_var();
+    update_geom();
+}
+
 void SCell::update_geom() {
     lsp = generate_least_square(mesh_cell.key, solver.phy_mesh);
     if (solver.limiter_switch) {
@@ -127,7 +136,7 @@ void SCell::get_f_bp() {
 }
 
 void SCell::get_grad_f_bp() {
-    const int near_num = mesh_cell.near_cell_key.size();
+    const int near_num = int(mesh_cell.near_cell_key.size());
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         if (solver.zero_gradient) {
             slope_g[p] = {0.0, 0.0, 0.0};
@@ -485,45 +494,36 @@ void Scheme::init() {
     for (auto &it : phy_mesh.CELLS) {
         CELLS.emplace_back(it, *this);
     }
-    PhysicalVar::MacroVars init_var;
-    init_var.density = Rho0;
-    init_var.temperature = T0;
-    init_var.velocity = {0.0, 0.0, 0.0};
-    for (auto &mark : phy_mesh.MARKS) {
-        if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
-            init_var.density = mark.density;
-            init_var.temperature = mark.temperature;
-            init_var.velocity = mark.velocity;
-            break;
+    std::string check_point_file = parser.parse_param<std::string>("check_point", STRING_NULL);
+    if (check_point_file == STRING_NULL) {
+        PhysicalVar::MacroVars init_var{};
+        init_var.density = Rho0;
+        init_var.temperature = T0;
+        init_var.velocity = {0.0, 0.0, 0.0};
+        for (auto &mark : phy_mesh.MARKS) {
+            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
+                init_var.density = mark.density;
+                init_var.temperature = mark.temperature;
+                init_var.velocity = mark.velocity;
+                break;
+            }
         }
-    }
-    for (auto &cell : CELLS) {
-        for (auto &it2 : dvs_mesh.CELLS) {
-            Vec3D c = it2.position - init_var.velocity;
-            double g_m = g_maxwell(init_var.density, init_var.temperature, c);
-            cell.g_t[it2.key] = g_m;
-            cell.h_t[it2.key] = h_maxwell(g_m, init_var.temperature);
+        for (auto &mark : phy_mesh.MARKS) {
+            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
+                init_var.density = mark.density;
+                init_var.temperature = mark.temperature;
+                init_var.velocity = mark.velocity;
+                break;
+            }
         }
-        cell.get_macro_var();
-        cell.macro_vars.old_density = cell.macro_vars.density;
-        cell.macro_vars.old_energy = cell.macro_vars.energy;
-        /// least-square & limiter
-        cell.update_geom();
+        check_point.init_field(init_var);
+    } else {
+        check_point.init_from_file(check_point_file);
     }
     logger << "    scheme-objects: cell - ok.";
     logger.info();
     for (auto &face : phy_mesh.FACES) {
         FACES.emplace_back(face, *this);
-        /// face init
-        /*
-        auto &face = get_face(face_key);
-        for (auto & it2 : dvs_mesh.CELLS) {
-            auto &key = it2.first;
-            auto &particle = it2.second;
-            face.f[key] = 0.0;
-            face.f_b[key] = 0.0;
-        }
-         */
     }
     logger << "    scheme-objects: face - ok.";
     logger.info();
@@ -600,7 +600,7 @@ SFace &Scheme::get_face(const int &_key) {
 void Scheme::do_crashed(Scheme::Cell &cell) {
     logger << "Caught crashed value: \n"
               "   cell<" << cell.mesh_cell.key << ", pos=" << cell.mesh_cell.position.info() << ">\n"
-                                                                                                "   density=" << cell.macro_vars.density << " temperature=" << cell.macro_vars.temperature;
+              "   density=" << cell.macro_vars.density << " temperature=" << cell.macro_vars.temperature;
     logger.warn();
     is_crashed = true;
 }
@@ -623,7 +623,7 @@ void Scheme::do_residual() {
         double a, b;
         a = cell.macro_vars.density * cell.mesh_cell.volume;
         b = cell.macro_vars.old_density * cell.mesh_cell.volume;
-        sum1 += fabs((a-b)*(a-b));
+        sum1 += fabs((a - b) * (a - b));
         sum2 += fabs(b * b);
         cell.macro_vars.old_density = cell.macro_vars.density;
     }

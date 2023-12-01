@@ -5,7 +5,7 @@
       <paths name="GPU服务器 (0e817efc-3c3e-480e-b2cd-89ba5141c3c7)">
         <serverdata>
           <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/meso-lts" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

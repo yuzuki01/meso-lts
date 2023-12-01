@@ -6,7 +6,7 @@
 case-info:
     name        micro-cavity                # 算例名称
     phy_mesh    cavity_40x40.su2            # 物理网格文件
-    dvs_mesh    dvs_100x100.su2             # 使用结构生成网格
+    dvs_mesh    circle.su2                  # 使用结构生成网格
     solver      dugks@shakhov               # 求解器名称
     thread      10                          # OpenMP 并行数
 :end
