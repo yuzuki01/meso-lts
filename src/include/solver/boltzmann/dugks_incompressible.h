@@ -43,7 +43,7 @@ public:
         void get_grad_f_bp();
         void get_macro_var();
         void update_f_t();
-        void update_geom();
+        void update_least_square();
     };
     /// Scheme Face
     class Face {

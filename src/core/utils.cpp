@@ -108,22 +108,6 @@ void data_double_println(const std::vector<std::string> &names, const std::vecto
 }
 
 
-void data_sci_double_println(const std::vector<std::string> &names, const std::vector<double> &values, const int width) {
-    if (names.size() != values.size()) {
-        std::string s = "Caught lists with different sizes to output.";
-        warn_println(s);
-        return;
-    }
-    std::stringstream ssn, ssv;
-    ssn << std::right;
-    for (auto &var : names) ssn << std::setw(width) << var;
-    ssv << std::right;
-    for (auto &var : values) ssv << std::setw(width) << std::scientific << var;
-    info_println(ssn.str());
-    info_println(ssv.str());
-}
-
-
 /**
  * file
  */

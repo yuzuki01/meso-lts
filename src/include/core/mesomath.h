@@ -57,7 +57,5 @@ public:
     Vec3D operator*(const Vec3D &_vec);     // Mat * Vec 矩阵乘于列向量
     Mat3D operator*(const Mat3D &_mat);     // 矩阵乘法 this * _mat
 
-    Vec3D operator[](int index);                     // 按行返回一个向量
-
     void info() const;
 };

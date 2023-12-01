@@ -46,7 +46,6 @@ public:
         /// 构造函数
         explicit Cell(MESH::Cell<int> &cell, Scheme &_solver);
         /// 算法函数
-        void init(const PhysicalVar::MacroVars &init_var);
         void get_f_bp();
         void get_grad_f_bp();
         void get_macro_var();
@@ -74,8 +73,8 @@ public:
     /// Container
     std::vector<Cell> CELLS;
     std::vector<Face> FACES;
-    Cell & get_cell(const int &_key);
-    Face & get_face(const int &_key);
+    inline Cell & get_cell(const int &_key);
+    inline Face & get_face(const int &_key);
 
     /// Solver function
     void init();

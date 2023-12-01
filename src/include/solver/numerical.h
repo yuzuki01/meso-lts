@@ -6,8 +6,7 @@
 struct LeastSquare {
     std::vector<Vec3D> dr{};
     std::vector<double> weight{};
-    // Vec3D Cx{}, Cy{}, Cz{};
-    Mat3D C{};
+    Vec3D Cx{}, Cy{}, Cz{};
 };
 
 TP_key_mesh

@@ -9,5 +9,3 @@ public:
     void init_from_file(const std::string &file_path);
     void write_to_file(const std::string &file_path);
 };
-
-static PhysicalVar::MacroVars strvec_to_macro_vars(const string_vector &str_vec);

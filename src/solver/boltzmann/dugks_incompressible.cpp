@@ -40,7 +40,7 @@ SCell::Cell(MESH::Cell<int> & cell, Scheme & _solver) : mesh_cell(cell), solver(
     f_bp.resize(solver.dvs_mesh.cell_num(), 0.0);
     slope_f.resize(solver.dvs_mesh.cell_num(), {0.0, 0.0, 0.0});
     /// least square
-    update_geom();
+    update_least_square();
 }
 
 /// Scheme Face Constructor
@@ -69,10 +69,10 @@ void SCell::init(const PhysicalVar::MacroVars &init_var) {
         f_t[p] = solver.f_maxwell(init_var, it.position);
     }
     get_macro_var();
-    update_geom();
+    update_least_square();
 }
 
-void SCell::update_geom() {
+void SCell::update_least_square() {
     lsp = generate_least_square(mesh_cell.key, solver.phy_mesh);
 }
 
@@ -92,7 +92,7 @@ void SCell::get_grad_f_bp() {
             auto &near_cell = solver.get_cell(mesh_cell.near_cell_key[j]);
             Sfr += lsp.weight[j] * (near_cell.f_bp[p] - f_bp[p]) * lsp.dr[j];
         }
-        slope_f[p] = lsp.C * Sfr;
+        slope_f[p] = {lsp.Cx * Sfr, lsp.Cy * Sfr, lsp.Cz * Sfr};
         /// zero gradient
         // slope_f[p] = {0.0, 0.0, 0.0};
     }
@@ -261,8 +261,7 @@ void Scheme::do_step() {
     if (step >= max_step && !is_crashed) {
         continue_to_run = false;
         logger << "reach max_step=" << max_step;
-        logger.note();
-        do_residual();
+        logger.highlight();
         do_save();
         return;
     }
@@ -298,25 +297,19 @@ void Scheme::init() {
     for (auto &it : phy_mesh.CELLS) {
         CELLS.emplace_back(it, *this);
     }
-    std::string check_point_file = parser.parse_param<std::string>("check_point", STRING_NULL);
-    if (check_point_file == STRING_NULL) {
-        PhysicalVar::MacroVars init_var;
-        init_var.density = Rho0;
-        init_var.temperature = T0;
-        init_var.velocity = {0.0, 0.0, 0.0};
-        for (auto &mark : phy_mesh.MARKS) {
-            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
-                init_var.density = mark.density;
-                init_var.temperature = mark.temperature;
-                init_var.velocity = mark.velocity;
-                break;
-            }
+    PhysicalVar::MacroVars init_var;
+    init_var.density = Rho0;
+    init_var.temperature = T0;
+    init_var.velocity = {0.0, 0.0, 0.0};
+    for (auto &mark : phy_mesh.MARKS) {
+        if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
+            init_var.density = mark.density;
+            init_var.temperature = mark.temperature;
+            init_var.velocity = mark.velocity;
+            break;
         }
-        check_point.init_field(init_var);
-    } else {
-        check_point.init_from_file(check_point_file);
     }
-
+    check_point.init_field(init_var);
     logger << "    scheme-objects: cell - ok.";
     logger.info();
     for (auto &face : phy_mesh.FACES) {
@@ -401,12 +394,12 @@ void Scheme::do_residual() {
         double a, b;
         a = cell.macro_vars.density * cell.mesh_cell.volume;
         b = cell.macro_vars.old_density * cell.mesh_cell.volume;
-        sum1 += fabs((a - b) * (a - b));
+        sum1 += fabs((a-b)*(a-b));
         sum2 += fabs(b * b);
         cell.macro_vars.old_density = cell.macro_vars.density;
     }
     residual = sqrt(sum1 / sum2);
     logger << "Residual at step=" << step;
     logger.info();
-    data_sci_double_println({"density"}, {residual});
+    data_double_println({"density"}, {residual});
 }

@@ -28,8 +28,6 @@ void data_int_println(const std::vector<std::string> &names, const std::vector<i
 
 void data_double_println(const std::vector<std::string> &names, const std::vector<double> &values, int width=15);
 
-void data_sci_double_println(const std::vector<std::string> &names, const std::vector<double> &values, int width=15);
-
 
 /// file
 bool create_dir(const std::string &path);

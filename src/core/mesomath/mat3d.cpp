@@ -56,7 +56,7 @@ Mat3D Mat3D::I() {
     if (_det == 0.0) {
         warn_println("Error: The matrix is singular, and its inverse does not exist.");
         // 处理矩阵不可逆的情况
-        // 这里可以添加适当的处理逻辑，比如返回一个特殊值表示不可逆，或者抛出异常等。
+        // 这里你可以添加适当的处理逻辑，比如返回一个特殊值表示不可逆，或者抛出异常等。
     } else {
         // 计算伴随矩阵
         result._matrix[0][0] = (_matrix[1][1] * _matrix[2][2] - _matrix[2][1] * _matrix[1][2]) / _det;
@@ -83,10 +83,6 @@ Mat3D Mat3D::operator*(const Mat3D &_mat) {
         }
     }
     return result;
-}
-
-Vec3D Mat3D::operator[](int index) {
-    return Vec3D{_matrix[index][0], _matrix[index][1], _matrix[index][2]};
 }
 
 Vec3D Mat3D::operator*(const Vec3D &_vec) {
