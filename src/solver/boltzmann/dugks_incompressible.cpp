@@ -1,5 +1,7 @@
 #include "solver.h"
 
+#ifdef SOLVER_DUGKS_INCOMPRESSIBLE
+
 using Scheme = DUGKS_INCOMPRESSIBLE;
 using SCell = Scheme::Cell;
 using SFace = Scheme::Face;
@@ -408,3 +410,5 @@ void Scheme::do_residual() {
     logger.info();
     data_sci_double_println({"density"}, {residual});
 }
+
+#endif

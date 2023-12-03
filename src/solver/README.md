@@ -110,5 +110,4 @@ public:
 };
 
 #endif // SOLVER_MYSOLVER
-
 ```

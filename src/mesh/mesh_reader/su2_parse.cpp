@@ -43,7 +43,7 @@ void su2Reader::parse(MESH::StaticMesh &mesh) {
                 }
                 {
                     Vec3D position{0.0,0.0,0.0};
-                    const int len = data.size();
+                    const int len = int(data.size());
                     if (len > 0) position.x = stod(data[0]);
                     if (len > 1) position.y = stod(data[1]);
                     if (len > 2 && mesh.NDIME == 3) position.z = stod(data[2]);

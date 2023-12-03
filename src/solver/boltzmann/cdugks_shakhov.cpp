@@ -1,13 +1,14 @@
 #include "solver.h"
 
-#ifdef SOLVER_DUGKS_SHAKHOV
+#ifdef SOLVER_CDUGKS_SHAKHOV
 
-using Scheme = DUGKS_SHAKHOV;
+using Scheme = CDUGKS_SHAKHOV;
 using SCell = Scheme::Cell;
 using SFace = Scheme::Face;
 
 /// Solver Constructor
-Scheme::DUGKS_SHAKHOV(ConfigReader &_config, ArgParser &_parser) : BasicSolver(_config, _parser),
+Scheme::CDUGKS_SHAKHOV(ConfigReader &_config, ArgParser &_parser) :
+BasicSolver(_config, _parser),
 check_point(*this) {
     /// Read config
     Kn = config.get<double>("Kn");
@@ -50,14 +51,13 @@ void Scheme::info() const {
     dvs_mesh.info();
 }
 
+
 /// Scheme Cell Constructor
 SCell::Cell(MESH::Cell & cell, Scheme &_solver) : mesh_cell (cell), solver(_solver) {
     const int dvs_num = solver.dvs_mesh.cell_num();
-    g_t.resize(dvs_num, 0.0);
-    g_bp.resize(dvs_num, 0.0);
+    g.resize(dvs_num, 0.0);
     slope_g.resize(dvs_num, {0.0, 0.0, 0.0});
-    h_t.resize(dvs_num, 0.0);
-    h_bp.resize(dvs_num, 0.0);
+    h.resize(dvs_num, 0.0);
     slope_h.resize(dvs_num, {0.0, 0.0, 0.0});
 }
 
@@ -65,9 +65,7 @@ SCell::Cell(MESH::Cell & cell, Scheme &_solver) : mesh_cell (cell), solver(_solv
 SFace::Face(MESH::Face & face, Scheme &_solver) : mesh_face (face), solver(_solver) {
     const int dvs_num = solver.dvs_mesh.cell_num();
     g.resize(dvs_num, 0.0);
-    g_b.resize(dvs_num, 0.0);
     h.resize(dvs_num, 0.0);
-    h_b.resize(dvs_num, 0.0);
 }
 
 /// Physical Formula
@@ -93,8 +91,7 @@ double Scheme::g_shakhov(double density, double temperature, const Vec3D &c, con
     double cq = c * heat_flux;
     double cc = c * c;
     double RT = R * temperature;
-    double p = density * RT;
-    return g_m + (1.0 - Pr) * (cq / (5.0 * p * RT)) * (cc / RT - D - 2.0) * g_m;
+    return g_m + (1.0 - Pr) * (cq / 5.0 / density / RT / RT) * (cc / RT - D - 2.0) * g_m;
 }
 
 double Scheme::h_shakhov(double density, double temperature, const Vec3D &c, const Vec3D &heat_flux) const {
@@ -102,22 +99,23 @@ double Scheme::h_shakhov(double density, double temperature, const Vec3D &c, con
     double cq = c * heat_flux;
     double cc = c * c;
     double RT = R * temperature;
-    double p = density * RT;
     return h_maxwell(g_m, temperature) +
-           (1.0 - Pr) * (cq / (5.0 * p)) * ((cc / RT - D) * (K + 3.0 - D) - 2.0 * K) * g_m;
+           (1.0 - Pr) * (cq / 5.0 / density / RT) * ((cc / RT - D) * (K + 3.0 - D) - 2.0 * K) * g_m;
 }
+
 
 /// Cell Functions
 void SCell::init(PhysicalVar::MacroVars init_var) {
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.get_cell(p);
         Vec3D c = it.position - init_var.velocity;
-        g_t[p] = solver.g_shakhov(init_var.density, init_var.temperature, c, init_var.heat_flux);
-        h_t[p] = solver.h_shakhov(init_var.density, init_var.temperature, c, init_var.heat_flux);
+        g[p] = solver.g_shakhov(init_var.density, init_var.temperature, c, init_var.heat_flux);
+        h[p] = solver.h_shakhov(init_var.density, init_var.temperature, c, init_var.heat_flux);
     }
     get_macro_var();
     update_geom();
 }
+
 
 void SCell::update_geom() {
     lsp = generate_least_square(mesh_cell.key, solver.phy_mesh);
@@ -127,19 +125,7 @@ void SCell::update_geom() {
     }
 }
 
-void SCell::get_f_bp() {
-    double C = (solver.half_dt + solver.dt) / (2.0 * solver.tau_f(macro_vars.density, macro_vars.temperature) + solver.dt);
-    for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
-        auto &it = solver.dvs_mesh.CELLS[p];
-        Vec3D c = it.position - macro_vars.velocity;
-        g_bp[p] = (1.0 - C) * g_t[p] +
-                  C * solver.g_shakhov(macro_vars.density, macro_vars.temperature, c, macro_vars.heat_flux);
-        h_bp[p] = (1.0 - C) * h_t[p] +
-                  C * solver.h_shakhov(macro_vars.density, macro_vars.temperature, c, macro_vars.heat_flux);
-    }
-}
-
-void SCell::get_grad_f_bp() {
+void SCell::get_grad_f() {
     const int near_num = int(mesh_cell.near_cell_key.size());
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         if (solver.zero_gradient) {
@@ -150,8 +136,8 @@ void SCell::get_grad_f_bp() {
         Vec3D Sgr{0.0, 0.0, 0.0}, Shr{0.0, 0.0, 0.0};
         for (int j = 0; j < near_num; j++) {
             auto &near_cell = solver.CELLS[mesh_cell.near_cell_key[j]];
-            Sgr += lsp.weight[j] * (near_cell.g_bp[p] - g_bp[p]) * lsp.dr[j];
-            Shr += lsp.weight[j] * (near_cell.h_bp[p] - h_bp[p]) * lsp.dr[j];
+            Sgr += lsp.weight[j] * (near_cell.g[p] - g[p]) * lsp.dr[j];
+            Shr += lsp.weight[j] * (near_cell.h[p] - h[p]) * lsp.dr[j];
         }
         slope_g[p] = lsp.C * Sgr;
         slope_h[p] = lsp.C * Shr;
@@ -165,9 +151,9 @@ void SCell::get_macro_var() {
     macro_vars.velocity = macro_vars.heat_flux = {0.0, 0.0, 0.0};
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.CELLS[p];
-        macro_vars.density += it.volume * g_t[p];
-        macro_vars.velocity += it.volume * g_t[p] * it.position;
-        macro_vars.energy += it.volume * (it.position_square * g_t[p] + h_t[p]);
+        macro_vars.density += it.volume * g[p];
+        macro_vars.velocity += it.volume * g[p] * it.position;
+        macro_vars.energy += it.volume * (it.position_square * g[p] + h[p]);
     }
     macro_vars.velocity /= macro_vars.density;
     macro_vars.energy /= 2.0 * macro_vars.density;
@@ -175,7 +161,7 @@ void SCell::get_macro_var() {
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.CELLS[p];
         Vec3D c = it.position - macro_vars.velocity;
-        macro_vars.heat_flux += it.volume * c * ((c * c) * g_t[p] + h_t[p]);
+        macro_vars.heat_flux += it.volume * c * ((c * c) * g[p] + h[p]);
     }
     double tau = solver.tau_f(macro_vars.density, macro_vars.temperature);
     macro_vars.heat_flux = (tau / (2.0 * tau + solver.dt * solver.Pr)) * macro_vars.heat_flux;
@@ -184,27 +170,28 @@ void SCell::get_macro_var() {
     if (std::isnan(macro_vars.density) || macro_vars.temperature < 0.0) solver.do_crashed(*this);
 }
 
-void SCell::update_f_t() {
+void SCell::update_f() {
     /// compute flux
     const int dvs_num = solver.dvs_mesh.cell_num();
     std::vector<double> flux_g(dvs_num, 0.0), flux_h(dvs_num, 0.0);
     /// list face
-    double dt_V = solver.dt / mesh_cell.volume;
+    double Adt_V;
     for (auto &face_key : mesh_cell.face_key) {
         auto &face = solver.FACES[face_key];
         auto &nv = (face.mesh_face.on_cell_key == mesh_cell.key) ?
-                face.mesh_face.on_cell_nv : face.mesh_face.inv_cell_nv;
-        double Adt_V = face.mesh_face.area * dt_V;
+                   face.mesh_face.on_cell_nv : face.mesh_face.inv_cell_nv;
+        Adt_V = face.mesh_face.area / mesh_cell.volume * solver.dt;
         for (int p = 0; p < dvs_num; p++) {
             auto &it = solver.dvs_mesh.CELLS[p];
             flux_g[p] += (it.position * nv) * Adt_V * face.g[p];
             flux_h[p] += (it.position * nv) * Adt_V * face.h[p];
         }
     }
-    /// update f_t
+    /// update f
+    double C = 1.0 / (1.0 + solver.dt / (2.0 * solver.tau_f(macro_vars.density, macro_vars.temperature)));
     for (int p = 0; p < dvs_num; p++) {
-        g_t[p] = (4.0 * g_bp[p] - g_t[p]) / 3.0 - flux_g[p];
-        h_t[p] = (4.0 * h_bp[p] - h_t[p]) / 3.0 - flux_h[p];
+        g[p] = C * (g[p] - flux_g[p]);
+        h[p] = C * (h[p] - flux_h[p]);
     }
 }
 
@@ -218,10 +205,10 @@ void SFace::get_f_b() {
         auto &it = solver.dvs_mesh.get_cell(p);
         if (it.position * nv >= 0.0) {
             Vec3D r_ij = mesh_face.position - on_cell.mesh_cell.position;
-            double g_i = on_cell.g_bp[p], h_i = on_cell.h_bp[p];
-            if (solver.zero_gradient || (solver.boundary_zero_gradient && mesh_face.boundary_type != MESH_BC_INTERFACE)) {
-                g_b[p] = g_i;
-                h_b[p] = h_i;
+            double g_i = on_cell.g[p], h_i = on_cell.h[p];
+            if (solver.boundary_zero_gradient) {
+                g[p] = g_i;
+                h[p] = h_i;
                 continue;
             }
             if (solver.limiter_switch) {
@@ -230,7 +217,7 @@ void SFace::get_f_b() {
                 /// find Wi_max and Wi_min
                 for (auto &near_cell_key : on_cell.mesh_cell.near_cell_key) {
                     auto &near_cell = solver.CELLS[near_cell_key];
-                    double g_n = near_cell.g_bp[p], h_n = near_cell.h_bp[p];
+                    double g_n = near_cell.g[p], h_n = near_cell.h[p];
                     if (g_n > limiter_g.Wi_max) limiter_g.Wi_max = g_n;
                     if (g_n < limiter_g.Wi_min) limiter_g.Wi_min = g_n;
                     if (h_n > limiter_h.Wi_max) limiter_h.Wi_max = h_n;
@@ -241,14 +228,14 @@ void SFace::get_f_b() {
                 phi_h = ventaka_phi(limiter_h, on_cell.ventaka_omega);
             }
             Vec3D dr = mesh_face.position - on_cell.mesh_cell.position - solver.half_dt * it.position;
-            g_b[p] = g_i + phi_g * on_cell.slope_g[p] * dr;
-            h_b[p] = h_i + phi_h * on_cell.slope_h[p] * dr;
+            g[p] = g_i + phi_g * on_cell.slope_g[p] * dr;
+            h[p] = h_i + phi_h * on_cell.slope_h[p] * dr;
         } else {
             Vec3D r_ij = mesh_face.position - inv_cell.mesh_cell.position;
-            double g_i = inv_cell.g_bp[p], h_i = inv_cell.h_bp[p];
-            if (solver.zero_gradient || (solver.boundary_zero_gradient && mesh_face.boundary_type != MESH_BC_INTERFACE)) {
-                g_b[p] = g_i;
-                h_b[p] = h_i;
+            double g_i = inv_cell.g[p], h_i = inv_cell.h[p];
+            if (solver.boundary_zero_gradient) {
+                g[p] = g_i;
+                h[p] = h_i;
                 continue;
             }
             if (solver.limiter_switch) {
@@ -257,7 +244,7 @@ void SFace::get_f_b() {
                 /// find Wi_max and Wi_min
                 for (auto &near_cell_key : inv_cell.mesh_cell.near_cell_key) {
                     auto &near_cell = solver.CELLS[near_cell_key];
-                    double g_n = near_cell.g_bp[p], h_n = near_cell.h_bp[p];
+                    double g_n = near_cell.g[p], h_n = near_cell.h[p];
                     if (g_n > limiter_g.Wi_max) limiter_g.Wi_max = g_n;
                     if (g_n < limiter_g.Wi_min) limiter_g.Wi_min = g_n;
                     if (h_n > limiter_h.Wi_max) limiter_h.Wi_max = h_n;
@@ -268,8 +255,8 @@ void SFace::get_f_b() {
                 phi_h = ventaka_phi(limiter_h, inv_cell.ventaka_omega);
             }
             Vec3D dr = mesh_face.position - inv_cell.mesh_cell.position - solver.half_dt * it.position;
-            g_b[p] = g_i + phi_g * inv_cell.slope_g[p] * dr;
-            h_b[p] = h_i + phi_h * inv_cell.slope_h[p] * dr;
+            g[p] = g_i + phi_g * inv_cell.slope_g[p] * dr;
+            h[p] = h_i + phi_h * inv_cell.slope_h[p] * dr;
         }
     }
 }
@@ -280,9 +267,9 @@ void SFace::get_macro_var() {
     macro_vars.velocity = macro_vars.heat_flux = {0.0, 0.0, 0.0};
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.CELLS[p];
-        macro_vars.density += it.volume * g_b[p];
-        macro_vars.velocity += it.volume * g_b[p] * it.position;
-        macro_vars.energy += it.volume * (it.position_square * g_b[p] + h_b[p]);
+        macro_vars.density += it.volume * g[p];
+        macro_vars.velocity += it.volume * g[p] * it.position;
+        macro_vars.energy += it.volume * (it.position_square * g[p] + h[p]);
     }
     macro_vars.velocity /= macro_vars.density;
     macro_vars.energy /= 2.0 * macro_vars.density;
@@ -290,7 +277,7 @@ void SFace::get_macro_var() {
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.CELLS[p];
         Vec3D c = it.position - macro_vars.velocity;
-        macro_vars.heat_flux += it.volume * c * ((c * c) * g_b[p] + h_b[p]);
+        macro_vars.heat_flux += it.volume * c * ((c * c) * g[p] + h[p]);
     }
     double tau = solver.tau_f(macro_vars.density, macro_vars.temperature);
     macro_vars.heat_flux = (tau / (2.0 * tau + solver.half_dt * solver.Pr)) * macro_vars.heat_flux;
@@ -305,9 +292,9 @@ void SFace::get_f() {
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.CELLS[p];
         Vec3D c = it.position - macro_vars.velocity;
-        g[p] = (1.0 - C) * g_b[p] +
+        g[p] = (1.0 - C) * g[p] +
                C * solver.g_shakhov(macro_vars.density, macro_vars.temperature, c, macro_vars.heat_flux);
-        h[p] = (1.0 - C) * h_b[p] +
+        h[p] = (1.0 - C) * h[p] +
                C * solver.h_shakhov(macro_vars.density, macro_vars.temperature, c, macro_vars.heat_flux);
     }
 }
@@ -395,13 +382,7 @@ void Scheme::do_step() {
 #pragma omp parallel for
     for (int i = 0; i < int(phy_mesh.cell_num()); i++) {
         auto &cell = CELLS[i];
-        cell.get_f_bp();
-    }
-
-#pragma omp parallel for
-    for (int i = 0; i < int(phy_mesh.cell_num()); i++) {
-        auto &cell = CELLS[i];
-        cell.get_grad_f_bp();
+        cell.get_grad_f();
     }
 
 #pragma omp parallel for
@@ -431,13 +412,7 @@ void Scheme::do_step() {
 #pragma omp parallel for
     for (int i = 0; i < int(phy_mesh.cell_num()); i++) {
         auto &cell = CELLS[i];
-        cell.update_f_t();
-    }
-
-#pragma omp parallel for
-    for (int i = 0; i < int(phy_mesh.cell_num()); i++) {
-        auto &cell = CELLS[i];
-        cell.get_macro_var();
+        cell.update_f();
     }
 
     /// OpenMP loop end
@@ -589,11 +564,6 @@ void Scheme::do_save() {
     writer.write_geom();
     writer.close();
 
-    /// check point
-    std::stringstream ss2;
-    ss2 << "./result/" << config.name << "/" << config.name << ".check_point";
-    check_point.write_to_file(ss2.str());
-
     logger << "Save to file: " << ss.str();
     logger.highlight();
 }
@@ -609,7 +579,7 @@ SFace &Scheme::get_face(const int &_key) {
 void Scheme::do_crashed(Scheme::Cell &cell) {
     logger << "Caught crashed value: \n"
               "   cell<" << cell.mesh_cell.key << ", pos=" << cell.mesh_cell.position.info() << ">\n"
-              "   density=" << cell.macro_vars.density << " temperature=" << cell.macro_vars.temperature;
+                                                                                                "   density=" << cell.macro_vars.density << " temperature=" << cell.macro_vars.temperature;
     logger.warn();
     is_crashed = true;
 }
@@ -617,8 +587,8 @@ void Scheme::do_crashed(Scheme::Cell &cell) {
 void Scheme::do_crashed(Scheme::Face &face) {
     logger << "Caught crashed value (checking before do_boundary()): \n"
               "   face<" << face.mesh_face.key << ", pos=" << face.mesh_face.position.info() << ">\n"
-              "      on_cell=" << face.mesh_face.on_cell_key << "  inv_cell=" << face.mesh_face.inv_cell_key << "\n"
-              "   density=" << face.macro_vars.density << " temperature=" << face.macro_vars.temperature;
+                                                                                                "      on_cell=" << face.mesh_face.on_cell_key << "  inv_cell=" << face.mesh_face.inv_cell_key << "\n"
+                                                                                                                                                                                                  "   density=" << face.macro_vars.density << " temperature=" << face.macro_vars.temperature;
     logger.warn();
     /// is_crashed = true;
 }

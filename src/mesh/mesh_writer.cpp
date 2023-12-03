@@ -44,7 +44,7 @@ TP_func void MeshWriter<MESH::StaticMesh>::write_head(const string_vector &value
     if (D == 2) value_names = {"X", "Y"};
     if (D == 3) value_names = {"X", "Y", "Z"};
     for (auto &it : values) value_names.push_back(it);
-    const int var_num = value_names.size();
+    const int var_num = int(value_names.size());
     /// write head
     fp << "VARIABLES = ";
     for (auto &it : value_names) fp << "\"" << it << "\",";
@@ -64,7 +64,7 @@ TP_func void MeshWriter<MESH::MapMesh>::write_head(const string_vector &values) 
     if (D == 2) value_names = {"X", "Y"};
     if (D == 3) value_names = {"X", "Y", "Z"};
     for (auto &it : values) value_names.push_back(it);
-    const int var_num = value_names.size();
+    const int var_num = int(value_names.size());
     /// write head
     fp << "VARIABLES = ";
     for (auto &it : value_names) fp << "\"" << it << "\",";

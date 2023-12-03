@@ -59,7 +59,7 @@ MESH::StaticMesh GENERATOR::gauss_hermit(int gauss_point, int dimension, double 
                 }
     }
     mesh.NDIME = dimension;
-    mesh.NELEM = mesh.CELLS.size();
+    mesh.NELEM = int(mesh.CELLS.size());
     mesh.shrink_to_fit();
     std::stringstream ss;
     ss << "Generate DVS mesh <" << mesh_name.str() << ">";
