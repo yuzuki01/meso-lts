@@ -2,6 +2,8 @@
 
 meso 求解器
 
+---
+
 ## 数值方法
 
 ### 最小二乘法求梯度
@@ -32,6 +34,8 @@ const int near_num = mesh_cell.near_cell_key.size();
         slope_f[p] = lsp.C * Sfr;
     }
 ```
+
+---
 
 ## 创建自己的求解器
 
