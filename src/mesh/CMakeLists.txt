@@ -1,7 +1,7 @@
 ######################
 # CMakeFile for mesh #
 ######################
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.25)
 project(mesh)
 set(CMAKE_BUILD_TYPE MinSizeRel)
 

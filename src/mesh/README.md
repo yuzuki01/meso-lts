@@ -14,6 +14,7 @@ meso 网格
     - [网格界面](#网格界面)
  - [网格生成器](#网格生成器)
     - [Gauss-Hermit型DVS](#Gauss-Hermit型DVS)
+    - [Newton-Cotes型DVS](#Newton-Cotes型DVS)
 
 ---
 
@@ -168,9 +169,29 @@ public:
 
 ### Gauss-Hermit型DVS
 
-生成 Gauss-Hermit 结构型速度空间的函数。其中 `gauss_point` 按照一维情况来给，函数会自动根据网格文件的维数来生成对应的结构型速度空间网格。
+生成 Gauss-Hermit 型结构速度空间的函数。其中 `gauss_point` 按照一维情况来给，函数会自动根据网格文件的维数来生成对应的结构型速度空间网格。
 
 如： `dvs_mesh = GENERATOR::gauss_hermit(3, 2, RT);` 则是生成 D2Q9 ，且气体常数和温度乘积为 `RT` 的网格。
+
+配置文件参数为：
+
+```text
+case-info:
+    # other definitions
+    ...
+    # gauss-hermit
+    dvs_mesh        GaussHermit
+:end
+
+def:
+    # other definitions
+    ...
+    # gauss-hermit
+    gauss_point     3
+:end
+```
+
+调用代码如下：
 
 ```c++
 ConfigReader config("./config/<your_config_file>");
@@ -188,5 +209,55 @@ if (config.dvs_mesh == MESH_GAUSS_HERMIT) {
         int gp;
         gp = config.get<int>("gauss_point");
         dvs_mesh = GENERATOR::gauss_hermit(gp, D, R * T);
+    }
+```
+
+### Newton-Cotes型DVS
+
+生成 Newton-Cotes 型结构速度空间网格的函数。其中 `n + 1` 和 `mount` 分别为复化求积中小区间内的结点个数和小区间份数。
+
+如： `dvs_mesh = GENERATOR::newton_cotes(4, 22, 2, 15.0, RT);` 则是生成点数为 `89 * 89` ，范围为 `[-15*sqrt(2*RT), 15*sqrt(2*RT)] *  [-15*sqrt(2RT), 15*sqrt(2RT)]` 的二维结构速度空间，复化求积的代数精度为 7 阶。
+
+配置文件参数为：
+
+```text
+case-info:
+    # other definitions
+    ...
+    # newton-cotes
+    dvs_mesh                NewtonCotes
+:end
+
+def:
+    # other definitions
+    ...
+    # newton-cotes
+    newton_cotes_point      4
+    newton_cotes_mount      22
+    newton_cotes_scale      15.0
+:end
+```
+
+调用代码如下：
+
+```c++
+ConfigReader config("./config/<your_config_file>");
+
+/// other codes
+
+// DVS mesh
+MESH::StaticMesh dvs_mesh = MESH::StaticMesh(MESH_TYPE_NO_FACE, "NewtonCotes");
+
+D = phy_mesh.dimension();               // dimension
+R = config.get<double>("R");            // gas constant
+T = config.get<double>("temperature");  // temperature
+
+if (config.dvs_mesh == MESH_NEWTON_COTES) {
+        int n, mount;
+        double scale;
+        n = config.get<int>("newton_cotes_point");
+        mount = config.get<int>("newton_cotes_mount");
+        scale = config.get<double>("newton_cotes_scale");
+        dvs_mesh = GENERATOR::newton_cotes(n, mount, D, scale, R * T);
     }
 ```

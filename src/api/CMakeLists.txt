@@ -1,7 +1,7 @@
 ########################
 # CMakeFile for solver #
 ########################
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.25)
 project(api)
 set(CMAKE_BUILD_TYPE MinSizeRel)
 

@@ -41,8 +41,17 @@ check_point(*this) {
     phy_mesh.build();
 
     D = phy_mesh.dimension();
-    dvs_mesh.load("./mesh/" + config.dvs_mesh);
-    dvs_mesh.build();
+    if (config.dvs_mesh == MESH_NEWTON_COTES) {
+        int n, mount;
+        double scale;
+        n = config.get<int>("newton_cotes_point");
+        mount = config.get<int>("newton_cotes_mount");
+        scale = config.get<double>("newton_cotes_scale");
+        dvs_mesh = GENERATOR::newton_cotes(n, mount, D, scale, R * T0);
+    } else {
+        dvs_mesh.load("./mesh/" + config.dvs_mesh);
+        dvs_mesh.build();
+    }
 }
 
 void Scheme::info() const {

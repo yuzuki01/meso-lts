@@ -1,6 +1,6 @@
 import re
 
-fp = "../build/result/cylinder/step_33000.dat"
+fp = R"..\build\result\cavity-thin-mesh\step_100000.dat"
 D = 2
 
 with open(fp, 'r') as file:
@@ -51,5 +51,5 @@ for key, value in data.items():
 with open("result.check_point", 'w') as fp2:
     fp2.write("step= 0\n\ncell:\n")
     for i in range(element_count):
-        fp2.write(f"{i} {data['density'][i]} {data['temperature'][i]} {data['velocity-x'][i]} {data['velocity-y'][i]} 0.0 {data['heat_flux-x'][i]} {data['heat_flux-y'][i]} 0.0\n")
+        fp2.write(f"{i} {data['density'][i]} 0.0 {data['velocity-x'][i]} {data['velocity-y'][i]} 0.0 0.0 0.0 0.0\n")
     fp2.write(":end")
