@@ -26,7 +26,7 @@ MESH::StaticMesh GENERATOR::newton_cotes(int n, int mount, int dimension, double
     MESH::StaticMesh mesh;
     mesh.name = mesh_name.str();
     scale = scale * sqrt(2.0 * RT);
-    double dh = 2.0 * scale / double(total_point - 1);
+    double dh = 2.0 * scale / mount;
     std::vector<double> coordinate(total_point), weight(total_point);
     for (int i = 0; i < total_point; i++) {
         coordinate[i] = scale * double(2 * i + 1 - total_point) / double (total_point - 1);
