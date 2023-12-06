@@ -23,9 +23,12 @@ public:
 /// Physical Var
 namespace PhysicalVar {
     struct MacroVars {
+        /// conserved
         double density = 0.0, old_density = 0.0;
-        double temperature = 0.0;
         double energy = 0.0, old_energy = 0.0;
+        Vec3D momentum{0.0, 0.0, 0.0};
+        /// primitive
+        double temperature = 0.0;
         Vec3D velocity{0.0, 0.0, 0.0};
         Vec3D heat_flux{0.0, 0.0, 0.0};
     };

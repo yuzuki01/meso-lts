@@ -20,6 +20,9 @@ int handle_solver(ConfigReader &config, ArgParser &parser)  {
 #ifdef SOLVER_DUGKS_INCOMPRESSIBLE
 template int handle_solver<DUGKS_INCOMPRESSIBLE>(ConfigReader &config, ArgParser &parser);
 #endif
+#ifdef SOLVER_CDUGKS_INCOMPRESSIBLE
+template int handle_solver<CDUGKS_INCOMPRESSIBLE>(ConfigReader &config, ArgParser &parser);
+#endif
 #ifdef SOLVER_DUGKS_SHAKHOV
 template int handle_solver<DUGKS_SHAKHOV>(ConfigReader &config, ArgParser &parser);
 #endif

@@ -171,16 +171,16 @@ void SCell::get_grad_f_bp() {
 
 void SCell::get_macro_var() {
     macro_vars.density = macro_vars.energy = 0.0;
-    macro_vars.velocity = macro_vars.heat_flux = {0.0, 0.0, 0.0};
+    macro_vars.heat_flux = macro_vars.momentum = {0.0, 0.0, 0.0};
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.CELLS[p];
         macro_vars.density += it.volume * g_t[p];
-        macro_vars.velocity += it.volume * g_t[p] * it.position;
+        macro_vars.momentum += it.volume * g_t[p] * it.position;
         macro_vars.energy += it.volume * (it.position_square * g_t[p] + h_t[p]);
     }
-    macro_vars.velocity /= macro_vars.density;
-    macro_vars.energy /= 2.0 * macro_vars.density;
-    macro_vars.temperature = (macro_vars.energy - (macro_vars.velocity * macro_vars.velocity) / 2.0) / solver.Cv;
+    macro_vars.energy /= 2.0;
+    macro_vars.velocity = macro_vars.momentum / macro_vars.density;
+    macro_vars.temperature = ((macro_vars.energy / macro_vars.density) - (macro_vars.velocity * macro_vars.velocity) / 2.0) / solver.Cv;
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.CELLS[p];
         Vec3D c = it.position - macro_vars.velocity;
@@ -286,16 +286,16 @@ void SFace::get_f_b() {
 
 void SFace::get_macro_var() {
     macro_vars.density = macro_vars.energy = 0.0;
-    macro_vars.velocity = macro_vars.heat_flux = {0.0, 0.0, 0.0};
+    macro_vars.heat_flux = macro_vars.momentum = {0.0, 0.0, 0.0};
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.CELLS[p];
         macro_vars.density += it.volume * g_b[p];
-        macro_vars.velocity += it.volume * g_b[p] * it.position;
+        macro_vars.momentum += it.volume * g_b[p] * it.position;
         macro_vars.energy += it.volume * (it.position_square * g_b[p] + h_b[p]);
     }
-    macro_vars.velocity /= macro_vars.density;
-    macro_vars.energy /= 2.0 * macro_vars.density;
-    macro_vars.temperature = (macro_vars.energy - (macro_vars.velocity * macro_vars.velocity) / 2.0) / solver.Cv;
+    macro_vars.energy /= 2.0;
+    macro_vars.velocity = macro_vars.momentum / macro_vars.density;
+    macro_vars.temperature = ((macro_vars.energy / macro_vars.density) - (macro_vars.velocity * macro_vars.velocity) / 2.0) / solver.Cv;
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.CELLS[p];
         Vec3D c = it.position - macro_vars.velocity;

@@ -1,14 +1,16 @@
 #include "solver.h"
 
-#ifdef SOLVER_DUGKS_INCOMPRESSIBLE
+#ifdef SOLVER_CDUGKS_INCOMPRESSIBLE
 
-using Scheme = DUGKS_INCOMPRESSIBLE;
+using Scheme = CDUGKS_INCOMPRESSIBLE;
 using SCell = Scheme::Cell;
 using SFace = Scheme::Face;
 
 /// Solver Constructor
-Scheme::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : BasicSolver(_config, _parser),
-check_point(*this) {
+CDUGKS_INCOMPRESSIBLE::CDUGKS_INCOMPRESSIBLE(ConfigReader &_config,
+                                             ArgParser &_parser) :
+        BasicSolver(_config, _parser),
+        check_point(*this) {
     /// Read config
     Rho0 = config.get<double>("density");
     Re = config.get<double>("Re");
@@ -20,6 +22,7 @@ check_point(*this) {
     /// Mesh
     phy_mesh.load("./mesh/" + config.phy_mesh);
     phy_mesh.build();
+
     D = phy_mesh.dimension();
     if (config.dvs_mesh == MESH_GAUSS_HERMIT) {
         int gp;
@@ -37,14 +40,16 @@ void Scheme::info() const {
 }
 
 /// Scheme Cell Constructor
-SCell::Cell(MESH::Cell & cell, Scheme & _solver) : mesh_cell(cell), solver(_solver) {
-    f_t.resize(solver.dvs_mesh.cell_num(), 0.0);
+Scheme::Cell::Cell(MESH::Cell &cell, Scheme &_solver) :
+        mesh_cell(cell), solver(_solver) {
+    f.resize(solver.dvs_mesh.cell_num(), 0.0);
     f_bp.resize(solver.dvs_mesh.cell_num(), 0.0);
     slope_f.resize(solver.dvs_mesh.cell_num(), {0.0, 0.0, 0.0});
 }
 
 /// Scheme Face Constructor
-SFace::Face(MESH::Face & face, Scheme & _solver) : mesh_face(face), solver(_solver) {
+Scheme::Face::Face(MESH::Face &face, Scheme &_solver) :
+        mesh_face(face), solver(_solver) {
     f.resize(solver.dvs_mesh.cell_num(), 0.0);
     f_b.resize(solver.dvs_mesh.cell_num(), 0.0);
 }
@@ -66,9 +71,18 @@ double Scheme::f_maxwell(const PhysicalVar::MacroVars &macro_var, const Vec3D &p
 void SCell::init(const PhysicalVar::MacroVars &init_var) {
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.get_cell(p);
-        f_t[p] = solver.f_maxwell(init_var, it.position);
+        f[p] = solver.f_maxwell(init_var, it.position);
     }
-    get_macro_var();
+
+    macro_vars.density = macro_vars.temperature = 0.0;
+    macro_vars.momentum = {0.0, 0.0, 0.0};
+    for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
+        auto &it = solver.dvs_mesh.get_cell(p);
+        macro_vars.density += it.volume * f[p];
+        macro_vars.momentum += it.volume * f[p] * it.position;
+    }
+    macro_vars.velocity = macro_vars.momentum / macro_vars.density;
+
     update_least_square();
 }
 
@@ -77,10 +91,10 @@ void SCell::update_least_square() {
 }
 
 void SCell::get_f_bp() {
-    double C = 3.0 * solver.half_dt / (2.0 * solver.tau + solver.dt);
+    double C = solver.half_dt / (2.0 * solver.tau);
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.get_cell(p);
-        f_bp[p] = (1.0 - C) * f_t[p] + C * solver.f_maxwell(macro_vars, it.position);
+        f_bp[p] = (1.0 - C) * f[p] + C * solver.f_maxwell(macro_vars, it.position);
     }
 }
 
@@ -98,34 +112,41 @@ void SCell::get_grad_f_bp() {
     }
 }
 
-void SCell::get_macro_var() {
-    macro_vars.density = macro_vars.temperature = 0.0;
-    macro_vars.momentum = {0.0, 0.0, 0.0};
-    for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
-        auto &it = solver.dvs_mesh.get_cell(p);
-        macro_vars.density += it.volume * f_t[p];
-        macro_vars.momentum += it.volume * f_t[p] * it.position;
-    }
-    macro_vars.velocity = macro_vars.momentum / macro_vars.density;
-}
-
-void SCell::update_f_t() {
+void SCell::update_f() {
     /// compute flux
     std::vector<double> flux_f(solver.dvs_mesh.cell_num(), 0.0);
     /// list face
-    double Adt_V;
-    for (auto &face_key : mesh_cell.face_key) {
+    for (auto &face_key: mesh_cell.face_key) {
         auto &face = solver.get_face(face_key);
-        auto &nv = (face.mesh_face.on_cell_key == mesh_cell.key) ? face.mesh_face.on_cell_nv : face.mesh_face.inv_cell_nv;
-        Adt_V = face.mesh_face.area / mesh_cell.volume * solver.dt;
+        auto &nv = (face.mesh_face.on_cell_key == mesh_cell.key) ? face.mesh_face.on_cell_nv
+                                                                 : face.mesh_face.inv_cell_nv;
         for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
             auto &it = solver.dvs_mesh.get_cell(p);
-            flux_f[p] += (it.position * nv) * Adt_V * face.f[p];
+            flux_f[p] += (it.position * nv) * face.mesh_face.area * face.f[p];
         }
     }
-    /// update f_t
+    /// update macro vars
+    double dt_v = solver.dt / mesh_cell.volume;
+    double density_n = macro_vars.density;
+    Vec3D velocity_n = macro_vars.velocity;
+    double flux_density = 0.0;
+    Vec3D flux_momentum(0.0, 0.0, 0.0);
+    for (int p = 0; p < solver.dvs_mesh.cell_num(); ++p) {
+        auto &it = solver.dvs_mesh.get_cell(p);
+        flux_density += it.volume * flux_f[p];
+        flux_momentum += it.volume * flux_f[p] * it.position;
+    }
+    macro_vars.density -= dt_v * flux_density;
+    macro_vars.momentum -= dt_v * flux_momentum;
+    macro_vars.velocity = macro_vars.momentum / macro_vars.density;
+
+    /// update micro vars
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
-        f_t[p] = (4.0 * f_bp[p] - f_t[p]) / 3.0 - flux_f[p];
+        auto &it = solver.dvs_mesh.get_cell(p);
+        double f_eq_n = solver.f_maxwell(density_n, it.position, velocity_n),
+                f_eq_n1 = solver.f_maxwell(macro_vars.density, it.position, macro_vars.velocity);
+        f[p] = ((2.0 * solver.tau + 1.0) / solver.dt) *
+               (f[p] + solver.half_dt * (f_eq_n1 / solver.tau + (f_eq_n - f[p]) / solver.tau) - dt_v * flux_f[p]);
     }
 }
 
@@ -148,8 +169,8 @@ void SFace::get_f_b() {
     }
 }
 
-void SFace::get_macro_var() {
-    macro_vars.density = macro_vars.temperature = 0.0;
+void SFace::get_f() {
+    macro_vars.density = 0.0;
     macro_vars.momentum = {0.0, 0.0, 0.0};
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.get_cell(p);
@@ -157,13 +178,11 @@ void SFace::get_macro_var() {
         macro_vars.momentum += it.volume * f_b[p] * it.position;
     }
     macro_vars.velocity = macro_vars.momentum / macro_vars.density;
-}
 
-void SFace::get_f() {
     double C = solver.half_dt / (2.0 * solver.tau + solver.half_dt);
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.get_cell(p);
-        f[p] = (1.0 - C) * f_b[p] + C * solver.f_maxwell(macro_vars, it.position);
+        f[p] = (1.0 - C) * f_b[p] + C * solver.f_maxwell(macro_vars.density, it.position, macro_vars.velocity);
     }
 }
 
@@ -229,12 +248,6 @@ void Scheme::do_step() {
 #pragma omp parallel for
     for (int i = 0; i < int(phy_mesh.face_num()); i++) {
         auto &face = get_face(i);
-        face.get_macro_var();
-    }
-
-#pragma omp parallel for
-    for (int i = 0; i < int(phy_mesh.face_num()); i++) {
-        auto &face = get_face(i);
         face.get_f();
     }
 
@@ -247,13 +260,7 @@ void Scheme::do_step() {
 #pragma omp parallel for
     for (int i = 0; i < int(phy_mesh.cell_num()); i++) {
         auto &cell = get_cell(i);
-        cell.update_f_t();
-    }
-
-#pragma omp parallel for
-    for (int i = 0; i < int(phy_mesh.cell_num()); i++) {
-        auto &cell = get_cell(i);
-        cell.get_macro_var();
+        cell.update_f();
     }
 
     /// OpenMP loop end
@@ -295,7 +302,7 @@ void Scheme::init() {
     /// Create Scheme Objects
     logger << "Create scheme-objects.";
     logger.note();
-    for (auto &it : phy_mesh.CELLS) {
+    for (auto &it: phy_mesh.CELLS) {
         CELLS.emplace_back(it, *this);
     }
 
@@ -305,7 +312,7 @@ void Scheme::init() {
         init_var.density = Rho0;
         init_var.temperature = T0;
         init_var.velocity = {0.0, 0.0, 0.0};
-        for (auto &mark : phy_mesh.MARKS) {
+        for (auto &mark: phy_mesh.MARKS) {
             if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
                 init_var.density = mark.density;
                 init_var.temperature = mark.temperature;
@@ -313,7 +320,7 @@ void Scheme::init() {
                 break;
             }
         }
-        for (auto &mark : phy_mesh.MARKS) {
+        for (auto &mark: phy_mesh.MARKS) {
             if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
                 init_var.density = mark.density;
                 init_var.temperature = mark.temperature;
@@ -328,7 +335,7 @@ void Scheme::init() {
 
     logger << "    scheme-objects: cell - ok.";
     logger.info();
-    for (auto &face : phy_mesh.FACES) {
+    for (auto &face: phy_mesh.FACES) {
         FACES.emplace_back(face, *this);
         /// face init
     }
@@ -353,21 +360,21 @@ void Scheme::do_save() {
     std::vector<double> data(phy_mesh.cell_num());
 
     /// density
-    for (auto &it : CELLS) data[it.mesh_cell.key] = it.macro_vars.density;
+    for (auto &it: CELLS) data[it.mesh_cell.key] = it.macro_vars.density;
     writer.write_data(data);
     data.clear();
     /// velocity-x
-    for (auto &it : CELLS) data[it.mesh_cell.key] = it.macro_vars.velocity.x;
+    for (auto &it: CELLS) data[it.mesh_cell.key] = it.macro_vars.velocity.x;
     writer.write_data(data);
     data.clear();
     /// velocity-y
-    for (auto &it : CELLS) data[it.mesh_cell.key] = it.macro_vars.velocity.y;
+    for (auto &it: CELLS) data[it.mesh_cell.key] = it.macro_vars.velocity.y;
     writer.write_data(data);
     data.clear();
 
     /// velocity-x
     if (D == 3) {
-        for (auto &it : CELLS) data[it.mesh_cell.key] = it.macro_vars.velocity.z;
+        for (auto &it: CELLS) data[it.mesh_cell.key] = it.macro_vars.velocity.z;
         writer.write_data(data);
         data.clear();
     }
@@ -397,7 +404,7 @@ void Scheme::do_residual() {
     double sum1, sum2;
     /// density
     sum1 = sum2 = 0.0;
-    for (auto &cell : CELLS) {
+    for (auto &cell: CELLS) {
         double a, b;
         a = cell.macro_vars.density * cell.mesh_cell.volume;
         b = cell.macro_vars.old_density * cell.mesh_cell.volume;
