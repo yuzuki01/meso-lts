@@ -20,7 +20,7 @@ public:
 
     /// Physical Formula
     inline double f_maxwell(double density, const Vec3D &particle_velocity, const Vec3D &flow_velocity) const;
-    inline double f_maxwell(const PhysicalVar::MacroVars &macro_var, const Vec3D &particle_velocity) const;
+    inline double f_maxwell(const Physical::MacroVars &macro_var, const Vec3D &particle_velocity) const;
 
     using DistributionFunction = std::vector<double>;
     /// Scheme Cell
@@ -34,11 +34,11 @@ public:
         DistributionFunction f_t{}, f_bp{};
         std::vector<Vec3D> slope_f{};
         /// 宏观量
-        PhysicalVar::MacroVars macro_vars{};
+        Physical::MacroVars macro_vars{};
         /// 构造函数
         explicit Cell(MESH::Cell &cell, Scheme &_solver);
         /// 算法函数
-        void init(const PhysicalVar::MacroVars &init_var);
+        void init(const Physical::MacroVars &init_var);
         void get_f_bp();
         void get_grad_f_bp();
         void get_macro_var();
@@ -53,7 +53,7 @@ public:
         /// 分布函数
         DistributionFunction f{}, f_b{};
         /// 宏观量
-        PhysicalVar::MacroVars macro_vars{};
+        Physical::MacroVars macro_vars{};
         /// 构造函数
         explicit Face(MESH::Face &face, Scheme &_solver);
         /// 算法函数

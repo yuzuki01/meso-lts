@@ -20,8 +20,8 @@ public:
     void do_step();
 };
 
-/// Physical Var
-namespace PhysicalVar {
+/// Physical
+namespace Physical {
     struct MacroVars {
         /// conserved
         double density = 0.0, old_density = 0.0;
@@ -32,4 +32,6 @@ namespace PhysicalVar {
         Vec3D velocity{0.0, 0.0, 0.0};
         Vec3D heat_flux{0.0, 0.0, 0.0};
     };
+
+    MacroVars strvec_to_macro_vars(const string_vector &str_vec);
 }

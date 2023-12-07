@@ -42,11 +42,11 @@ public:
         std::vector<Vec3D> slope_g{};
         std::vector<Vec3D> slope_h{};
         /// 宏观量
-        PhysicalVar::MacroVars macro_vars{};
+        Physical::MacroVars macro_vars{};
         /// 构造函数
         explicit Cell(MESH::Cell &cell, Scheme &_solver);
         /// 算法函数
-        void init(PhysicalVar::MacroVars init_var);
+        void init(Physical::MacroVars init_var);
         void get_f_bp();
         void get_grad_f_bp();
         void get_macro_var();
@@ -62,7 +62,7 @@ public:
         DistributionFunction g{}, g_b{};
         DistributionFunction h{}, h_b{};
         /// 宏观量
-        PhysicalVar::MacroVars macro_vars{};
+        Physical::MacroVars macro_vars{};
         /// 构造函数
         explicit Face(MESH::Face &face, Scheme &_solver);
         /// 算法函数

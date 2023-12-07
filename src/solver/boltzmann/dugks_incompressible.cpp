@@ -6,6 +6,14 @@ using Scheme = DUGKS_INCOMPRESSIBLE;
 using SCell = Scheme::Cell;
 using SFace = Scheme::Face;
 
+/// check_point
+
+TP_func void CheckPoint<Scheme>::init_field(const Physical::MacroVars &_var);
+
+TP_func void CheckPoint<Scheme>::init_from_file(const std::string &file_path);
+
+TP_func void CheckPoint<Scheme>::write_to_file(const std::string &file_path);
+
 /// Solver Constructor
 Scheme::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : BasicSolver(_config, _parser),
 check_point(*this) {
@@ -56,14 +64,14 @@ double Scheme::f_maxwell(double density, const Vec3D &particle_velocity, const V
     return density * (1.0 + ku_RT + (ku_RT * ku_RT - uu_RT) / 2.0);
 }
 
-double Scheme::f_maxwell(const PhysicalVar::MacroVars &macro_var, const Vec3D &particle_velocity) const {
+double Scheme::f_maxwell(const Physical::MacroVars &macro_var, const Vec3D &particle_velocity) const {
     double uu_RT = macro_var.velocity * macro_var.velocity / RT;
     double ku_RT = macro_var.velocity * particle_velocity / RT;
     return macro_var.density * (1.0 + ku_RT + (ku_RT * ku_RT - uu_RT) / 2.0);
 }
 
 /// Cell Functions
-void SCell::init(const PhysicalVar::MacroVars &init_var) {
+void SCell::init(const Physical::MacroVars &init_var) {
     for (int p = 0; p < solver.dvs_mesh.cell_num(); p++) {
         auto &it = solver.dvs_mesh.get_cell(p);
         f_t[p] = solver.f_maxwell(init_var, it.position);
@@ -301,7 +309,7 @@ void Scheme::init() {
 
     auto check_point_file = parser.parse_param<std::string>("check_point", STRING_NULL);
     if (check_point_file == STRING_NULL) {
-        PhysicalVar::MacroVars init_var{};
+        Physical::MacroVars init_var{};
         init_var.density = Rho0;
         init_var.temperature = T0;
         init_var.velocity = {0.0, 0.0, 0.0};
@@ -409,6 +417,78 @@ void Scheme::do_residual() {
     logger << "Residual at step=" << step;
     logger.info();
     data_sci_double_println({"density"}, {residual});
+}
+
+
+/// check_point
+
+TP_func void CheckPoint<Scheme>::init_field(const Physical::MacroVars &_var) {
+    for (auto &cell : solver.CELLS) {
+        cell.init(_var);
+    }
+}
+
+TP_func void CheckPoint<Scheme>::init_from_file(const std::string &file_path) {
+    BasicReader reader("check_point", file_path);
+    int read_case = 0;
+    std::vector<Physical::MacroVars> data;
+    for (int i = 0; i < reader.line_num(); i++) {
+        auto each_line = split(reader[i]);
+        if (each_line.empty()) continue;
+        switch (read_case) {
+            case 0:
+                if (each_line[0] == "case=") {
+                    if (each_line[1] != solver.config.name) {
+                        solver.continue_to_run = false;
+                        warn_println("check_point error.");
+                        return;
+                    }
+                    continue;
+                }
+                if (each_line[0] == "mesh=") {
+                    if (each_line[1] != solver.phy_mesh.name) {
+                        solver.continue_to_run = false;
+                        warn_println("check_point error.");
+                        return;
+                    }
+                    data.resize(solver.phy_mesh.cell_num());
+                    continue;
+                }
+                if (each_line[0] == "step=") {
+                    solver.step = stoi(each_line[1]);
+                    std::stringstream ss;
+                    ss << "Set step=" << solver.step << " for " << solver.config.solver;
+                    highlight_println(ss.str());
+                    continue;
+                }
+                if (each_line[0] == cell_mark) {
+                    read_case = 1;
+                    continue;
+                }
+                break;
+            case 1:
+                if (each_line[0] == ":end") break;
+                solver.get_cell(stoi(each_line[0])).init(Physical::strvec_to_macro_vars(each_line));
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+TP_func void CheckPoint<Scheme>::write_to_file(const std::string &file_path) {
+    std::ofstream fp;
+    fp.open(file_path, std::ios::out | std::ios::trunc);
+    fp << "case= " << solver.config.name << "\n" <<
+       "mesh= " << solver.phy_mesh.name << "\n" <<
+       "step= " << solver.step << "\n\n" << cell_mark << "\n";
+    for (auto &cell : solver.CELLS) {
+        fp << cell.mesh_cell.key << "\t" << std::setprecision(DATA_PRECISION)
+           << cell.macro_vars.density << "\t" << cell.macro_vars.temperature << "\t"
+           << cell.macro_vars.velocity.x << "\t" << cell.macro_vars.velocity.y << "\t" << cell.macro_vars.velocity.z << "\t"
+           << cell.macro_vars.heat_flux.x << "\t" << cell.macro_vars.heat_flux.y << "\t" << cell.macro_vars.heat_flux.z << "\n";
+    }
+    fp << end_mark;
 }
 
 #endif
