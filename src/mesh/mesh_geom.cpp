@@ -76,21 +76,21 @@ int GEOM::face_num(const int elem_type) {
 std::string GEOM::generate_face_key(key_vector &node_set) {
     /// transfer 'string' to 'int' weight.
     const int len = int(node_set.size());
-    key_vector node_set_cp(len);
-    key_vector weight(len, 0);
-    std::copy(node_set.begin(), node_set.end(), node_set_cp.begin());
-    std::sort(node_set_cp.begin(), node_set_cp.end());
-    for (int i = 0; i < len; i++) {
-        weight[i] = int(std::find(node_set_cp.begin(), node_set_cp.end(), node_set[i]) - node_set_cp.begin());
-    }
     /// find position where is min.
-    int pos = int(std::find(weight.begin(), weight.end(), 0) - weight.begin());
+    int pos = 0;
+    auto min = node_set[pos];
+    for (int i = 0; i < len; i++) {
+        if (node_set[i] < min) {
+            pos = i;
+            min = node_set[i];
+        }
+    }
     /// direction
     bool direction;
     int left_pos, right_pos;
     left_pos = (pos == 0) ? (len - 1) : (pos - 1);
-    right_pos = (pos + 2 == len) ? 0 : (pos + 1);
-    direction = weight[right_pos] > weight[left_pos];
+    right_pos = (pos == len - 1) ? 0 : (pos + 1);
+    direction = node_set[right_pos] < node_set[left_pos];
     /// append key
     int count = 0;
     std::stringstream ss;
@@ -98,8 +98,8 @@ std::string GEOM::generate_face_key(key_vector &node_set) {
         ss << node_set[pos] << ">";
         pos = direction ? (pos + 1) : (pos - 1);
         /// make valid range
-        if (pos < 0) pos += len;
-        if (pos >= len) pos -= len;
+        if (pos < 0) pos = len - 1;
+        if (pos > len - 1) pos = 0;
         count++;
     }
     return ss.str();
@@ -118,7 +118,7 @@ void GEOM::face_normal_vector(MESH::Face &face, MESH::StaticMesh &mesh) {
         /// 2D config
         /// get vector along the LINE
         Vec3D vfn = mesh.get_node(face.node_key[0]).position - mesh.get_node(face.node_key[1]).position;
-        vfn.norm();
+        vfn = vfn.norm();
         /// get angle
         double angle_x = vector_angles_2d(vfn, {1.0, 0.0, 0.0});
         double angle_y = vector_angles_2d(vfn, {0.0, 1.0, 0.0});
@@ -144,7 +144,7 @@ void GEOM::face_normal_vector(MESH::Face &face, MESH::StaticMesh &mesh) {
                 v12 = mesh.get_node(face.node_key[2]).position - mesh.get_node(face.node_key[1]).position;
         /// get normal vector
         Vec3D nv = v01 ^v12;   // cross
-        nv.norm();
+        nv = nv.norm();
         /// direction
         if (nv * vcf >= 0.0) {
             face.on_cell_nv = nv;
@@ -167,7 +167,7 @@ void GEOM::face_normal_vector(MESH::Face &face, MESH::MapMesh &mesh) {
         /// 2D config
         /// get vector along the LINE
         Vec3D vfn = mesh.get_node(face.node_key[0]).position - mesh.get_node(face.node_key[1]).position;
-        vfn.norm();
+        vfn = vfn.norm();
         /// get angle
         double angle_x = vector_angles_2d(vfn, {1.0, 0.0, 0.0});
         double angle_y = vector_angles_2d(vfn, {0.0, 1.0, 0.0});
@@ -193,7 +193,7 @@ void GEOM::face_normal_vector(MESH::Face &face, MESH::MapMesh &mesh) {
                 v12 = mesh.get_node(face.node_key[2]).position - mesh.get_node(face.node_key[1]).position;
         /// get normal vector
         Vec3D nv = v01 ^v12;   // cross
-        nv.norm();
+        nv = nv.norm();
         /// direction
         if (nv * vcf >= 0.0) {
             face.on_cell_nv = nv;

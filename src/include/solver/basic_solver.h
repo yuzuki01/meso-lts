@@ -33,5 +33,11 @@ namespace Physical {
         Vec3D heat_flux{0.0, 0.0, 0.0};
     };
 
+    struct ConservedFlux {
+        double density = 0.0;
+        Vec3D momentum{0.0, 0.0, 0.0};
+        double energy = 0.0;
+    };
+
     MacroVars strvec_to_macro_vars(const string_vector &str_vec);
 }

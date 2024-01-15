@@ -6,15 +6,6 @@ using Scheme = DUGKS_SHAKHOV;
 using SCell = Scheme::Cell;
 using SFace = Scheme::Face;
 
-/// check point
-
-TP_func void CheckPoint<Scheme>::init_field(const Physical::MacroVars &_var);
-
-TP_func void CheckPoint<Scheme>::init_from_file(const std::string &file_path);
-
-TP_func void CheckPoint<Scheme>::write_to_file(const std::string &file_path);
-
-
 /// Solver Constructor
 Scheme::DUGKS_SHAKHOV(ConfigReader &_config, ArgParser &_parser) : BasicSolver(_config, _parser),
 check_point(*this) {
@@ -237,7 +228,7 @@ void SFace::get_f_b() {
         if (it.position * nv >= 0.0) {
             Vec3D r_ij = mesh_face.position - on_cell.mesh_cell.position;
             double g_i = on_cell.g_bp[p], h_i = on_cell.h_bp[p];
-            if (solver.zero_gradient || (solver.boundary_zero_gradient && mesh_face.boundary_type != MESH_BC_INTERFACE)) {
+            if (solver.zero_gradient || (solver.boundary_zero_gradient && mesh_face.boundary_type != MeshBC_interface)) {
                 g_b[p] = g_i;
                 h_b[p] = h_i;
                 continue;
@@ -264,7 +255,7 @@ void SFace::get_f_b() {
         } else {
             Vec3D r_ij = mesh_face.position - inv_cell.mesh_cell.position;
             double g_i = inv_cell.g_bp[p], h_i = inv_cell.h_bp[p];
-            if (solver.zero_gradient || (solver.boundary_zero_gradient && mesh_face.boundary_type != MESH_BC_INTERFACE)) {
+            if (solver.zero_gradient || (solver.boundary_zero_gradient && mesh_face.boundary_type != MeshBC_interface)) {
                 g_b[p] = g_i;
                 h_b[p] = h_i;
                 continue;
@@ -332,11 +323,11 @@ void SFace::get_f() {
 
 void SFace::do_boundary() {
     switch (mesh_face.boundary_type) {
-        case MESH_BC_INTERFACE: {
+        case MeshBC_interface: {
             /// interface - skip
             return;
         }
-        case MESH_BC_INLET: {
+        case MeshBC_inlet: {
             /// inlet
             double kn;
             auto &mark = solver.phy_mesh.get_mark(mesh_face.mark_key);
@@ -355,7 +346,7 @@ void SFace::do_boundary() {
             }
             return;
         }
-        case MESH_BC_OUTLET: {
+        case MeshBC_outlet: {
             /// outlet
             auto &mark = solver.phy_mesh.get_mark(mesh_face.mark_key);
             auto &nv = mesh_face.inv_cell_nv;
@@ -371,7 +362,7 @@ void SFace::do_boundary() {
             }
             return;
         }
-        case MESH_BC_ISOTHERMAL_WALL: {
+        case MeshBC_isothermal_wall: {
             /// isothermal wall
             double kn, rho_w, rho_w0;
             auto &mark = solver.phy_mesh.get_mark(mesh_face.mark_key);
@@ -523,15 +514,7 @@ void Scheme::init() {
         init_var.temperature = T0;
         init_var.velocity = {0.0, 0.0, 0.0};
         for (auto &mark : phy_mesh.MARKS) {
-            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
-                init_var.density = mark.density;
-                init_var.temperature = mark.temperature;
-                init_var.velocity = mark.velocity;
-                break;
-            }
-        }
-        for (auto &mark : phy_mesh.MARKS) {
-            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
+            if (MESH::MarkTypeID[mark.type] == MeshBC_inlet) {
                 init_var.density = mark.density;
                 init_var.temperature = mark.temperature;
                 init_var.velocity = mark.velocity;

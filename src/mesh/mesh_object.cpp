@@ -4,13 +4,13 @@ using namespace MESH;
 
 /// global vars
 std::unordered_map<std::string, int> MESH::MarkTypeID{
-        {"interface",       MESH_BC_INTERFACE},
-        {"inlet",           MESH_BC_INLET},
-        {"outlet",          MESH_BC_OUTLET},
-        {"isothermal_wall", MESH_BC_ISOTHERMAL_WALL},
-        {"adiabat_wall",    MESH_BC_ABDIABAT_WALL},
-        {"symmetry",        MESH_BC_SYMMETRY},
-        {"periodic",        MESH_BC_PERIODIC},
+        {"interface",       MeshBC_interface},
+        {"inlet",           MeshBC_inlet},
+        {"outlet",          MeshBC_outlet},
+        {"isothermal_wall", MeshBC_isothermal_wall},
+        {"adiabat_wall",    MeshBC_abdiabat_wall},
+        {"symmetry",        MeshBC_symmetry},
+        {"periodic",        MeshBC_periodic},
 };
 
 /// Node
@@ -115,10 +115,10 @@ void BasicMesh::info() {
     if (name == MESH_KEY_NULL) return;
     std::string type_name;
     switch (type) {
-        case MESH_TYPE_NORMAL:
+        case MeshTypeNormal:
             type_name = "normal";
             break;
-        case MESH_TYPE_NO_FACE:
+        case MeshTypeNoFace:
             type_name = "no-face";
             break;
         default:
@@ -160,9 +160,9 @@ void StaticMesh::load(const std::string &file_path) {
 
 void StaticMesh::build() {
     switch (type) {
-        case MESH_TYPE_NORMAL:
+        case MeshTypeNormal:
             build_face();
-        case MESH_TYPE_NO_FACE:
+        case MeshTypeNoFace:
             build_geom();
         default:
             shrink_to_fit();
@@ -200,18 +200,31 @@ bool StaticMesh::set_mark(const BoundaryParam &bc_param) {
     return false;
 }
 
+void StaticMesh::compute_rotate_matrix() {
+    if (type != MeshTypeNormal) return;
+    /// list face
+    for (int i = 0; i < face_num(); ++i) {
+        auto &face = get_face(i);
+        face.rotate_matrix = rotate_matrix(face.on_cell_nv);
+        face.inv_rotate_matrix = face.rotate_matrix.I();
+    }
+    std::stringstream ss;
+    ss << "Set rotating matrix for each interface - ok.";
+    note_println(ss.str());
+}
+
 int StaticMesh::node_num() {
-    NPOIN = NODES.size();
+    NPOIN = int(NODES.size());
     return NPOIN;
 }
 
 int StaticMesh::cell_num() {
-    NELEM = CELLS.size();
+    NELEM = int(CELLS.size());
     return NELEM;
 }
 
 int StaticMesh::face_num() const {
-    return FACES.size();
+    return int(FACES.size());
 }
 
 MESH::Node &StaticMesh::get_node(int _key) {
@@ -244,10 +257,10 @@ void StaticMesh::info() const {
     if (name == MESH_KEY_NULL) return;
     std::string type_name;
     switch (type) {
-        case MESH_TYPE_NORMAL:
+        case MeshTypeNormal:
             type_name = "normal";
             break;
-        case MESH_TYPE_NO_FACE:
+        case MeshTypeNoFace:
             type_name = "no-face";
             break;
         default:
@@ -261,7 +274,7 @@ void StaticMesh::info() const {
     info_println(ss.str());
     data_int_println({"node", "cell", "face", "mark"}, {NPOIN, NELEM, int(FACES.size()), NMARK});
     data_double_println({"max-magnitude", "min-size"}, {max_discrete_velocity, min_mesh_size});
-    if (type == MESH_TYPE_NORMAL) {
+    if (type == MeshTypeNormal) {
         info_println("  mark info:");
         for (auto &mark : MARKS) mark.info();
     }
@@ -276,9 +289,9 @@ void MapMesh::load(const std::string &file_path) {
 
 void MapMesh::build() {
     switch (type) {
-        case MESH_TYPE_NORMAL:
+        case MeshTypeNormal:
             build_face();
-        case MESH_TYPE_NO_FACE:
+        case MeshTypeNoFace:
             build_geom();
         default:
             shrink_to_fit();
@@ -317,17 +330,17 @@ bool MapMesh::set_mark(const BoundaryParam &bc_param) {
 }
 
 int MapMesh::node_num() {
-    NPOIN = NodeKey.size();
+    NPOIN = int(NodeKey.size());
     return NPOIN;
 }
 
 int MapMesh::cell_num() {
-    NELEM = CellKey.size();
+    NELEM = int(CellKey.size());
     return NELEM;
 }
 
 int MapMesh::face_num() const {
-    return FaceKey.size();
+    return int(FaceKey.size());
 }
 
 MESH::Node &MapMesh::get_node(int _key) {
@@ -365,10 +378,10 @@ void MapMesh::info() const {
     if (name == MESH_KEY_NULL) return;
     std::string type_name;
     switch (type) {
-        case MESH_TYPE_NORMAL:
+        case MeshTypeNormal:
             type_name = "normal";
             break;
-        case MESH_TYPE_NO_FACE:
+        case MeshTypeNoFace:
             type_name = "no-face";
             break;
         default:
@@ -382,7 +395,7 @@ void MapMesh::info() const {
     info_println(ss.str());
     data_int_println({"node", "cell", "face", "mark"}, {NPOIN, NELEM, int(FaceKey.size()), NMARK});
     data_double_println({"max-magnitude", "min-size"}, {max_discrete_velocity, min_mesh_size});
-    if (type == MESH_TYPE_NORMAL) {
+    if (type == MeshTypeNormal) {
         info_println("  mark info:");
         for (auto &it : MARKS) it.second.info();
     }

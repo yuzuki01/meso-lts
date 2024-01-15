@@ -9,8 +9,8 @@ public:
     /// Check Point
     CheckPoint<DUGKS_INCOMPRESSIBLE> check_point;
     /// Mesh
-    MESH::StaticMesh phy_mesh{MESH_TYPE_NORMAL, config.phy_mesh};
-    MESH::StaticMesh dvs_mesh{MESH_TYPE_NO_FACE, config.dvs_mesh};
+    MESH::StaticMesh phy_mesh{MeshTypeNormal, config.phy_mesh};
+    MESH::StaticMesh dvs_mesh{MeshTypeNoFace, config.dvs_mesh};
     /// Physical
     double Re, Ma;
     double R, T0, Rho0, L;
@@ -75,5 +75,14 @@ public:
     void do_save();
     void do_residual();
 };
+
+
+/// check_point
+
+TP_func void CheckPoint<DUGKS_INCOMPRESSIBLE>::init_field(const Physical::MacroVars &_var);
+
+TP_func void CheckPoint<DUGKS_INCOMPRESSIBLE>::init_from_file(const std::string &file_path);
+
+TP_func void CheckPoint<DUGKS_INCOMPRESSIBLE>::write_to_file(const std::string &file_path);
 
 #endif  // SOLVER_DUGKS_INCOMPRESSIBLE

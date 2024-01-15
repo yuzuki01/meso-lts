@@ -34,7 +34,8 @@ public:
     Vec3D &operator*=(double k);                    // 自乘 double
     Vec3D &operator/=(double k);                    // 自除
     double magnitude() const;                       // 取模
-    void norm();                                    // 归一
+    double sum() const;                             // 求和
+    Vec3D norm() const;                                   // 归一
 
     std::string info() const;
 };
@@ -49,13 +50,26 @@ public:
     ~Mat3D() = default;
     Mat3D() = default;
     explicit Mat3D(double every);    // 矩阵各个值设置为 every
-    explicit Mat3D(std::initializer_list<double>);
+    explicit Mat3D(std::initializer_list<double> values);
+    Mat3D &operator=(const Mat3D &_mat);
 
     double det() const;
     Mat3D T();                              // 转置
     Mat3D I();                              // 矩阵的逆
+    Mat3D operator*(double _value);         // 乘于系数
+    Mat3D operator/(double _value);         // 除于系数
     Vec3D operator*(const Vec3D &_vec);     // Mat * Vec 矩阵乘于列向量
     Mat3D operator*(const Mat3D &_mat);     // 矩阵乘法 this * _mat
+    Mat3D operator+(const Mat3D &_mat);
+    Mat3D operator-();
+    Mat3D operator-(const Mat3D &_mat);
 
     void info() const;
 };
+
+Mat3D operator*(double _value, const Mat3D &_mat);
+Mat3D identity();
+Mat3D diag(std::initializer_list<double> values);
+
+/// 3D Coordinate Transfer
+Mat3D rotate_matrix(const Vec3D &_vec);

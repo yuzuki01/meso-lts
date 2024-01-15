@@ -33,6 +33,11 @@ Mat3D::Mat3D(std::initializer_list<double> values) {
     }
 }
 
+Mat3D &Mat3D::operator=(const Mat3D &_mat) {
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) _matrix[i][j] = _mat._matrix[i][j];
+    return *this;
+}
+
 double Mat3D::det() const {
     return _matrix[0][0] * (_matrix[1][1] * _matrix[2][2] - _matrix[2][1] * _matrix[1][2]) -
            _matrix[0][1] * (_matrix[1][0] * _matrix[2][2] - _matrix[2][0] * _matrix[1][2]) +
@@ -72,6 +77,18 @@ Mat3D Mat3D::I() {
     return result;
 }
 
+Mat3D Mat3D::operator*(double _value) {
+    Mat3D result;
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) result._matrix[i][j] = _matrix[i][j] * _value;
+    return result;
+}
+
+Mat3D Mat3D::operator/(double _value) {
+    Mat3D result;
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) result._matrix[i][j] = _matrix[i][j] / _value;
+    return result;
+}
+
 Mat3D Mat3D::operator*(const Mat3D &_mat) {
     Mat3D result;
     for (int i = 0; i < 3; ++i) {
@@ -82,6 +99,24 @@ Mat3D Mat3D::operator*(const Mat3D &_mat) {
             }
         }
     }
+    return result;
+}
+
+Mat3D Mat3D::operator+(const Mat3D &_mat) {
+    Mat3D result;
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) result._matrix[i][j] = _matrix[i][j] + _mat._matrix[i][j];
+    return result;
+}
+
+Mat3D Mat3D::operator-() {
+    Mat3D result;
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) result._matrix[i][j] = -_matrix[i][j];
+    return result;
+}
+
+Mat3D Mat3D::operator-(const Mat3D &_mat) {
+    Mat3D result;
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) result._matrix[i][j] = _matrix[i][j] - _mat._matrix[i][j];
     return result;
 }
 
@@ -102,4 +137,34 @@ void Mat3D::info() const {
         }
         std::cout << '\n';
     }
+}
+
+Mat3D operator*(double _value, const Mat3D &_mat) {
+    Mat3D result;
+    for (int i = 0; i < 3; ++i) for (int j = 0; j < 3; ++j) result._matrix[i][j] = _mat._matrix[i][j] * _value;
+    return result;
+}
+
+Mat3D identity() {
+    Mat3D result(0.0);
+    for (int i = 0; i < 3; ++i) result._matrix[i][i] = 1.0;
+    return result;
+}
+
+Mat3D diag(std::initializer_list<double> values) {
+    if (values.size() != 3)
+        warn_println("Warning: The provided initializer list does not have length 3. "
+                     "The matrix will be partially filled, and the excess values will be ignored or set to 0.");
+
+    auto it = values.begin();
+    Mat3D result(0.0);
+    for (int i = 0; i < 3; ++i) {
+        if (it != values.end()) {
+            result._matrix[i][i] = *it;
+            ++it;
+        } else {
+            result._matrix[i][i] = 0.0;
+        }
+    }
+    return result;
 }

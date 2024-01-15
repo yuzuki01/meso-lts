@@ -35,7 +35,12 @@ double &Vec3D::operator[](int i) {
     }
 }
 
-Vec3D &Vec3D::operator=(const Vec3D &other) = default;
+Vec3D &Vec3D::operator=(const Vec3D &other) {
+    x = other.x;
+    y = other.y;
+    z = other.z;
+    return *this;
+}
 
 Vec3D &Vec3D::operator=(const std::initializer_list<double> &init_list) {
     switch (init_list.size()) {
@@ -151,18 +156,15 @@ double Vec3D::magnitude() const {
     return sqrt(x * x + y * y + z * z);
 }
 
-void Vec3D::norm() {
+double Vec3D::sum() const {
+    return x + y + z;
+}
+
+Vec3D Vec3D::norm() const {
     // 归一
-    double len = magnitude();
-    if (len != 0.0) {
-        x /= len;
-        y /= len;
-        z /= len;
-    } else {
-        x = INFINITY;
-        y = INFINITY;
-        z = INFINITY;
-    }
+    double k = magnitude();
+    // 除于系数
+    return *this / k;
 }
 
 std::string Vec3D::info() const {

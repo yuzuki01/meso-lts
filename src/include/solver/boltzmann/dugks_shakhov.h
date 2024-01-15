@@ -9,8 +9,8 @@ public:
     /// Check Point
     CheckPoint<DUGKS_SHAKHOV> check_point;
     /// Mesh
-    MESH::StaticMesh phy_mesh{MESH_TYPE_NORMAL, config.phy_mesh};
-    MESH::StaticMesh dvs_mesh{MESH_TYPE_NO_FACE, config.dvs_mesh};
+    MESH::StaticMesh phy_mesh{MeshTypeNormal, config.phy_mesh};
+    MESH::StaticMesh dvs_mesh{MeshTypeNoFace, config.dvs_mesh};
     /// Physical
     double Re{}, Ma, Kn, Pr;
     double R, T0, Rho0, L0, vhs_index, CFL;
@@ -86,5 +86,13 @@ public:
     void do_crashed(Scheme::Cell &cell);
     void do_crashed(Scheme::Face &face);
 };
+
+/// check point
+
+TP_func void CheckPoint<DUGKS_SHAKHOV>::init_field(const Physical::MacroVars &_var);
+
+TP_func void CheckPoint<DUGKS_SHAKHOV>::init_from_file(const std::string &file_path);
+
+TP_func void CheckPoint<DUGKS_SHAKHOV>::write_to_file(const std::string &file_path);
 
 #endif //SOLVER_DUGKS_SHAKHOV

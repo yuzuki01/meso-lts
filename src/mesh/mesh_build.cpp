@@ -79,7 +79,7 @@ void MESH::StaticMesh::build_geom() {
         update_min_mesh_size(pow(cell.volume, 1.0 / dimension()));
     }
     info_println(" - build geom: cell - ok.");
-    if (type == MESH_TYPE_NORMAL) {
+    if (type == MeshTypeNormal) {
         /// face
         for (auto &face: FACES) {
             face.position = GEOM::face_position(face, *this);
@@ -249,7 +249,7 @@ void MESH::MapMesh::build_geom() {
         update_min_mesh_size(pow((Pi_over_2 / dimension()) * cell.volume, 1.0 / dimension()));
     }
     info_println(" - build geom: cell - ok.");
-    if (type == MESH_TYPE_NORMAL) {
+    if (type == MeshTypeNormal) {
         /// face
         for (auto &it: FACES) {
             auto &face = it.second;

@@ -1,7 +1,7 @@
 #include "api.h"
 
 int handle_parse_mesh(const std::string &path) {
-    MESH::StaticMesh mesh(MESH_TYPE_NORMAL, "parsed_mesh");
+    MESH::StaticMesh mesh(MeshTypeNormal, "parsed_mesh");
     mesh.load(path);
     mesh.build();
     mesh.info();
@@ -20,15 +20,26 @@ int handle_parse_mesh(const std::string &path) {
 int handle_help() {
     Logger logger("meso");
     logger << " meso -<switch> --<param> <value>" << "\n" <<
-    "     switch:" << "\n" <<
-    "       h / help        -- help information" << "\n" <<
-    "       debug           -- debug symbol" << "\n" <<
-    "     param:" << "\n" <<
-    "       case            -- fetch config file in ./config/" << "\n" <<
-    "       max_step        -- set max step" << "\n" <<
-    "       save_interval   -- set save step interval" << "\n" <<
-    "       parse_mesh      -- output tecplot file of mesh file" << "\n" <<
-    "       ...";
+           "     switch:" << "\n" <<
+           "       h / help        -- help information" << "\n" <<
+           "       debug           -- debug symbol" << "\n" <<
+           "     param:" << "\n" <<
+           "       case            -- fetch config file in ./config/" << "\n" <<
+           "       max_step        -- set max step" << "\n" <<
+           "       save_interval   -- set save step interval" << "\n" <<
+           "       parse_mesh      -- output tecplot file of mesh file" << "\n" <<
+           "       ...";
     logger.info();
+    return 0;
+}
+
+int handle_test() {
+    std::cout << "test" << std::endl;
+    GKS::MMDF u_l(1.0, 1.0, 0, GKS::MMDF::full_zone);
+    std::cout << "init mmdf" << std::endl;
+    std::cout << u_l(5) << std::endl;
+    std::cout << u_l(2) << std::endl;
+    std::cout << u_l(1) << std::endl;
+    std::cout << u_l(0) << std::endl;
     return 0;
 }

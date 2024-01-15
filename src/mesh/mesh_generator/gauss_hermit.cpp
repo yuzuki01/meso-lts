@@ -48,7 +48,7 @@ MESH::StaticMesh GENERATOR::gauss_hermit(int gauss_point, int dimension, double 
                     int cell_key = i + j * gauss_point + k * gauss_point * gauss_point;
                     int inv_cell_key =
                             (gauss_point - i - 1) + (gauss_point - j - 1) * gauss_point +
-                            (gauss_point - k - 1) * gauss_point;
+                            (gauss_point - k - 1) * gauss_point * gauss_point;
                     mesh.CELLS.emplace_back(
                             sqrt(RT) * Vec3D(points[i], points[j], points[k]),
                             weights[i] * weights[j] * weights[k],

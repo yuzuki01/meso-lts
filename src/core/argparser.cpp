@@ -11,7 +11,7 @@ ArgParser::ArgParser(int argc, char **argv) {
         if (std::strncmp(argv[i], "-", 1) == 0) {
             if (std::strncmp(argv[i], "--", 2) == 0) {
                 /// --target value
-                _value[argv[i]] = (argc > i && std::strncmp(argv[i+1], "-", 1) != 0) ? argv[i + 1] : PARSER_NULL;
+                _value[argv[i]] = (argc > i + 1 && std::strncmp(argv[i + 1], "-", 1) != 0) ? argv[i + 1] : PARSER_NULL;
             } else {
                 /// -target
                 _switch[argv[i]] = true;

@@ -6,16 +6,8 @@ using Scheme = DUGKS_INCOMPRESSIBLE;
 using SCell = Scheme::Cell;
 using SFace = Scheme::Face;
 
-/// check_point
-
-TP_func void CheckPoint<Scheme>::init_field(const Physical::MacroVars &_var);
-
-TP_func void CheckPoint<Scheme>::init_from_file(const std::string &file_path);
-
-TP_func void CheckPoint<Scheme>::write_to_file(const std::string &file_path);
-
 /// Solver Constructor
-Scheme::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : BasicSolver(_config, _parser),
+DUGKS_INCOMPRESSIBLE::DUGKS_INCOMPRESSIBLE(ConfigReader & _config, ArgParser & _parser) : BasicSolver(_config, _parser),
 check_point(*this) {
     /// Read config
     Rho0 = config.get<double>("density");
@@ -102,7 +94,7 @@ void SCell::get_grad_f_bp() {
         }
         slope_f[p] = lsp.C * Sfr;
         /// zero gradient
-        // slope_f[p] = {0.0, 0.0, 0.0};
+        slope_f[p] = {0.0, 0.0, 0.0};
     }
 }
 
@@ -177,7 +169,7 @@ void SFace::get_f() {
 
 void SFace::do_boundary() {
     switch (mesh_face.boundary_type) {
-        case MESH_BC_ISOTHERMAL_WALL: {
+        case MeshBC_isothermal_wall: {
             /// isothermal wall
             double kn, rho_w, rho_w0;
             auto &mark = solver.phy_mesh.get_mark(mesh_face.mark_key);
@@ -202,7 +194,7 @@ void SFace::do_boundary() {
             }
             return;
         }
-        case MESH_BC_INTERFACE: {
+        case MeshBC_interface: {
             /// interface - skip
             return;
         }
@@ -314,15 +306,7 @@ void Scheme::init() {
         init_var.temperature = T0;
         init_var.velocity = {0.0, 0.0, 0.0};
         for (auto &mark : phy_mesh.MARKS) {
-            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
-                init_var.density = mark.density;
-                init_var.temperature = mark.temperature;
-                init_var.velocity = mark.velocity;
-                break;
-            }
-        }
-        for (auto &mark : phy_mesh.MARKS) {
-            if (MESH::MarkTypeID[mark.type] == MESH_BC_INLET) {
+            if (MESH::MarkTypeID[mark.type] == MeshBC_inlet) {
                 init_var.density = mark.density;
                 init_var.temperature = mark.temperature;
                 init_var.velocity = mark.velocity;
@@ -372,8 +356,7 @@ void Scheme::do_save() {
     for (auto &it : CELLS) data[it.mesh_cell.key] = it.macro_vars.velocity.y;
     writer.write_data(data);
     data.clear();
-
-    /// velocity-x
+    /// velocity-z
     if (D == 3) {
         for (auto &it : CELLS) data[it.mesh_cell.key] = it.macro_vars.velocity.z;
         writer.write_data(data);

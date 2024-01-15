@@ -6,8 +6,9 @@
 
 #define MESH_KEY_NULL "NULL"
 
-#define MESH_TYPE_NORMAL    0
-#define MESH_TYPE_NO_FACE   1
+// #define MESH_TYPE_NORMAL    0
+// #define MESH_TYPE_NO_FACE   1
+enum {MeshTypeNormal, MeshTypeNoFace};
 
 /// template
 #define TP_func template<>
@@ -98,7 +99,7 @@ class MESH::Face {
 public:
     int type{};           /// Geom type
     int key{};
-    int boundary_type = MESH_BC_INTERFACE;  /// boundary type
+    int boundary_type = MeshBC_interface;  /// boundary type
     int mark_key{};                    /// mark where the interface is
     // Mark<int> * mark_ptr{};
 
@@ -118,6 +119,7 @@ public:
     // Cell<int> * on_cell_ptr{};
     int on_cell_face{};
     Vec3D on_cell_nv{};
+    Mat3D rotate_matrix{}, inv_rotate_matrix{};     /// for on_cell only
     int inv_cell_key{};
     // Cell<int> * inv_cell_ptr{};
     int inv_cell_face{};
@@ -227,6 +229,8 @@ public:
 
     bool set_mark(const BoundaryParam &bc_param);
 
+    void compute_rotate_matrix();
+
     void info() const;
 
     void shrink_to_fit();
@@ -303,5 +307,5 @@ public:
 private:
     /// mesh/mesh_build.cpp
     void build_face();       // create interface
-    void build_geom();            // calculate geom params
+    void build_geom();       // calculate geom params
 };
