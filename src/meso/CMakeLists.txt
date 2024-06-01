@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(mesh)
+project(meso)
 
 set(CMAKE_CXX_STANDARD 17)
 set(PROJECT_HOME_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
@@ -33,12 +33,14 @@ file(GLOB SRC
 # set(CMAKE_SHARED_LIBRARY_PREFIX "")                     # remove prefix
 
 # 根据不同的目标执行不同的指令
-add_library(${PROJECT_NAME}
-        SHARED
+add_executable(${PROJECT_NAME}
+        main.cpp
         ${SRC}
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_HOME_DIR}/bin/libcore${SHARED_LIBRARY_SUFFIX})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_HOME_DIR}/bin/libmesh${SHARED_LIBRARY_SUFFIX})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_HOME_DIR}/bin/libsolver${SHARED_LIBRARY_SUFFIX})
 
 # check openMP
 find_package(OpenMP REQUIRED)

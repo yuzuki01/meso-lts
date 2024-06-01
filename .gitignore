@@ -1,11 +1,2 @@
 /.idea/
-/src/core/.idea/
-/src/core/cmake-build-minsizerel/
-/src/mesh/.idea/
-/src/mesh/cmake-build-minsizerel/
-/src/solver/.idea/
-/src/solver/cmake-build-minsizerel/
-/src/api/
-/src/api/.idea/
-/src/api/cmake-build-minsizerel/
-/build/
+/cmake-build-release/
