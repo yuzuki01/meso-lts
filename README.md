@@ -66,4 +66,4 @@ type        wall
 
 网格使用 gambit `.neu` 格式
 
-![result](./files/result.gif)
+![result](files/result.gif)
