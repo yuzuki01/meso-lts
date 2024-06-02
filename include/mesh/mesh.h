@@ -9,7 +9,7 @@
 #include "mesh/reader.h"
 
 namespace MESO::Mesh {
-    MESO::Mesh::Zone load_gambit(const std::string &file_path);
+    MESO::Mesh::Mesh load_gambit(const std::string &file_path);
 }
 
 #endif //MESO_MESH_H

@@ -2,18 +2,17 @@
 #define SOLVER_CDUGKS_H
 
 class CDUGKS : public BasicSolver {
-private:
-    std::vector<MESO::Scalar> GH_weight;
-    std::vector<MESO::Vector> GH_dvs;
 public:
-    Mesh::Zone mesh;
-    Mesh::Zone dvs_mesh;
+    Mesh::Mesh mesh;
+    Mesh::Mesh dvs_mesh;
+    /// mpi
+    MPI_Task_List dvs_partition; // [node_rank]{start_index, num}
 
     bool is_crashed{}, gradient_switch;
     double Ma, Re, CFL;
     double RT, Rho0, L0;
     double tau{}, dt{}, half_dt{};
-    int step{}, dvs_num{};
+    int step{};
     double solution_time{};
 
     /// FieldValue

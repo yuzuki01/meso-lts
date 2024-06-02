@@ -26,11 +26,11 @@ MESO::StringList BasicReader::read_lines() const {
     return lines;
 }
 
-MESO::Mesh::Zone Gambit::read() {
+MESO::Mesh::Mesh Gambit::read() {
     StringList lines = read_lines();
     int line_size = int(lines.size());
     StringList data;
-    Zone zone;
+    Mesh zone;
     for (int i = 0; i < line_size; ++i) {
         data = MESO::Utils::split(lines[i]);
         if (data[0] == "NNODE") {

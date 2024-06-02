@@ -50,8 +50,8 @@ namespace MESO::Solver {
          **/
         T get(const ConfigKey &key, T default_value, bool print_error = true);
 
-        Group & get_cell_group(MESO::Mesh::Cell &cell, MESO::Mesh::Zone &mesh);
-        Mark & get_face_group(MESO::Mesh::Face &face, MESO::Mesh::Zone &mesh);
+        Group & get_cell_group(MESO::Mesh::Cell &cell, MESO::Mesh::Mesh &mesh);
+        Mark & get_face_group(MESO::Mesh::Face &face, MESO::Mesh::Mesh &mesh);
 
         void info();
     };

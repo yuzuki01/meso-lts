@@ -36,7 +36,7 @@ FaceNodeIdMap fni_map = {
         {Pyram, {{0, 2, 3, 1}, {0, 1, 4},    {1, 3, 4},    {3, 2, 4},    {2, 0, 4}}}
 };
 
-void Zone::generate_face() {
+void Mesh::generate_face() {
     FaceMap fm_edge, fm_quad, fm_tria;
     for (auto &cell: cells) {
         for (int fi = 0; fi < face_num(cell.geom_type); ++fi) {
@@ -83,7 +83,7 @@ void Zone::generate_face() {
     }
 }
 
-void Zone::update_num() {
+void Mesh::update_num() {
     NNODE = int(nodes.size());
     NFACE = int(faces.size());
     NCELL = int(cells.size());
@@ -91,7 +91,7 @@ void Zone::update_num() {
     NMARK = int(face_groups.size());
 }
 
-void Zone::build_geom() {
+void Mesh::build_geom() {
     update_num();
     /// cell
     const int D = dimension();
@@ -153,7 +153,7 @@ void Zone::build_geom() {
     face_groups.shrink_to_fit();
 }
 
-void Zone::info() {
+void Mesh::info() {
     logger.note << "Mesh info: \n";
     logger.info << "    Node num: " << NNODE << "\n"
                 << "    Face num: " << NFACE << "\n"

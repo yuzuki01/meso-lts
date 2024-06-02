@@ -8,7 +8,7 @@ namespace MESO::Mesh {
 
     class Cell;
 
-    class Zone;
+    class Mesh;
 
     struct LeastSquare;
 }
@@ -36,7 +36,7 @@ namespace MESO {
     template<class FieldType>
     class Field {
     protected:
-        Mesh::Zone* mesh_ptr = nullptr;
+        Mesh::Mesh* mesh_ptr = nullptr;
     public:
         int len{};
         ObjectType flag{};
@@ -49,11 +49,11 @@ namespace MESO {
 
         Field() = default;
 
-        Field(Mesh::Zone &mesh, int flag);
+        Field(Mesh::Mesh &mesh, int flag);
 
         Field(const Field<FieldType> &other);
 
-        [[nodiscard]] Mesh::Zone * get_mesh() const { return mesh_ptr; };
+        [[nodiscard]] Mesh::Mesh * get_mesh() const { return mesh_ptr; };
 
         Field<Scalar> heft(int id);
 
@@ -108,7 +108,7 @@ namespace MESO::Mesh {
         void calculate_least_square(const CellList &neighbor_cells, int dimension);  // defined in geom.cpp
     };
 
-    class Zone {
+    class Mesh {
     public:
         int NNODE{}, NFACE{}, NCELL{}, NZONE{}, NMARK{}, NDFCD{}, NDFVL{};
         NodeList nodes;
@@ -122,7 +122,7 @@ namespace MESO::Mesh {
         double min_cell_size{};
         double max_cell_magnitude{};
 
-        Zone() = default;
+        Mesh() = default;
 
         [[nodiscard]] int dimension() const { return NDFVL; };
 

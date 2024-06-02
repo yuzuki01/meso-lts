@@ -135,7 +135,7 @@ bool Config::get(const ConfigKey &key, bool default_value, bool print_error) {
     return (settings[key] == "True");
 }
 
-Group &Config::get_cell_group(MESO::Mesh::Cell &cell, MESO::Mesh::Zone &mesh) {
+Group &Config::get_cell_group(MESO::Mesh::Cell &cell, MESO::Mesh::Mesh &mesh) {
     auto &key = mesh.cell_names[cell.group_id];
     if (groups.find(key) == groups.end()) {
         std::stringstream error_massage;
@@ -146,7 +146,7 @@ Group &Config::get_cell_group(MESO::Mesh::Cell &cell, MESO::Mesh::Zone &mesh) {
     return groups[key];
 }
 
-Mark &Config::get_face_group(MESO::Mesh::Face &face, MESO::Mesh::Zone &mesh) {
+Mark &Config::get_face_group(MESO::Mesh::Face &face, MESO::Mesh::Mesh &mesh) {
     auto &key = mesh.face_names[face.group_id];
     if (marks.find(key) == marks.end()) {
         std::stringstream error_massage;

@@ -13,9 +13,9 @@ ValueListMap gh_position = {
 using namespace MESO;
 
 
-Mesh::Zone Solver::generate_gauss_hermite(int dimension, int _n, double RT) {
+Mesh::Mesh Solver::generate_gauss_hermite(int dimension, int _n, double RT) {
     int dvs_num = 1;
-    Mesh::Zone mesh;
+    Mesh::Mesh mesh;
     for (int i = 0; i < dimension; ++i) {
         dvs_num *= _n;
     }

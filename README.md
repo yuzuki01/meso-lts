@@ -12,9 +12,9 @@
 
 与网格相关联的标量场
 
-格心 `Field<Scalar>(MESO::Mesh::Zone, cell_field_flag)`
+格心 `Field<Scalar>(MESO::Mesh::Mesh, cell_field_flag)`
 
-界面 `Field<Scalar>(MESO::Mesh::Zone, face_field_flag)`
+界面 `Field<Scalar>(MESO::Mesh::Mesh, face_field_flag)`
 
 `gradient()` 方法可以得到网格格心 `Field<Vector>`
 

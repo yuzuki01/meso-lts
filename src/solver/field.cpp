@@ -5,13 +5,13 @@ using namespace MESO;
 
 
 template<>
-Field<Scalar>::Field(Mesh::Zone &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
+Field<Scalar>::Field(Mesh::Mesh &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
     len = (flag == cell_field_flag) ? mesh.NCELL : int(mesh.faces.size());
     values.resize(len, 0.0);
 }
 
 template<>
-Field<Vector>::Field(Mesh::Zone &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
+Field<Vector>::Field(Mesh::Mesh &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
     len = (flag == cell_field_flag) ? mesh.NCELL : int(mesh.faces.size());
     values.resize(len, Vector(0.0, 0.0, 0.0));
 }
@@ -48,11 +48,11 @@ Vector &Field<Vector>::operator[](int index) {
     return values[index];
 }
 
-Field<Scalar> Mesh::Zone::zero_scalar_field(int flag) {
+Field<Scalar> Mesh::Mesh::zero_scalar_field(int flag) {
     return {*this, flag};
 }
 
-Field<Vector> Mesh::Zone::zero_vector_field(int flag) {
+Field<Vector> Mesh::Mesh::zero_vector_field(int flag) {
     return {*this, flag};
 }
 

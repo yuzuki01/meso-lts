@@ -8,6 +8,12 @@ namespace MESO::Math {
 }
 
 namespace MESO {
+    struct MPI_Task {
+        size_t start = 0;
+        size_t size = 0;
+    };
+    typedef std::vector<MPI_Task> MPI_Task_List;
+
     /// defined in mesh/object.h
     template<class FieldType>
     class Field;

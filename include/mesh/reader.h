@@ -15,13 +15,13 @@ public:
 
     [[nodiscard]] StringList read_lines() const;
 
-    virtual Zone read() { throw std::invalid_argument("<BasicReader> read() has not been override."); };
+    virtual Mesh read() { throw std::invalid_argument("<BasicReader> read() has not been override."); };
 };
 
 class MESO::Mesh::Reader::Gambit : public MESO::Mesh::Reader::BasicReader {
 public:
     explicit Gambit(MESO::String file) : MESO::Mesh::Reader::BasicReader(std::move(file)) {};
-    Zone read() override;
+    Mesh read() override;
 };
 
 #endif //MESH_READER_H

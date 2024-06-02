@@ -6,9 +6,14 @@
 #include "solver/config.h"
 
 
+namespace MESO::MPI {
+    void DVS_partition(MPI_Task_List &task_list, Mesh::Mesh &mesh);
+}
+
+
 namespace MESO::Solver {
 
-    Mesh::Zone generate_gauss_hermite(int dimension, int _n, double RT);
+    Mesh::Mesh generate_gauss_hermite(int dimension, int _n, double RT);
 
     class BasicSolver {
     protected:

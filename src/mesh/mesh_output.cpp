@@ -1,13 +1,13 @@
 #include "mesh/mesh.h"
 
 /// local func
-void write_mesh_geom(std::fstream &fp, MESO::Mesh::Zone *mesh_ptr);
+void write_mesh_geom(std::fstream &fp, MESO::Mesh::Mesh *mesh_ptr);
 
 /// global func
 using namespace MESO::Mesh;
 
 
-void Zone::output(const std::string &file_name) {
+void Mesh::output(const std::string &file_name) {
     const int dim = dimension();
     const int DATA_PRECISION = 15;
     const int LINE_DATA_NUM = 30;
@@ -88,7 +88,7 @@ void Zone::output(const std::string &file_name) {
     logger.info << ss.str() << std::endl;
 }
 
-void Zone::output(const std::string &file_name,
+void Mesh::output(const std::string &file_name,
                   std::initializer_list<std::string> names,
                   std::initializer_list<MESO::Field<Scalar> *> values,
                   int step, double solution_time) {
@@ -190,7 +190,7 @@ void Zone::output(const std::string &file_name,
     logger.info << ss.str() << std::endl;
 }
 
-void write_mesh_geom(std::fstream &fp, MESO::Mesh::Zone *mesh_ptr) {
+void write_mesh_geom(std::fstream &fp, MESO::Mesh::Mesh *mesh_ptr) {
     // write geom
     fp << std::endl << "## geom" << std::endl;
     for (auto &cell: mesh_ptr->cells) {
