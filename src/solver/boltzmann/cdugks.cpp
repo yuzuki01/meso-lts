@@ -21,69 +21,18 @@ CDUGKS::CDUGKS(MESO::ArgParser &parser) : BasicSolver(parser) {
     mesh = MESO::Mesh::load_gambit(config.get<std::string>("mesh-file", "<mesh-file>"));
     mesh.info();
     config.info();
+    dvs_mesh = MESO::Solver::generate_gauss_hermite(mesh.dimension(), 3, RT);
+    dvs_mesh.info();
 
     logger.note << "Solver::CDUGKS loaded." << std::endl;
 }
 
 void CDUGKS::initial() {
-    /// DVS
-    const double wi[3] = {2. / 3., 1. / 6., 1. / 6.};
-    const double e_mag = sqrt(3. * RT);
-    const double ei[3] = {0., 1., -1.};
-    double max_dvs_mag = 0.0;
-    if (mesh.dimension() == 2) {
-        dvs_num = 9;
-        GH_weight.resize(dvs_num);
-        GH_dvs.resize(dvs_num);
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                int ij = i * 3 + j;
-                GH_weight[ij] = wi[i] * wi[j];
-                GH_dvs[ij] = e_mag * Vector{ei[i], ei[j], 0.0};
-                double pv = GH_dvs[ij].magnitude();
-                if (max_dvs_mag < pv) max_dvs_mag = pv;
-            }
-        }
-    } else {
-        dvs_num = 27;
-        GH_weight.resize(dvs_num);
-        GH_dvs.resize(dvs_num);
-        for (int i = 0; i < 3; ++i) {
-            for (int j = 0; j < 3; ++j) {
-                for (int k = 0; k < 3; ++k) {
-                    int ijk = (i * 3 + j) * 3 + k;
-                    GH_weight[ijk] = wi[i] * wi[j];
-                    GH_dvs[ijk] = e_mag * Vector{ei[i], ei[j], ei[k]};
-                    double pv = GH_dvs[ijk].magnitude();
-                    if (max_dvs_mag < pv) max_dvs_mag = pv;
-                }
-            }
-        }
-    }
-    // GH 减少舍入误差
-    {
-        std::vector<size_t> indices(dvs_num);
-        for (size_t i = 0; i < indices.size(); ++i) {
-            indices[i] = i;
-        }
-        std::sort(indices.begin(), indices.end(), [this](size_t i1, size_t i2) {
-            return this->GH_weight[i1] > this->GH_weight[i2]; // 降序排列
-        });
-        std::vector<Scalar> sorted_weight(dvs_num);
-        std::vector<Vector> sorted_dvs(dvs_num);
-        for (size_t i = 0; i < indices.size(); ++i) {
-            sorted_weight[i] = GH_weight[indices[i]];
-            sorted_dvs[i] = GH_dvs[indices[i]];
-        }
-        GH_weight = sorted_weight;
-        GH_dvs = sorted_dvs;
-    }
-
     step = 0;
     solution_time = 0.0;
     double c_sound = sqrt(RT);
     tau = (L0 * Ma) / (Re * c_sound);
-    dt = CFL * ((mesh.min_cell_size / 2.0) / max_dvs_mag);
+    dt = CFL * ((mesh.min_cell_size / 2.0) / dvs_mesh.max_cell_magnitude);
     half_dt = 0.5 * dt;
 
     rho_cell = Field<Scalar>(mesh, cell_field_flag);

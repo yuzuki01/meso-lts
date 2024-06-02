@@ -20,6 +20,8 @@ int main(int argc, char **argv) {
 
     parse_string = parser.parse_param<std::string>("case", "<case-file>", false);
     if (parse_string != "<case-file>") {
+        /// MPI RUN
+        // MESO::MPI::Initialize(&argc, &argv);
         omp_set_num_threads(parser.parse_param<int>("parallel", omp_get_max_threads(), true));
         int save_interval = parser.parse_param<int>("save-interval", 1000, false);
         MESO::Solver::CDUGKS solver(parser);
@@ -32,8 +34,11 @@ int main(int argc, char **argv) {
             if (solver.step % save_interval == 0) solver.output();
         }
         solver.output();
+        /// MPI END
+        // MESO::MPI::Finalize();
         return 0;
     }
+
 
 
     return 0;

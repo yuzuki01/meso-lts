@@ -14,23 +14,26 @@ private:
         const int output_level;
         const std::string color_prefix;
         const std::string color_suffix;
+        bool is_output_available() {
+            return (root_ptr->level <= output_level) and (MPI::rank == MPI::main_rank);
+        };
+
     public:
-        explicit Printer(const int output_level, Logger* root_ptr, std::string prefix, std::string suffix="\033[0m") :
+        explicit Printer(const int output_level, Logger* root_ptr, std::string prefix) :
                 output_level(output_level),
                 root_ptr(root_ptr),
-                color_prefix(std::move(prefix)),
-                color_suffix(std::move(suffix)) {};
+                color_prefix(std::move(prefix)) {};
 
         template<typename T>
         Printer& operator<<(const T& value) {
-            if (root_ptr->level <= output_level) {
-                std::cout << color_prefix << value << color_suffix;
+            if (is_output_available()) {
+                std::cout << color_prefix << value;
             }
             return *this;
         }
 
         Printer& operator<<(std::ostream& (*manipulator)(std::ostream&)) {
-            if (root_ptr->level <= output_level) {
+            if (is_output_available()) {
                 manipulator(std::cout);
             }
             return *this;

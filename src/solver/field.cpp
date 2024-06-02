@@ -6,13 +6,13 @@ using namespace MESO;
 
 template<>
 Field<Scalar>::Field(Mesh::Zone &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
-    len = (flag == cell_field_flag) ? mesh.NELEM : int(mesh.faces.size());
+    len = (flag == cell_field_flag) ? mesh.NCELL : int(mesh.faces.size());
     values.resize(len, 0.0);
 }
 
 template<>
 Field<Vector>::Field(Mesh::Zone &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
-    len = (flag == cell_field_flag) ? mesh.NELEM : int(mesh.faces.size());
+    len = (flag == cell_field_flag) ? mesh.NCELL : int(mesh.faces.size());
     values.resize(len, Vector(0.0, 0.0, 0.0));
 }
 

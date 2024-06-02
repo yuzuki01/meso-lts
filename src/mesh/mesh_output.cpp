@@ -27,7 +27,7 @@ void Zone::output(const std::string &file_name) {
     }
     fp << R"(, "GroupId")";
     fp << std::endl;
-    fp << "ZONE T=\"" << "MeshData" << "\", N=" << NUMNP << ", E=" << NELEM << ", VARLOCATION=([1-" << dim
+    fp << "ZONE T=\"" << "MeshData" << "\", N=" << NNODE << ", E=" << NCELL << ", VARLOCATION=([1-" << dim
        << "]=NODAL, [3]=CELLCENTERED), DATAPACKING=BLOCK, ZONETYPE="
        << (dim == 2 ? "FEQUADRILATERAL" : "FEBRICK")
        << std::endl;
@@ -119,7 +119,7 @@ void Zone::output(const std::string &file_name,
 
     fp << "ZONE T=\""
        << ((step >= 0) ? "SolutionData(step=" + std::to_string(step) + ")" : "SolutionData")
-       << "\", N=" << NUMNP << ", E=" << NELEM << ", VARLOCATION=([1-" << dim << "]=NODAL, [";
+       << "\", N=" << NNODE << ", E=" << NCELL << ", VARLOCATION=([1-" << dim << "]=NODAL, [";
     if (vc == 1) {
         fp << dim + 1;
     } else {

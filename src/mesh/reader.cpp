@@ -33,18 +33,18 @@ MESO::Mesh::Zone Gambit::read() {
     Zone zone;
     for (int i = 0; i < line_size; ++i) {
         data = MESO::Utils::split(lines[i]);
-        if (data[0] == "NUMNP") {
+        if (data[0] == "NNODE") {
             data = MESO::Utils::split(lines[++i]);
-            zone.NUMNP = std::stoi(data[0]);
-            zone.nodes.reserve(zone.NUMNP);
-            zone.NELEM = std::stoi(data[1]);
-            zone.cells.reserve(zone.NELEM);
-            zone.NGRPS = std::stoi(data[2]);
-            zone.cell_names.reserve(zone.NGRPS);
-            zone.cell_groups.resize(zone.NGRPS);
-            zone.NBSETS = std::stoi(data[3]);
-            zone.face_names.reserve(zone.NBSETS + 1);
-            zone.face_groups.resize(zone.NBSETS + 1);
+            zone.NNODE = std::stoi(data[0]);
+            zone.nodes.reserve(zone.NNODE);
+            zone.NCELL = std::stoi(data[1]);
+            zone.cells.reserve(zone.NCELL);
+            zone.NZONE = std::stoi(data[2]);
+            zone.cell_names.reserve(zone.NZONE);
+            zone.cell_groups.resize(zone.NZONE);
+            zone.NMARK = std::stoi(data[3]);
+            zone.face_names.reserve(zone.NMARK + 1);
+            zone.face_groups.resize(zone.NMARK + 1);
             zone.NDFCD = std::stoi(data[4]);
             zone.NDFVL = std::stoi(data[5]);
             continue;

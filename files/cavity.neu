@@ -3,7 +3,7 @@ CONTROL INFO         1.2.1
 F:/UserData/ASUS/Documents/Mesh/cavity/cavity.neu
 PROGRAM:  Pointwise                VERSION:  17   
 30 May 2024 23:15:41
-     NUMNP     NELEM     NGRPS    NBSETS     NDFCD     NDFVL
+     NNODE     NCELL     NZONE    NMARK     NDFCD     NDFVL
       1644      1778         1         2         2         2
 ENDOFSECTION
 NODAL COORDINATES    1.2.1

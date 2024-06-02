@@ -8,6 +8,8 @@
 
 namespace MESO::Solver {
 
+    Mesh::Zone generate_gauss_hermite(int dimension, int _n, double RT);
+
     class BasicSolver {
     protected:
         ArgParser &parser;

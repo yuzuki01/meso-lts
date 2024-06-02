@@ -91,7 +91,7 @@ namespace MESO::Mesh {
 
     class Cell {
     public:
-        ObjectType geom_type;
+        ObjectType geom_type{};
         ObjectId id;
         ObjectId group_id = 0;
         Position position;
@@ -101,6 +101,8 @@ namespace MESO::Mesh {
         ObjectIdList neighbors;     // neighbor cells shared faces
         LeastSquare least_square;
 
+        explicit Cell(ObjectId id) : id(id) {};     // dvs init
+
         Cell(ObjectId id, ObjectType geom_type, ObjectIdList &node_list);
 
         void calculate_least_square(const CellList &neighbor_cells, int dimension);  // defined in geom.cpp
@@ -108,7 +110,7 @@ namespace MESO::Mesh {
 
     class Zone {
     public:
-        int NUMNP{}, NELEM{}, NGRPS{}, NBSETS{}, NDFCD{}, NDFVL{};
+        int NNODE{}, NFACE{}, NCELL{}, NZONE{}, NMARK{}, NDFCD{}, NDFVL{};
         NodeList nodes;
         FaceList faces;
         CellList cells;
@@ -125,6 +127,8 @@ namespace MESO::Mesh {
         [[nodiscard]] int dimension() const { return NDFVL; };
 
         void generate_face();
+
+        void update_num();
 
         void build_geom();
 

@@ -7,6 +7,7 @@ private:
     std::vector<MESO::Vector> GH_dvs;
 public:
     Mesh::Zone mesh;
+    Mesh::Zone dvs_mesh;
 
     bool is_crashed{}, gradient_switch;
     double Ma, Re, CFL;

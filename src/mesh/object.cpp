@@ -83,7 +83,16 @@ void Zone::generate_face() {
     }
 }
 
+void Zone::update_num() {
+    NNODE = int(nodes.size());
+    NFACE = int(faces.size());
+    NCELL = int(cells.size());
+    NZONE = int(cell_groups.size());
+    NMARK = int(face_groups.size());
+}
+
 void Zone::build_geom() {
+    update_num();
     /// cell
     const int D = dimension();
     min_cell_size = -1.0;
@@ -146,18 +155,18 @@ void Zone::build_geom() {
 
 void Zone::info() {
     logger.note << "Mesh info: \n";
-    logger.info << "    Node num: " << int(nodes.size()) << "\n"
-                << "    Face num: " << int(faces.size()) << "\n"
-                << "    Cell num: " << int(cells.size()) << "\n"
+    logger.info << "    Node num: " << NNODE << "\n"
+                << "    Face num: " << NFACE << "\n"
+                << "    Cell num: " << NCELL << "\n"
                 << "    Min-cell-size: " << min_cell_size << "\n"
                 << "    Max-cell-magnitude: " << max_cell_magnitude << "\n";
     logger.info << "    Cell Groups: \n";
-    for (int i = 0; i < int(cell_names.size()); ++i) {
+    for (int i = 0; i < NZONE; ++i) {
         logger.info << "        " << i + 1 << " " << cell_names[i] << "\n"
                     << "            cell num: " << int(cell_groups[i].size()) << "\n";
     }
     logger.info << "    Face Groups: \n";
-    for (int i = 0; i < int(face_names.size()); ++i) {
+    for (int i = 0; i < NMARK; ++i) {
         logger.info << "        " << i + 1 << " " << face_names[i] << "\n"
                     << "            face num: " << int(face_groups[i].size()) << "\n";
     }
