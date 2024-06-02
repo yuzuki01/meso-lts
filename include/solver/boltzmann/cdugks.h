@@ -5,8 +5,7 @@ class CDUGKS : public BasicSolver {
 public:
     Mesh::Mesh mesh;
     Mesh::Mesh dvs_mesh;
-    /// mpi
-    MPI_Task_List dvs_partition; // [node_rank]{start_index, num}
+    MPI::MPI_TaskObject mpi_task;
 
     bool is_crashed{}, gradient_switch;
     double Ma, Re, CFL;

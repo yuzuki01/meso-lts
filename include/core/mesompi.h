@@ -8,12 +8,6 @@ namespace MESO::Math {
 }
 
 namespace MESO {
-    struct MPI_Task {
-        size_t start = 0;
-        size_t size = 0;
-    };
-    typedef std::vector<MPI_Task> MPI_Task_List;
-
     /// defined in mesh/object.h
     template<class FieldType>
     class Field;
@@ -22,8 +16,15 @@ namespace MESO {
 namespace MESO::MPI {
 
     const int main_rank = 0;
-    extern int processor_num;
+    extern int node_num;
     extern int rank;
+
+    struct MPI_TaskObject {
+        int start = 0;
+        int size = 0;
+    };
+    typedef std::vector<MPI_TaskObject> MPI_Task;
+    MPI_Task get_task_distribution(int total_num);
 
     void Initialize(int *p_argc, char*** p_argv);
 

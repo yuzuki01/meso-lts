@@ -2,6 +2,9 @@
 
 
 int main(int argc, char **argv) {
+    /// MPI RUN
+    MESO::MPI::Initialize(&argc, &argv);
+
     MESO::ArgParser parser(argc, argv);
     if (parser.parse_switch("debug")) {
         logger.level = -1;
@@ -20,26 +23,23 @@ int main(int argc, char **argv) {
 
     parse_string = parser.parse_param<std::string>("case", "<case-file>", false);
     if (parse_string != "<case-file>") {
-        /// MPI RUN
-        // MESO::MPI::Initialize(&argc, &argv);
         omp_set_num_threads(parser.parse_param<int>("parallel", omp_get_max_threads(), true));
         int save_interval = parser.parse_param<int>("save-interval", 1000, false);
         MESO::Solver::CDUGKS solver(parser);
         solver.initial();
         solver.output();
-        if (parser.parse_switch("not-run")) return 0;
+        if (parser.parse_switch("not-run")) {
+            MESO::MPI::Finalize();
+            return 0;
+        }
         for (int i = 0; i < parser.parse_param("max-step", 10000, false); ++i) {
             solver.do_step();
             if (solver.is_crashed) break;
             if (solver.step % save_interval == 0) solver.output();
         }
         solver.output();
-        /// MPI END
-        // MESO::MPI::Finalize();
         return 0;
     }
-
-
-
+    MESO::MPI::Finalize();
     return 0;
 }

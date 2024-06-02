@@ -7,7 +7,7 @@
 
 
 namespace MESO::MPI {
-    void DVS_partition(MPI_Task_List &task_list, Mesh::Mesh &mesh);
+    MPI_TaskObject DVS_partition(Mesh::Mesh &mesh);
 }
 
 
