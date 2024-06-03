@@ -18,6 +18,7 @@ namespace MESO::MPI {
     const int main_rank = 0;
     extern int node_num;
     extern int rank;
+    extern int omp_num;
 
     struct MPI_TaskObject {
         int start = 0;
@@ -30,8 +31,14 @@ namespace MESO::MPI {
 
     void Finalize();
 
-    void ReduceAndBcast(Scalar local, Scalar &global);
-    void ReduceAndBcast(const MESO::Vector &local, MESO::Vector &global);
+    void Bcast(Scalar &global);
+    void Bcast(MESO::Vector &global);
+    void ReduceAll(Scalar local, Scalar &global);
+    void ReduceAll(const MESO::Vector &local, MESO::Vector &global);
+
+    /// defined in solver/field.cpp
+    void ReduceAll(Field<Scalar> &local, Field<Scalar> &global);
+    void ReduceAll(Field<Vector> &local, Field<Vector> &global);
 }
 
 #endif //CORE_MESOMPI_H

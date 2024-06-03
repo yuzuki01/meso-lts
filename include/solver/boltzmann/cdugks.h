@@ -15,8 +15,8 @@ public:
     double solution_time{};
 
     /// FieldValue
-    Field<Scalar> rho_cell;
-    Field<Vector> vel_cell;
+    Field<Scalar> m0_cell, m0_cell_n, m0_face;
+    Field<Vector> m1_cell, m1_cell_n, m1_face;
     DistributionFunction f_cell;
     DistributionFunction f_face;
 
@@ -24,7 +24,7 @@ public:
 
     void initial();
 
-    Scalar f_maxwell(double density, const Vector &flow_velocity, const Vector &particle_velocity) const;
+    Scalar f_maxwell(double m0, const Vector &m1, const Vector &particle_velocity) const;
 
     void reconstruct();
 

@@ -89,3 +89,18 @@ Field<Vector> Field<Scalar>::gradient(bool _switch) {
     // openMP - end
     return result;
 }
+
+/// MPI func
+void MPI::ReduceAll(Field<MESO::Scalar> &local, Field<MESO::Scalar> &global) {
+    for (int i = 0; i < global.len; ++i) {
+        MPI_Allreduce(&(local[i]), &(global[i]), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    }
+}
+
+void MPI::ReduceAll(Field<MESO::Vector> &local, Field<MESO::Vector> &global) {
+    for (int i = 0; i < global.len; ++i) {
+        MPI_Allreduce(&(local[i].x), &(global[i].x), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&(local[i].y), &(global[i].y), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&(local[i].z), &(global[i].z), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    }
+}

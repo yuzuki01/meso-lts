@@ -92,6 +92,7 @@ void Mesh::output(const std::string &file_name,
                   std::initializer_list<std::string> names,
                   std::initializer_list<MESO::Field<Scalar> *> values,
                   int step, double solution_time) {
+    if (MPI::rank != MPI::main_rank) return;
     if (names.size() != values.size())
         throw std::invalid_argument("Wrong size when output result");
     const int vc = int(names.size());

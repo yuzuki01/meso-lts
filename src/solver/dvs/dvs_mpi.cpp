@@ -10,10 +10,11 @@ MPI::MPI_TaskObject MPI::DVS_partition(Mesh::Mesh &mesh) {
         auto &task = task_list[i];
         auto &group = mesh.cell_groups[i];
         group.resize(task.size);
-        mesh.cell_names[i] = "node-" + std::to_string(MPI::rank);
+        mesh.cell_names[i] = "node-" + std::to_string(i);
         for (int j = 0; j < task.size; ++j) {
             group[j] = task.start + j;
         }
     }
+    mesh.update_num();
     return task_list[MPI::rank];
 }
