@@ -45,7 +45,7 @@ void CDUGKS::initial() {
     f_cell.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
     f_face.resize(mpi_task.size, Field<Scalar>(mesh, face_field_flag));
 
-#pragma omp parallel for shared(MPI::rank) default(none)
+#pragma omp parallel for default(none)
     for (auto &cell: mesh.cells) {
         auto &group = config.get_cell_group(cell, mesh);
         double m0 = 0.0;
@@ -64,9 +64,9 @@ void CDUGKS::initial() {
     /// X_cell_n as X_cell_local here
     MPI::ReduceAll(m0_cell_n, m0_cell);
     MPI::ReduceAll(m1_cell_n, m1_cell);
+    MPI_Barrier(MPI_COMM_WORLD);
     m0_cell_n.values = m0_cell.values;
     m1_cell_n.values = m1_cell.values;
-    MPI_Barrier(MPI_COMM_WORLD);
     is_crashed = false;
     logger.note << "Initialization finished." << std::endl;
 }
@@ -95,125 +95,191 @@ void CDUGKS::reconstruct() {
                                  + (face.position - cell.position - particle.position * half_dt) * grad_f[cell.id];
         }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    {
+        Field <Scalar> m0_local(mesh, face_field_flag);
+        Field <Vector> m1_local(mesh, face_field_flag);
+#pragma omp parallel for shared(m0_local, m1_local) default(none)
+        for (auto &face: mesh.faces) {
+            double m0 = 0.0;
+            Vector m1(0.0, 0.0, 0.0);
+            /// face macro vars
+            for (int p = 0; p < mpi_task.size; ++p) {
+                ObjectId dvs_id = p + mpi_task.start;
+                auto &particle = dvs_mesh.cells[dvs_id];
+                double f = f_face[p][face.id];
+                m0 += particle.volume * f;
+                m1 += particle.volume * f * particle.position;
+            }
+            m0_local[face.id] = m0;
+            m1_local[face.id] = m1;
+        }
+        MPI::ReduceAll(m0_local, m0_face);
+        MPI::ReduceAll(m1_local, m1_face);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
 #pragma omp parallel for default(none)
     for (auto &face: mesh.faces) {
-        double m0 = 0.0;
-        Vector m1(0.0, 0.0, 0.0);
-        /// face macro vars
-        for (int p = 0; p < mpi_task.size; ++p) { /// future work --- mpi on DVS
-            ObjectId dvs_id = p + mpi_task.start;
-            auto &particle = dvs_mesh.cells[dvs_id];
-            double f = f_face[p][face.id];
-            m0 += particle.volume * f;
-            m1 += particle.volume * f * particle.position;
-        }
         /// get original f on face
         double c_eq = half_dt / (2.0 * tau + half_dt);
-        for (int p = 0; p < mpi_task.size; ++p) { /// future work --- mpi on DVS
+        for (int p = 0; p < mpi_task.size; ++p) {
             // openMP parallel runs on mesh
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
-            double f_eq = f_maxwell(m0, m1, particle.position);
+            double f_eq = f_maxwell(m0_face[face.id], m1_face[face.id], particle.position);
             f_face[p][face.id] = (1.0 - c_eq) * f_face[p][face.id] + c_eq * f_eq;
         }
-        /// boundary
-        auto &mark = config.get_face_group(face, mesh);
-        auto &nv = face.normal_vector[1];
-        auto &neighbor = mesh.cells[face.cell_id[0]];
-        switch (mark.type) {
-            case inlet:
-                for (int p = 0; p < mpi_task.size; ++p) { /// future work --- mpi on DVS
-                    ObjectId dvs_id = p + mpi_task.start;
-                    auto &particle = dvs_mesh.cells[dvs_id];
-                    if (particle.position * nv >= 0.0) {
-                        f_face[p][face.id] = f_maxwell(mark.density,  mark.density * mark.velocity, particle.position);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    {
+        Field <Scalar> rho_w_local(mesh, face_field_flag);
+        Field <Scalar> rho_w0_local(mesh, face_field_flag);
+        Field <Scalar> rho_w_global(mesh, face_field_flag);
+        Field <Scalar> rho_w0_global(mesh, face_field_flag);
+
+#pragma omp parallel for shared(rho_w_local, rho_w0_local) default(none)
+        for (auto &face: mesh.faces) {
+            /// boundary
+            auto &mark = config.get_face_group(face, mesh);
+            auto &nv = face.normal_vector[1];
+            auto &neighbor = mesh.cells[face.cell_id[0]];
+            switch (mark.type) {
+                case inlet:
+                    for (int p = 0; p < mpi_task.size; ++p) {
+                        ObjectId dvs_id = p + mpi_task.start;
+                        auto &particle = dvs_mesh.cells[dvs_id];
+                        if (particle.position * nv >= 0.0) {
+                            f_face[p][face.id] = f_maxwell(mark.density, mark.density * mark.velocity,
+                                                           particle.position);
+                        }
                     }
-                }
-                break;
-            case outlet:
-                for (int p = 0; p < mpi_task.size; ++p) { /// future work --- mpi on DVS
-                    ObjectId dvs_id = p + mpi_task.start;
-                    auto &particle = dvs_mesh.cells[dvs_id];
-                    if (particle.position * nv >= 0.0) {
-                        f_face[p][face.id] = f_maxwell(m0_cell[neighbor.id], m1_cell[neighbor.id], particle.position);
+                    break;
+                case outlet:
+                    for (int p = 0; p < mpi_task.size; ++p) {
+                        ObjectId dvs_id = p + mpi_task.start;
+                        auto &particle = dvs_mesh.cells[dvs_id];
+                        if (particle.position * nv >= 0.0) {
+                            f_face[p][face.id] = f_maxwell(m0_cell[neighbor.id], m1_cell[neighbor.id],
+                                                           particle.position);
+                        }
                     }
-                }
-                break;
-            case wall: {
-                double rho_w, rho_w0;
-                rho_w = rho_w0 = 0.0;
-                for (int p = 0; p < mpi_task.size; ++p) { /// future work --- mpi on DVS
-                    ObjectId dvs_id = p + mpi_task.start;
-                    auto &particle = dvs_mesh.cells[dvs_id];
-                    double kn = particle.position * nv;
-                    if (kn >= 0.0) {
-                        double f_eq = f_maxwell(1.0, mark.velocity, particle.position);
-                        rho_w0 += kn * particle.volume * f_eq;
-                        f_face[p][face.id] = f_eq;
-                    } else {
-                        rho_w -= kn * particle.volume *  f_face[p][face.id];
+                    break;
+                case wall: {
+                    double rho_w, rho_w0;
+                    rho_w = rho_w0 = 0.0;
+                    for (int p = 0; p < mpi_task.size; ++p) {
+                        ObjectId dvs_id = p + mpi_task.start;
+                        auto &particle = dvs_mesh.cells[dvs_id];
+                        double kn = particle.position * nv;
+                        if (kn >= 0.0) {
+                            double f_eq = f_maxwell(1.0, mark.velocity, particle.position);
+                            rho_w0 += kn * particle.volume * f_eq;
+                            f_face[p][face.id] = f_eq;
+                        } else {
+                            rho_w -= kn * particle.volume * f_face[p][face.id];
+                        }
                     }
+                    rho_w_local[face.id] = rho_w;
+                    rho_w0_local[face.id] = rho_w0;
                 }
-                rho_w /= rho_w0;
-                for (int p = 0; p < mpi_task.size; ++p) { /// future work --- mpi on DVS
-                    ObjectId dvs_id = p + mpi_task.start;
-                    auto &particle = dvs_mesh.cells[dvs_id];
-                    double kn = particle.position * nv;
-                    if (kn >= 0.0) {
-                        f_face[p][face.id] *= rho_w;
-                    }
-                }
+                case fluid_interior:
+                default:
+                    break;
             }
-                break;
-            case fluid_interior:
-            default:
-                break;
         }
+        MPI_Barrier(MPI_COMM_WORLD);
+        MPI::ReduceAll(rho_w_local, rho_w_global);
+        MPI::ReduceAll(rho_w0_local, rho_w0_global);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+#pragma omp parallel for shared(rho_w_global, rho_w0_global) default(none)
+        for (auto &face: mesh.faces) {
+            auto &mark = config.get_face_group(face, mesh);
+            switch (mark.type) {
+                case wall: {
+                    auto &nv = face.normal_vector[1];
+                    for (int p = 0; p < mpi_task.size; ++p) {
+                        ObjectId dvs_id = p + mpi_task.start;
+                        auto &particle = dvs_mesh.cells[dvs_id];
+                        double kn = particle.position * nv;
+                        if (kn >= 0.0) {
+                            f_face[p][face.id] *= rho_w_global[face.id] / rho_w0_global[face.id];
+                        }
+                    }
+                }
+                    break;
+                default:
+                    break;
+            }
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
     }
 }
 
-void CDUGKS::fvm_update() {
-#pragma omp parallel for default(none)
-    for (auto &cell: mesh.cells) {
-        double dt_v = dt / cell.volume;
-        double flux_m0 = 0.0;
-        Vector flux_m1(0.0, 0.0, 0.0);
-        for (int p = 0; p < mpi_task.size; ++p) { /// future work --- mpi on DVS
-            ObjectId dvs_id = p + mpi_task.start;
-            auto &particle = dvs_mesh.cells[dvs_id];
-            double flux = 0.0;
-            for (auto face_id: cell.face_id) {
-                auto &face = mesh.faces[face_id];
-                auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
-                flux += (particle.position * nv) * face.area * f_face[p][face.id];
-            }
-            flux_m0 += particle.volume * flux;
-            flux_m1 += particle.volume * flux * particle.position;
-        }
-        m0_cell[cell.id] = m0_cell_n[cell.id] - dt_v * flux_m0;
-        m1_cell[cell.id] = m1_cell_n[cell.id] - dt_v * flux_m1;
 
-        double C = tau / (tau + half_dt);
-        double cm = half_dt / (half_dt - 2.0 * tau);
-        double c_eq = half_dt / (2.0 * tau);
-        for (int p = 0; p < mpi_task.size; ++p) { /// future work --- mpi on DVS
-            ObjectId dvs_id = p + mpi_task.start;
-            auto &particle = dvs_mesh.cells[dvs_id];
-            double flux = 0.0;
-            for (auto face_id: cell.face_id) {
-                auto &face = mesh.faces[face_id];
-                auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
-                flux += (particle.position * nv) * face.area * f_face[p][face.id];
+void CDUGKS::fvm_update() {
+    {
+        Field <Scalar> flux_m0_local(mesh, cell_field_flag);
+        Field <Vector> flux_m1_local(mesh, cell_field_flag);
+        Field <Scalar> flux_m0_global(mesh, cell_field_flag);
+        Field <Vector> flux_m1_global(mesh, cell_field_flag);
+
+#pragma omp parallel for shared(flux_m0_local, flux_m1_local) default(none)
+        for (auto &cell: mesh.cells) {
+            double flux_m0 = 0.0;
+            Vector flux_m1(0.0, 0.0, 0.0);
+            for (int p = 0; p < mpi_task.size; ++p) {
+                ObjectId dvs_id = p + mpi_task.start;
+                auto &particle = dvs_mesh.cells[dvs_id];
+                double flux = 0.0;
+                for (auto face_id: cell.face_id) {
+                    auto &face = mesh.faces[face_id];
+                    auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
+                    flux += (particle.position * nv) * face.area * f_face[p][face.id];
+                }
+                flux_m0 += particle.volume * flux;
+                flux_m1 += particle.volume * flux * particle.position;
             }
-            double f_eq_n = f_maxwell(m0_cell_n[cell.id], m1_cell_n[cell.id], particle.position);
-            double f_n = cm * f_eq_n + (1.0 - cm) * f_cell[p][cell.id];
-            double f_eq = f_maxwell(m0_cell[cell.id], m1_cell[cell.id], particle.position);
-            // 直接演化得 n + 1 时刻的 f_bp
-            f_cell[p][cell.id] = (1.0 - c_eq) *
-                                 (C * (f_n + half_dt * (f_eq / tau + (f_eq_n - f_n) / tau) - dt_v * flux)) + c_eq * f_eq;
+            flux_m0_local[cell.id] = flux_m0;
+            flux_m1_local[cell.id] = flux_m1;
         }
-        m0_cell_n[cell.id] = m0_cell[cell.id];
-        m1_cell_n[cell.id] = m1_cell[cell.id];
+        MPI_Barrier(MPI_COMM_WORLD);
+        MPI::ReduceAll(flux_m0_local, flux_m0_global);
+        MPI::ReduceAll(flux_m1_local, flux_m1_global);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+#pragma omp parallel for shared(flux_m0_global, flux_m1_global) default(none)
+        for (auto &cell: mesh.cells) {
+            double dt_v = dt / cell.volume;
+            m0_cell[cell.id] = m0_cell_n[cell.id] - dt_v * flux_m0_global[cell.id];
+            m1_cell[cell.id] = m1_cell_n[cell.id] - dt_v * flux_m1_global[cell.id];
+            double C = tau / (tau + half_dt);
+            double cm = half_dt / (half_dt - 2.0 * tau);
+            double c_eq = half_dt / (2.0 * tau);
+            for (int p = 0; p < mpi_task.size; ++p) {
+                ObjectId dvs_id = p + mpi_task.start;
+                auto &particle = dvs_mesh.cells[dvs_id];
+                double flux = 0.0;
+                for (auto face_id: cell.face_id) {
+                    auto &face = mesh.faces[face_id];
+                    auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
+                    flux += (particle.position * nv) * face.area * f_face[p][face.id];
+                }
+                double f_eq_n = f_maxwell(m0_cell_n[cell.id], m1_cell_n[cell.id], particle.position);
+                double f_n = cm * f_eq_n + (1.0 - cm) * f_cell[p][cell.id];
+                double f_eq = f_maxwell(m0_cell[cell.id], m1_cell[cell.id], particle.position);
+                // 直接演化得 n + 1 时刻的 f_bp
+                f_cell[p][cell.id] = (1.0 - c_eq) *
+                                     (C * (f_n + half_dt * (f_eq / tau + (f_eq_n - f_n) / tau) - dt_v * flux)) +
+                                     c_eq * f_eq;
+            }
+            m0_cell_n[cell.id] = m0_cell[cell.id];
+            m1_cell_n[cell.id] = m1_cell[cell.id];
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
     }
 }
 

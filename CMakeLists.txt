@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(mesh)
+project(meso-mpi)
 
 set(CMAKE_CXX_STANDARD 17)
-set(PROJECT_HOME_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+set(PROJECT_HOME_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 # OS type
 if (WIN32)
@@ -26,19 +26,16 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_HOME_DIR}/bin)
 include_directories(${PROJECT_HOME_DIR}/include)
 
 file(GLOB SRC
-        ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/*/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/*/*/*.cpp
 )
 
 # set(CMAKE_SHARED_LIBRARY_PREFIX "")                     # remove prefix
 
 # 根据不同的目标执行不同的指令
-add_library(${PROJECT_NAME}
-        SHARED
+add_executable(${PROJECT_NAME}
         ${SRC}
 )
-
-target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_HOME_DIR}/bin/libcore${SHARED_LIBRARY_SUFFIX})
 
 # check openMP
 find_package(OpenMP REQUIRED)

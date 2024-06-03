@@ -26,17 +26,26 @@
 
 不可压 CDUGKS 求解器
 
+#### 单节点启动: (仅openMP)
+
 ```shell
 ./meso --case case.txt --max-step 50000 --save-interval 100 --parallel 10
 ```
 
-配置文件:
+#### 多节点启动: (跨节点mpi+本地openMP)
+
+```shell
+export LD_LIBRARY_PATH=/path/to/meso-libs:$LD_LIBRARY_PATH
+mpirun -host node01, node02 /path/to/meso --parallel <omp_thread_num>
+```
+
+### 配置文件
 
 ```
 [settings]
 case-name       demo
-result-path     ./result
-mesh-file       cavity.neu
+result-path     /<absolute-path-to>/result
+mesh-file       /<absolute-path-to>/<mesh>.neu
 
 Re          400.0
 Ma          0.1414213562373095
@@ -64,6 +73,17 @@ type        wall
 
 ```
 
-网格使用 gambit `.neu` 格式
+### 网格
+
+使用 gambit `.neu` 格式
+
+### 结果
+
+| 输出  |        含义         |      |
+|:---:|:-----------------:|:----:|
+| m0  |   动理学分布函数 0 阶矩    |  质量  |
+| m1x | 动理学分布函数 1 阶矩 x 分量 | x 动量 |
+| m1y | 动理学分布函数 1 阶矩 y 分量 | y 动量 |
+| m1z | 动理学分布函数 1 阶矩 z 分量 | z 动量 |
 
 ![result](files/result.gif)
