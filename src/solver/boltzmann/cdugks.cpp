@@ -316,7 +316,13 @@ void CDUGKS::output() {
     auto m1x = m1_cell.heft(0);
     auto m1y = m1_cell.heft(1);
     auto m1z = m1_cell.heft(2);
-    mesh.output(file_name.str(),
-                {"m0", "m1x", "m1y", "m1z"},
-                {&m0_cell, &m1x, &m1y, &m1z}, step, solution_time);
+    if (mesh.dimension() == 2) {
+        mesh.output(file_name.str(),
+                    {"m0", "m1x", "m1y"},
+                    {&m0_cell, &m1x, &m1y}, step, solution_time);
+    } else {
+        mesh.output(file_name.str(),
+                    {"m0", "m1x", "m1y", "m1z"},
+                    {&m0_cell, &m1x, &m1y, &m1z}, step, solution_time);
+    }
 }
