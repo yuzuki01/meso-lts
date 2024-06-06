@@ -73,6 +73,22 @@ void Field<Vector>::MeshCellValueToField(const std::function<Vector(Mesh::Cell &
 }
 
 template<>
+void Field<Scalar>::set_zero() {
+#pragma omp parallel for shared(len, values, mesh_ptr) default(none)
+    for (int i = 0; i < len; ++i) {
+        *(values.begin() + i) = 0.0;
+    }
+}
+
+template<>
+void Field<Vector>::set_zero() {
+#pragma omp parallel for shared(len, values, mesh_ptr) default(none)
+    for (int i = 0; i < len; ++i) {
+        *(values.begin() + i) = {0.0, 0.0, 0.0};
+    }
+}
+
+template<>
 Field<Vector> Field<Scalar>::gradient(bool _switch) {
     Field<Vector> result(*mesh_ptr, cell_field_flag);
     if (not _switch) return result;

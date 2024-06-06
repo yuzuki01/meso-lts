@@ -6,6 +6,7 @@ using namespace MESO::Solver;
 
 CDUGKS::CDUGKS(MESO::ArgParser &parser) : BasicSolver(parser) {
     config = Config(parser.parse_param<std::string>("case", "<case-file>", false));
+    case_name = config.get<std::string>("case-name", "unnamed", false);
     /// params
     RT = config.get("gas-constant", 0.5) * config.get("ref-temperature", 1.0);
     Rho0 = config.get("ref-density", 1.0);
@@ -291,9 +292,13 @@ void CDUGKS::do_step() {
 }
 
 void CDUGKS::output() {
+    {
+        std::stringstream ss;
+        ss << "mkdir " << case_name;
+        system(ss.str().c_str());
+    }
     std::stringstream file_name;
-    file_name << config.get<std::string>("result-path", "./result", false) << "/"
-              << config.get<std::string>("case-name", "unnamed", false) << "-" << step;
+    file_name << "./" << case_name << "/result-" << step << ".dat.plt";
 
     auto m1x = m1_cell.heft(0);
     auto m1y = m1_cell.heft(1);

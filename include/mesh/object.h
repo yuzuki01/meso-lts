@@ -61,6 +61,8 @@ namespace MESO {
 
         void MeshCellValueToField(const std::function<FieldType(Mesh::Cell &)> &func);
 
+        void set_zero();
+
         Field<Vector> gradient(bool _switch=true);
     };
 }

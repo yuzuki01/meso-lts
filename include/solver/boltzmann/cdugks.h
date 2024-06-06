@@ -2,6 +2,8 @@
 #define SOLVER_CDUGKS_H
 
 class CDUGKS : public BasicSolver {
+private:
+    std::string case_name;
 public:
     Mesh::Mesh mesh;
     Mesh::Mesh dvs_mesh;
