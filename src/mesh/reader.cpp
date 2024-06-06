@@ -33,7 +33,7 @@ MESO::Mesh::Mesh Gambit::read() {
     Mesh zone;
     for (int i = 0; i < line_size; ++i) {
         data = MESO::Utils::split(lines[i]);
-        if (data[0] == "NNODE") {
+        if (data[0] == "NUMNP") {
             data = MESO::Utils::split(lines[++i]);
             zone.NNODE = std::stoi(data[0]);
             zone.nodes.reserve(zone.NNODE);
@@ -67,6 +67,7 @@ MESO::Mesh::Mesh Gambit::read() {
                 zone.nodes.emplace_back(node_id, Vector{nx, ny, nz});
                 ++i;
             }
+            logger.debug << "mesh - read nodes, NDODE=" << zone.NNODE << std::endl;
             continue;
         }
         if (data[0] == "ELEMENTS/CELLS") {
@@ -93,8 +94,10 @@ MESO::Mesh::Mesh Gambit::read() {
                 zone.cells.emplace_back(cell_id, geom_type, node_list);
                 ++i;
             }
+            logger.debug << "mesh - read cells, NCELL=" << zone.NCELL << std::endl;
             /// generate face
             zone.generate_face();
+            logger.debug << "mesh - build faces: " << zone.NFACE << std::endl;
             continue;
         }
         if (data[0] == "ELEMENT" and data[1] == "GROUP") {
@@ -119,6 +122,7 @@ MESO::Mesh::Mesh Gambit::read() {
                 }
                 ++i;
             }
+            logger.debug << "mesh - read group: " << group_name << std::endl;
             continue;
         }
         if (data[0] == "BOUNDARY" and data[1] == "CONDITIONS") {
@@ -141,6 +145,7 @@ MESO::Mesh::Mesh Gambit::read() {
                 face.group_id = group_id;
                 ++i;
             }
+            logger.debug << "mesh - read mark: " << name << std::endl;
             continue;
         }
     }

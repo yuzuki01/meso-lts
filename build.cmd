@@ -2,7 +2,7 @@
 
 :main
 set TARGET_NAME="meso-mpi"
-set SRC_DIR=./src
+set SRC_DIR=./
 set CMAKE_DIR=./cmake-build-release
 
 if not exist cmake-build-release mkdir cmake-build-release

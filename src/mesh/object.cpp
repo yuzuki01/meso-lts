@@ -81,6 +81,7 @@ void Mesh::generate_face() {
             }
         }
     }
+    NFACE = int(faces.size());
 }
 
 void Mesh::update_num() {
