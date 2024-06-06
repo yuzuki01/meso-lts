@@ -19,9 +19,9 @@ namespace MESO::Solver {
     protected:
         ArgParser &parser;
         Config config;
+        std::string case_name;
     public:
-        explicit BasicSolver(ArgParser &parser) :
-                parser(parser), config(parser.parse_param<std::string>("case", "<case-file>", true)) {};
+        explicit BasicSolver(ArgParser &parser);
     };
 
     /// Residual

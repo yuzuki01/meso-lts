@@ -5,8 +5,6 @@ using namespace MESO::Solver;
 
 
 CDUGKS::CDUGKS(MESO::ArgParser &parser) : BasicSolver(parser) {
-    config = Config(parser.parse_param<std::string>("case", "<case-file>", false));
-    case_name = config.get<std::string>("case-name", "unnamed", false);
     /// params
     RT = config.get("gas-constant", 0.5) * config.get("ref-temperature", 1.0);
     Rho0 = config.get("ref-density", 1.0);
