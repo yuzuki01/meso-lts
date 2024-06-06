@@ -111,7 +111,7 @@ void Field<Scalar>::output(const std::string &file_name) {
     if (MPI::rank != MPI::main_rank) return;
     std::fstream fp;
     std::stringstream ss;
-    ss << file_name << ".dat.plt";
+    ss << file_name << ".np.dat";
     fp.open(ss.str(), std::ios::out | std::ios::trunc);
     if (!fp.is_open()) {
         logger.warn << "Cannot open file: " << ss.str() << std::endl;
