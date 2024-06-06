@@ -325,4 +325,11 @@ void CDUGKS::output() {
                     {"m0", "m1x", "m1y", "m1z"},
                     {&m0_cell, &m1x, &m1y, &m1z}, step, solution_time);
     }
+
+    if (output_np) {
+        Utils::mkdir(case_name + "/np-data");
+        /// output numpy data
+        m0_cell.output(case_name + "/np-data/m0");
+        m1_cell.output(case_name + "/np-data/m1");
+    }
 }

@@ -20,7 +20,7 @@ namespace MESO::Solver {
         ArgParser &parser;
         Config config;
         std::string case_name;
-        bool output_dvs;
+        bool output_np;
     public:
         explicit BasicSolver(ArgParser &parser);
     };

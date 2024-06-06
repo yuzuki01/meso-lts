@@ -106,6 +106,48 @@ Field<Vector> Field<Scalar>::gradient(bool _switch) {
     return result;
 }
 
+template<>
+void Field<Scalar>::output(const std::string &file_name) {
+    if (MPI::rank != MPI::main_rank) return;
+    std::fstream fp;
+    std::stringstream ss;
+    ss << file_name << ".dat.plt";
+    fp.open(ss.str(), std::ios::out | std::ios::trunc);
+    if (!fp.is_open()) {
+        logger.warn << "Cannot open file: " << ss.str() << std::endl;
+        fp.close();
+        return;
+    }
+    const int DATA_PRECISION = 18;
+    for (auto &it: values) {
+        fp << std::setprecision(DATA_PRECISION) << it << std::endl;
+    }
+    // fp close
+    fp.close();
+}
+
+template<>
+void Field<Vector>::output(const std::string &file_name) {
+    if (MPI::rank != MPI::main_rank) return;
+    std::fstream fp;
+    std::stringstream ss;
+    ss << file_name << ".np.dat";
+    fp.open(ss.str(), std::ios::out | std::ios::trunc);
+    if (!fp.is_open()) {
+        logger.warn << "Cannot open file: " << ss.str() << std::endl;
+        fp.close();
+        return;
+    }
+    const int DATA_PRECISION = 18;
+    for (auto &it: values) {
+        fp << std::setprecision(DATA_PRECISION) << it.x << " "
+           << std::setprecision(DATA_PRECISION) << it.y << " "
+           << std::setprecision(DATA_PRECISION) << it.z << std::endl;
+    }
+    // fp close
+    fp.close();
+}
+
 /// MPI func
 void MPI::ReduceAll(Field<MESO::Scalar> &local, Field<MESO::Scalar> &global) {
     for (int i = 0; i < global.len; ++i) {

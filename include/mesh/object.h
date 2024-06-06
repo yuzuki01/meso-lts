@@ -64,6 +64,8 @@ namespace MESO {
         void set_zero();
 
         Field<Vector> gradient(bool _switch=true);
+
+        void output(const std::string &file_name);
     };
 }
 
