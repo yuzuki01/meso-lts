@@ -5,16 +5,14 @@ using namespace MESO;
 
 int MPI::node_num = 1;
 int MPI::rank = 0;
-int MPI::omp_num = omp_get_thread_num();
+int MPI::omp_num = 1;
 
 
-void MPI::Initialize(int *p_argc, char ***p_argv) {
-    int provided;
-    MPI_Init_thread(p_argc, p_argv, MPI_THREAD_MULTIPLE, &provided);
-    if (provided < MPI_THREAD_MULTIPLE) {
-        std::cerr << "MPI does not provide needed threading level\n";
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
+void MPI::Initialize(int *p_argc, char ***p_argv, int omp_threads_num) {
+    MPI_Init(p_argc, p_argv);
+
+    omp_set_num_threads(omp_threads_num);
+    MPI::omp_num = omp_threads_num;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &node_num);
@@ -23,8 +21,21 @@ void MPI::Initialize(int *p_argc, char ***p_argv) {
     int name_len;
     MPI_Get_processor_name(node_name, &name_len);
 
-    std::cout << "Spawn node: " << node_name << " , omp max-num: " << omp_get_max_threads()
-              << ", mpi rank: " << rank << " out of " << node_num << " nodes" << std::endl;
+    for (int i = 0; i < node_num; ++i) {
+        if (rank == i) {
+#pragma omp master
+            {
+                std::cout << "Spawn node: " << node_name << " , mpi rank: " << rank
+                          << " out of " << node_num << " nodes." << std::endl;
+            }
+#pragma omp parallel shared(node_name, omp_num, std::cout) default(none)
+            {
+#pragma omp critical
+                std::cout << "\tnode: " << node_name << " thread: " << omp_get_thread_num()
+                          << " out of " << omp_num << " threads." << std::endl;
+            }
+        }
+    }
 
     MPI_Barrier(MPI_COMM_WORLD);
 }

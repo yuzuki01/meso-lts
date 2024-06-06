@@ -24,9 +24,15 @@ namespace MESO::Solver {
                 parser(parser), config(parser.parse_param<std::string>("case", "<case-file>", true)) {};
     };
 
-/// add Solver here
+    /// Residual
+    const int residual_interval = 100;
+
+    template <class T>
+    T residual(Field<T> &_old, Field<T> &_new);
 
     typedef std::vector<Field<Scalar>> DistributionFunction;
+
+/// add Solver here
 
 #include "solver/boltzmann/cdugks.h"
 

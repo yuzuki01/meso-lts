@@ -22,7 +22,9 @@
 #if defined(_WIN32)
 /// Windows
 #define OS 0
+
 #include <direct.h>
+
 #elif defined(__linux__)
 /// Linux
 #define OS 1
@@ -44,6 +46,10 @@
 
 namespace MESO::Utils {
     StringList split(const std::string &_str);
+
+    void print_names_and_values(const StringList &names, const ScalarList &values);
+
+    int mkdir(const String &dir_name);
 }
 
 #endif //MESO_CORE_H

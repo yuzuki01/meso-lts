@@ -4,9 +4,9 @@ using namespace MESO::Solver;
 
 std::unordered_map<std::string, int> MESO::Solver::mark_type_map = {
         {"fluid-interior", fluid_interior},
-        {"inlet",  inlet},
-        {"outlet", outlet},
-        {"wall",   wall}
+        {"inlet",          inlet},
+        {"outlet",         outlet},
+        {"wall",           wall}
 };
 
 
@@ -67,7 +67,7 @@ Config::Config(const std::string &file_path) {
             continue;
         } else if (data[0] == "[group]") {
             Group group;
-            group.id = int(groups.size()) +  1;
+            group.id = int(groups.size()) + 1;
             ++i;
             while (i < line_size) {
                 if (lines[i].empty()) continue;     // skip empty
@@ -140,7 +140,10 @@ Group &Config::get_cell_group(MESO::Mesh::Cell &cell, MESO::Mesh::Mesh &mesh) {
     if (groups.find(key) == groups.end()) {
         std::stringstream error_massage;
         error_massage << "get_cell_group() missing key=" << key;
-        logger.warn << "[Error] " << error_massage.str() << std::endl;
+#pragma omp critical
+        {
+            logger.warn << "[Error] " << error_massage.str() << std::endl;
+        }
         throw std::invalid_argument(error_massage.str());
     }
     return groups[key];
@@ -151,7 +154,10 @@ Mark &Config::get_face_group(MESO::Mesh::Face &face, MESO::Mesh::Mesh &mesh) {
     if (marks.find(key) == marks.end()) {
         std::stringstream error_massage;
         error_massage << "get_face_group() missing key=" << key;
-        logger.warn << "[Error] " << error_massage.str() << std::endl;
+#pragma omp critical
+        {
+            logger.warn << "[Error] " << error_massage.str() << std::endl;
+        }
         throw std::invalid_argument(error_massage.str());
     }
     return marks[key];

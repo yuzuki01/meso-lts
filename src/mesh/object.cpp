@@ -95,6 +95,7 @@ void Mesh::update_num() {
 void Mesh::build_geom() {
     update_num();
     /// cell
+    total_volume = 0.0;
     const int D = dimension();
     min_cell_size = -1.0;
     max_cell_magnitude = -1.0;
@@ -105,6 +106,7 @@ void Mesh::build_geom() {
         }
         cell.position = Geom::calculate_position(node_list);
         cell.volume = Geom::calculate_volume(cell.geom_type, node_list);
+        total_volume += cell.volume;
         double mcs = (D == 2) ? 2.0 * sqrt(cell.volume / M_PI) : 2.0 * pow((3.0 * cell.volume / (4.0 * M_PI)), 1.0 / 3.0);
         double mcm = cell.position.magnitude();
         if (min_cell_size < 0.0) {

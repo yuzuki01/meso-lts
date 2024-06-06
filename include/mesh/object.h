@@ -113,6 +113,7 @@ namespace MESO::Mesh {
     class Mesh {
     public:
         int NNODE{}, NFACE{}, NCELL{}, NZONE{}, NMARK{}, NDFCD{}, NDFVL{};
+        double total_volume{};
         NodeList nodes;
         FaceList faces;
         CellList cells;

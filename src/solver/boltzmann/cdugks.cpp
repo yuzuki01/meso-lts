@@ -39,8 +39,10 @@ void CDUGKS::initial() {
 
     m0_cell = Field<Scalar>(mesh, cell_field_flag);
     m0_cell_n = Field<Scalar>(mesh, cell_field_flag);
+    m0_cell_res = Field<Scalar>(mesh, cell_field_flag);
     m1_cell = Field<Vector>(mesh, cell_field_flag);
     m1_cell_n = Field<Vector>(mesh, cell_field_flag);
+    m1_cell_res = Field<Vector>(mesh, cell_field_flag);
     m0_face = Field<Scalar>(mesh, face_field_flag);
     m1_face = Field<Vector>(mesh, face_field_flag);
     f_cell.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
@@ -289,16 +291,29 @@ void CDUGKS::do_step() {
     fvm_update();
     step++;
     solution_time += dt;
+    if (MPI::rank == MPI::main_rank) {
+        if (step % residual_interval == 0) {
+            double m0_res = residual(m0_cell_res, m0_cell);
+            Vector m1_res = residual(m1_cell_res, m1_cell);
+            logger.note << "step: " << step << std::endl;
+            if (mesh.dimension() == 2) {
+                Utils::print_names_and_values({"Res[m0]", "Res[m1x]", "Res[m1y]"},
+                                              {m0_res, m1_res.x, m1_res.y});
+            } else {
+                Utils::print_names_and_values({"Res[m0]", "Res[m1x]", "Res[m1y]", "Res[m1z]"},
+                                              {m0_res, m1_res.x, m1_res.y, m1_res.z});
+            }
+        }
+    }
 }
 
 void CDUGKS::output() {
-    {
-        std::stringstream ss;
-        ss << "mkdir " << case_name;
-        system(ss.str().c_str());
+    if (Utils::mkdir(case_name) != 0) {
+        logger.warn << "Solver::output() cannot mkdir: " << case_name << std::endl;
+        return;
     }
     std::stringstream file_name;
-    file_name << "./" << case_name << "/result-" << step << ".dat.plt";
+    file_name << "./" << case_name << "/result-" << step;
 
     auto m1x = m1_cell.heft(0);
     auto m1y = m1_cell.heft(1);

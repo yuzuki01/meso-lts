@@ -3,11 +3,8 @@
 
 int main(int argc, char **argv) {
     MESO::ArgParser parser(argc, argv);
-    /// openMP init
-    MESO::MPI::omp_num = parser.parse_param<int>("parallel", omp_get_max_threads(), true);
-    omp_set_num_threads(MESO::MPI::omp_num);
     /// MPI init
-    MESO::MPI::Initialize(&argc, &argv);
+    MESO::MPI::Initialize(&argc, &argv, parser.parse_param<int>("parallel", 1, true));
 
     if (parser.parse_switch("debug")) {
         logger.level = -1;

@@ -27,7 +27,7 @@ namespace MESO::MPI {
     typedef std::vector<MPI_TaskObject> MPI_Task;
     MPI_Task get_task_distribution(int total_num);
 
-    void Initialize(int *p_argc, char*** p_argv);
+    void Initialize(int *p_argc, char*** p_argv, int omp_threads_num);
 
     void Finalize();
 

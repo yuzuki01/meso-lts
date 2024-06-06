@@ -19,6 +19,8 @@ public:
     /// FieldValue
     Field<Scalar> m0_cell, m0_cell_n, m0_face;
     Field<Vector> m1_cell, m1_cell_n, m1_face;
+    Field<Scalar> m0_cell_res;
+    Field<Vector> m1_cell_res;
     DistributionFunction f_cell;
     DistributionFunction f_face;
 

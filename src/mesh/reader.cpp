@@ -1,5 +1,3 @@
-#include <utility>
-
 #include "mesh/mesh.h"
 #include "mesh/reader.h"
 

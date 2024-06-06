@@ -94,7 +94,7 @@ Field<Vector> Field<Scalar>::gradient(bool _switch) {
     if (not _switch) return result;
     // openMP - start
 #pragma omp parallel for shared(len, values, mesh_ptr, result) default(none)
-    for (auto &cell : mesh_ptr->cells) {
+    for (auto &cell: mesh_ptr->cells) {
         Vector Sfr(0.0, 0.0, 0.0);
         for (int j = 0; j < cell.least_square.neighbor_num; ++j) {
             int &neighbor_id = cell.neighbors[j];
@@ -119,4 +119,48 @@ void MPI::ReduceAll(Field<MESO::Vector> &local, Field<MESO::Vector> &global) {
         MPI_Allreduce(&(local[i].y), &(global[i].y), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(&(local[i].z), &(global[i].z), 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     }
+}
+
+/// Residual
+template<>
+Scalar Solver::residual(Field<Scalar> &_old, Field<Scalar> &_new) {
+    auto &mesh = *_old.get_mesh();
+    ScalarList result_omp(MPI::omp_num, 0.0);
+#pragma omp parallel for shared(result_omp, mesh, _old, _new) default(none)
+    for (auto &cell: mesh.cells) {
+#pragma omp critical
+        result_omp[omp_get_team_num()] += std::abs((_new[cell.id] - _old[cell.id]) / _old[cell.id])
+                                          * (cell.volume / mesh.total_volume);
+    }
+    Scalar result = 0.0;
+    for (auto it: result_omp) {
+        result += it;
+    }
+    _old = _new;
+    return result;
+}
+
+
+template<>
+Vector Solver::residual(Field<Vector> &_old, Field<Vector> &_new) {
+    auto &mesh = *_old.get_mesh();
+    VectorList result_omp(MPI::omp_num, {0.0, 0.0, 0.0});
+#pragma omp parallel for shared(result_omp, mesh, _old, _new) default(none)
+    for (auto &cell: mesh.cells) {
+        auto &new_vec = _new[cell.id];
+        auto &old_vec = _old[cell.id];
+        Vector vec = {
+                std::fabs((new_vec.x - old_vec.x) / old_vec.x),
+                std::fabs((new_vec.y - old_vec.y) / old_vec.y),
+                std::fabs((new_vec.z - old_vec.z) / old_vec.z)
+        };
+#pragma omp critical
+        result_omp[omp_get_team_num()] += vec * (cell.volume / mesh.total_volume);
+    }
+    Vector result(0.0, 0.0, 0.0);
+    for (auto it: result_omp) {
+        result += it;
+    }
+    _old = _new;
+    return result;
 }

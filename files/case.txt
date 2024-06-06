@@ -1,9 +1,8 @@
 [settings]
-case-name       demo
-result-path     ./result
+case-name       re100
 mesh-file       cavity.neu
 
-Re          400.0
+Re          100.0
 Ma          0.1414213562373095
 CFL         0.8
 
@@ -15,7 +14,7 @@ ref-length          1.0
 ref-temperature     1.0
 
 [group]
-name        fluid-zone
+name        fluid
 density     1.0
 
 [mark]
