@@ -41,10 +41,11 @@ mpirun -host node01, node02 /path/to/meso --parallel <omp_thread_num>
 
 ### 配置文件
 
+[详细文档](src/solver/README.md)
+
 ```
 [settings]
 case-name       demo
-result-path     /<absolute-path-to>/result
 mesh-file       /<absolute-path-to>/<mesh>.neu
 
 Re          400.0
