@@ -20,7 +20,7 @@ public:
     Field<Scalar> rho_cell, T_cell, tau_cell,
             rho_cell_n, T_cell_n, tau_cell_n;
     Field<Vector> vel_cell, q_cell,
-            vel_cell_n, q_cell_n;
+            vel_cell_n;
 
     Field<Scalar> rho_cell_res, T_cell_res; // res
     Field<Vector> vel_cell_res, q_cell_res; // res

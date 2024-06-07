@@ -64,7 +64,6 @@ void CDUGKS_SHAKHOV::initial() {
     T_cell_n = Field<Scalar>(mesh, cell_field_flag);
     tau_cell_n = Field<Scalar>(mesh, cell_field_flag);
     vel_cell_n = Field<Vector>(mesh, cell_field_flag);
-    q_cell_n = Field<Vector>(mesh, cell_field_flag);
 
     // res
     rho_cell_res = Field<Scalar>(mesh, cell_field_flag);
@@ -109,17 +108,22 @@ void CDUGKS_SHAKHOV::initial() {
         }
         auto u = m1 / m0;
         auto T = (m2 / m0 - u * u) / (2.0 * Cv);
-        rho_cell_n[cell.id] = m0;
-        vel_cell_n[cell.id] = u;
-        T_cell_n[cell.id] = T;
-        tau_cell_n[cell.id] = tau_f(m0, T);
-        q_cell_n[cell.id] = m3 * 0.5;
+        rho_cell[cell.id] = m0;
+        vel_cell[cell.id] = u;
+        T_cell[cell.id] = T;
+        tau_cell[cell.id] = tau_f(m0, T);
+        q_cell[cell.id] = m3 * 0.5;
     }
-    rho_cell.values = rho_cell_n.values;
-    vel_cell.values = vel_cell_n.values;
-    T_cell.values = T_cell_n.values;
-    tau_cell.values = tau_cell_n.values;
-    q_cell.values = q_cell_n.values;
+    rho_cell_n = rho_cell;
+    vel_cell_n = vel_cell;
+    T_cell_n = T_cell;
+    tau_cell_n = tau_cell;
+    /// residual
+    rho_cell_res = rho_cell;
+    vel_cell_res = vel_cell;
+    T_cell_res = T_cell;
+    q_cell_res = q_cell;
+
     is_crashed = false;
     logger.note << "Initialization finished." << std::endl;
 }
@@ -201,16 +205,17 @@ void CDUGKS_SHAKHOV::reconstruct() {
         }
         for (auto &face: mesh.faces) {
             Vector m3(0.0, 0.0, 0.0);
+            auto u = vel_face[face.id];
+            auto tau = tau_face[face.id];
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
                 auto &particle = dvs_mesh.cells[dvs_id];
-                auto c = particle.position - vel_face[face.id];
+                auto c = particle.position - u;
                 auto cc = c * c;
                 auto g = g_face[p][face.id];
                 auto h = h_face[p][face.id];
                 m3 += particle.volume * c * (cc * g + h);
             }
-            auto tau = tau_face[face.id];
             auto cq = tau / (2.0 * tau + half_dt * Pr);
             q_face[face.id] = cq * m3;
         }
@@ -221,14 +226,16 @@ void CDUGKS_SHAKHOV::reconstruct() {
         /// get original f on face
         auto tau = tau_face[face.id];
         auto c_eq = half_dt / (2.0 * tau + half_dt);
+        auto rho = rho_face[face.id];
+        auto u =vel_face[face.id];
+        auto T = T_face[face.id];
+        auto q = q_face[face.id];
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
-            auto c = particle.position - vel_face[face.id];
+            auto c = particle.position - u;
             auto cc = c * c;
-            auto cq = c * q_face[face.id];
-            auto rho = rho_face[face.id];
-            auto T = T_face[face.id];
+            auto cq = c * q;
             auto g_m = g_maxwell(rho, T, cc);
             auto g_s = g_shakhov(rho, T, cc, cq, g_m);
             auto h_s = h_shakhov(rho, T, cc, cq, g_m);
@@ -320,7 +327,6 @@ void CDUGKS_SHAKHOV::fvm_update() {
         T_cell_n[cell.id] = T_cell[cell.id];
         tau_cell_n[cell.id] = tau_cell[cell.id];
         vel_cell_n[cell.id] = vel_cell[cell.id];
-        q_cell_n[cell.id] = q_cell[cell.id];
 
         double flux_m0 = 0.0, flux_m2 = 0.0;
         Vector flux_m1(0.0, 0.0, 0.0);
@@ -342,21 +348,20 @@ void CDUGKS_SHAKHOV::fvm_update() {
         }
         auto dt_v = dt / cell.volume;
         auto rho_n = rho_cell_n[cell.id];
-        auto vel_n = vel_cell_n[cell.id];
-        auto T_n = T_cell[cell.id];
-        auto rhoU_n = rho_n * vel_n;
-        auto rhoE_n = rho_n * (0.5 * (vel_n * vel_n) + Cv * T_n);
+        auto u_n = vel_cell_n[cell.id];
+        auto T_n = T_cell_n[cell.id];
+        auto rhoU_n = rho_n * u_n;
+        auto rhoE_n = rho_n * (0.5 * (u_n * u_n) + Cv * T_n);
         auto rho = rho_n - dt_v * flux_m0;
         auto rhoU = rhoU_n - dt_v * flux_m1;
         auto u = rhoU / rho;
-        auto rhoE = rhoE_n - dt_v * flux_m2;
+        auto rhoE = rhoE_n - dt_v * flux_m2 * 0.5;
         auto T = (rhoE / rho - (u * u) * 0.5) / Cv;
         auto tau = tau_f(rho, T);
         rho_cell[cell.id] = rho;
         vel_cell[cell.id] = rhoU / rho;
         T_cell[cell.id] = T;
         tau_cell[cell.id] = tau;
-        q_cell[cell.id] = (tau / (tau - Pr * dt)) * q_cell_n[cell.id];
     }
 
 #pragma omp parallel for default(none)
@@ -366,7 +371,7 @@ void CDUGKS_SHAKHOV::fvm_update() {
         auto rho_n = rho_cell_n[cell.id];
         auto u_n = vel_cell_n[cell.id];
         auto T_n = T_cell_n[cell.id];
-        auto q_n = q_cell_n[cell.id];
+        auto q_n = q_cell[cell.id];
         auto tau_n = tau_cell_n[cell.id];
         /// tn = n + 1
         auto rho = rho_cell[cell.id];
@@ -378,6 +383,7 @@ void CDUGKS_SHAKHOV::fvm_update() {
         auto C = tau / (tau + half_dt);
         double cm = half_dt / (half_dt - 2.0 * tau_n);
         double c_eq = half_dt / (2.0 * tau);
+        Vector m3(0.0, 0.0, 0.0);
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
@@ -398,13 +404,15 @@ void CDUGKS_SHAKHOV::fvm_update() {
             auto g_s = g_shakhov(rho, T, cc, cq, g_m);
             auto h_s = h_shakhov(rho, T, cc, cq, g_m);
             /// Evolution
-            g_cell[p][cell.id] = (1.0 - c_eq) *
-                                 (C * (g_n + half_dt * (g_s / tau + (g_s_n - g_n) / tau_n) - dt_v * flux_g[p][cell.id])) +
-                                 c_eq * g_s;
-            h_cell[p][cell.id] = (1.0 - c_eq) *
-                                 (C * (h_n + half_dt * (h_s / tau + (h_s_n - h_n) / tau_n) - dt_v * flux_h[p][cell.id])) +
-                                 c_eq * h_s;
+            auto g = C * (g_n + half_dt * (g_s / tau + (g_s_n - g_n) / tau_n) - dt_v * flux_g[p][cell.id]);
+            auto h = C * (h_n + half_dt * (h_s / tau + (h_s_n - h_n) / tau_n) - dt_v * flux_h[p][cell.id]);
+            g_cell[p][cell.id] = (1.0 - c_eq) * g + c_eq * g_s;
+            h_cell[p][cell.id] = (1.0 - c_eq) * h + c_eq * h_s;
+            /// heat-flux
+            m3 += particle.volume * c * (cc * g + h);
         }
+        /// update heat-flux at tn=n+1
+        q_cell[cell.id] = 0.5 * m3;
     }
 }
 
