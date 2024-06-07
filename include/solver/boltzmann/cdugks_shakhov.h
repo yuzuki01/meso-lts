@@ -30,6 +30,7 @@ public:
 
     DistributionFunction g_cell, h_cell;
     DistributionFunction g_face, h_face;
+    DistributionFunction flux_g, flux_h;
 
     explicit CDUGKS_SHAKHOV(ArgParser &parser);
 
