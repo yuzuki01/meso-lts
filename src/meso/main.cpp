@@ -3,7 +3,7 @@
 
 int main(int argc, char **argv) {
     MESO::ArgParser parser(argc, argv);
-    
+
     if (parser.parse_switch("debug")) {
         logger.level = -1;
         logger.debug << "Running in debug mode." << std::endl;
@@ -22,7 +22,11 @@ int main(int argc, char **argv) {
     parse_string = parser.parse_param<MESO::String>("case", "<case-file>", false);
     if (parse_string != "<case-file>") {
         auto solver = parser.parse_param<MESO::String>("solver", "cdugks", false);
-        if (solver == "cdugks") return MESO::Solver::handle_solver<MESO::Solver::CDUGKS>(&argc, &argv, parser);
+        logger.note << "Load solver: " << solver << std::endl;
+        if (solver == "cdugks")
+            return MESO::Solver::handle_solver<MESO::Solver::CDUGKS>(&argc, &argv, parser);
+        else if (solver == "cdugks@shakhov")
+            return MESO::Solver::handle_solver<MESO::Solver::CDUGKS_SHAKHOV>(&argc, &argv, parser);
         else return 0;
     }
     return 0;

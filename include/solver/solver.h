@@ -14,6 +14,7 @@ namespace MESO::MPI {
 namespace MESO::Solver {
 
     Mesh::Mesh generate_gauss_hermite(int dimension, int _n, double RT);
+    Mesh::Mesh generate_newton_cotes(int dimension, int n, int mount, double scale);
 
     class BasicSolver {
     protected:
@@ -36,6 +37,7 @@ namespace MESO::Solver {
 /// add Solver here
 
 #include "solver/boltzmann/cdugks.h"
+#include "solver/boltzmann/cdugks_shakhov.h"
 
 
 /// handle Solver

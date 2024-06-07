@@ -23,15 +23,16 @@ Config::Config(const std::string &file_path) {
     StringList data;
     const int line_size = int(lines.size());
     for (int i = 0; i < line_size; ++i) {
-        if (lines[i].empty()) continue;     // skip empty
         data = MESO::Utils::split(lines[i]);
         if (data[0] == "#") continue;       // skip #
         if (data[0] == "[settings]") {
             ++i;
             while (i < line_size) {
-                if (lines[i].empty()) continue;     // skip empty
                 data = MESO::Utils::split(lines[i]);
-                if (data[0] == "#") continue;       // skip #
+                if (data[0] == "#") {   // skip #
+                    ++i;
+                    continue;
+                }
                 if (data[0] == "[mark]" or data[0] == "[group]") {
                     --i;
                     break;
@@ -45,9 +46,11 @@ Config::Config(const std::string &file_path) {
             mark.id = int(marks.size()) + 1;
             ++i;
             while (i < line_size) {
-                if (lines[i].empty()) continue;     // skip empty
                 data = MESO::Utils::split(lines[i]);
-                if (data[0] == "#") continue;       // skip #
+                if (data[0] == "#") {   // skip #
+                    ++i;
+                    continue;
+                }
                 if (data[0] == "[mark]" or data[0] == "[group]") {
                     --i;
                     break;
@@ -70,9 +73,11 @@ Config::Config(const std::string &file_path) {
             group.id = int(groups.size()) + 1;
             ++i;
             while (i < line_size) {
-                if (lines[i].empty()) continue;     // skip empty
                 data = MESO::Utils::split(lines[i]);
-                if (data[0] == "#") continue;       // skip #
+                if (data[0] == "#") {   // skip #
+                    ++i;
+                    continue;
+                }
                 if (data[0] == "[mark]" or data[0] == "[group]") {
                     --i;
                     break;
@@ -166,7 +171,7 @@ Mark &Config::get_face_group(MESO::Mesh::Face &face, MESO::Mesh::Mesh &mesh) {
 void Config::info() {
     logger.note << "Settings:\n";
     for (auto &[name, value]: settings) {
-        logger.info << "  " << name << "\t" << value << "\n";
+        logger.info << "  " << name << std::setw(10) << "\t\t" << value << "\n";
     }
     logger.note << "\nCell groups:\n";
     for (auto &[name, group]: groups) {
