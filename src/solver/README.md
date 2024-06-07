@@ -26,6 +26,10 @@ mesh-file   <your-mesh-file>
 
 求解器设置：
 
+`limiter-switch`：是否打开限制器，默认`False`
+
+ - `venkata-limiter-k`：限制器参数，默认`1.0`，设置为`0`时限制效果最强
+
 `gradient-switch`：是否打开梯度计算，默认`True`
 
 `output-np`：是否打开 `numpy` 格式字符输出，默认`False`

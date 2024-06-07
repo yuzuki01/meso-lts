@@ -21,6 +21,8 @@ CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser) : BasicSolver(parser) {
     if (not gradient_switch) {
         logger.warn << "[Warn] gradient-switch was CLOSED." << std::endl;
     }
+    limiter_switch = config.get("limiter-switch", false);
+    venkata_k = config.get("venkata-limiter-k", 1.0);
 
     mesh = MESO::Mesh::load_gambit(config.get<std::string>("mesh-file", "<mesh-file>"));
     mesh.info();
@@ -173,10 +175,17 @@ void CDUGKS_SHAKHOV::reconstruct() {
         for (auto &face: mesh.faces) {
             Vector &nv = face.normal_vector[0];
             auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
+            Vector dr_ij = face.position - cell.position;
+            double phi_g = 1.0, phi_h = 1.0;
+            /// venkata limiter
+            if (limiter_switch) {
+                phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[cell.id], face, cell, venkata_k);
+                phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[cell.id], face, cell, venkata_k);
+            }
             g_face[p][face.id] = g_cell[p][cell.id]
-                                 + (face.position - cell.position - particle.position * half_dt) * grad_g[cell.id];
+                                 + (dr_ij - particle.position * half_dt) * (phi_g * grad_g[cell.id]);
             h_face[p][face.id] = h_cell[p][cell.id]
-                                 + (face.position - cell.position - particle.position * half_dt) * grad_h[cell.id];
+                                 + (dr_ij - particle.position * half_dt) * (phi_h * grad_h[cell.id]);
         }
     }
 
