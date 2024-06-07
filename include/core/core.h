@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <cmath>
+#include <csignal>
 #include <cstring>
 #include <iostream>
 #include <iomanip>

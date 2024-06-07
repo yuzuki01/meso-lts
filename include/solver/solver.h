@@ -37,6 +37,15 @@ namespace MESO::Solver {
 
 #include "solver/boltzmann/cdugks.h"
 
+
+/// handle Solver
+    template <class SolverClass>
+    int handle_solver(int *p_argc, char ***p_argv, MESO::ArgParser &parser);
+
+    extern int solver_state;
+
+    template <class SolverClass>
+    void solver_interrupt(int signum);
 }
 
 

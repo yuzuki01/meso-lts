@@ -29,7 +29,7 @@
 #### 单节点启动: (仅openMP)
 
 ```shell
-./meso --case case.txt --max-step 50000 --save-interval 100 --parallel 10
+./meso --case case-re100.txt --max-step 50000 --save-interval 100 --parallel 10
 ```
 
 #### 多节点启动: (跨节点mpi+本地openMP)
