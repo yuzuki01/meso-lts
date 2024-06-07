@@ -142,15 +142,18 @@ inline MESO::Scalar CDUGKS_SHAKHOV::h_maxwell(double t, double gm) const {
 }
 
 inline MESO::Scalar CDUGKS_SHAKHOV::g_shakhov(double rho, double t, double cc, double cq, double gm) const {
+    /// g_shakhov = g_maxwell + g_pr
     double RT = R * t;
     double p = rho * RT;
-    return (1.0 - Pr) * (cq / (5.0 * p * RT)) * (cc / RT - D - 2.0) * gm;
+    return (1.0 - Pr) * (cq / (5.0 * p * RT)) * (cc / RT - D - 2.0) * gm + gm;
 }
 
 inline MESO::Scalar CDUGKS_SHAKHOV::h_shakhov(double rho, double t, double cc, double cq, double gm) const {
+    /// h_shakhov = h_maxwell + h_pr
     double RT = R * t;
     double p = rho * RT;
-    return (1.0 - Pr) * (cq / (5.0 * p)) * ((cc / RT - D) * (K + 3.0 - D) - 2.0 * K) * gm;
+    double h_m = h_maxwell(t, gm);
+    return (1.0 - Pr) * (cq / (5.0 * p)) * ((cc / RT - D) * (K + 3.0 - D) - 2.0 * K) * gm + h_m;
 }
 
 void CDUGKS_SHAKHOV::reconstruct() {
