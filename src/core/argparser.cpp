@@ -29,11 +29,14 @@ bool ArgParser::parse_switch(const std::string &target) {
     }
 }
 
-template<> std::string ArgParser::parse_param<std::string>(const std::string &target, const std::string &_default, bool print_error) {
+template<>
+std::string
+ArgParser::parse_param<std::string>(const std::string &target, const std::string &_default, bool print_error) {
     auto it = _value.find("--" + target);
     if (it == _value.end()) {
         if (print_error) {
-            logger.warn << "ArgParser missed param: " << target << "<std::string>, using default value: " << _default << std::endl;
+            logger.warn << "ArgParser missed param: " << target << "<std::string>, using default value: " << _default
+                        << std::endl;
         }
         return _default;
     } else {
@@ -41,11 +44,13 @@ template<> std::string ArgParser::parse_param<std::string>(const std::string &ta
     }
 }
 
-template<> bool ArgParser::parse_param<bool>(const std::string &target, const bool &_default, bool print_error) {
+template<>
+bool ArgParser::parse_param<bool>(const std::string &target, const bool &_default, bool print_error) {
     auto it = _value.find("--" + target);
     if (it == _value.end()) {
         if (print_error) {
-            logger.warn << "ArgParser missed param: " << target << "<bool>, using default value: " << (_default?"True":"False") << std::endl;
+            logger.warn << "ArgParser missed param: " << target << "<bool>, using default value: "
+                        << (_default ? "True" : "False") << std::endl;
         }
         return _default;
     }
@@ -54,11 +59,13 @@ template<> bool ArgParser::parse_param<bool>(const std::string &target, const bo
     return false;
 }
 
-template<> int ArgParser::parse_param<int>(const std::string &target, const int &_default, bool print_error) {
+template<>
+int ArgParser::parse_param<int>(const std::string &target, const int &_default, bool print_error) {
     auto it = _value.find("--" + target);
     if (it == _value.end()) {
         if (print_error) {
-            logger.warn << "ArgParser missed param: " << target << "<int>, using default value: " << _default << std::endl;
+            logger.warn << "ArgParser missed param: " << target << "<int>, using default value: " << _default
+                        << std::endl;
         }
         return _default;
     } else {
@@ -66,11 +73,13 @@ template<> int ArgParser::parse_param<int>(const std::string &target, const int 
     }
 }
 
-template<> double ArgParser::parse_param<double>(const std::string &target, const double &_default, bool print_error) {
+template<>
+double ArgParser::parse_param<double>(const std::string &target, const double &_default, bool print_error) {
     auto it = _value.find("--" + target);
     if (it == _value.end()) {
         if (print_error) {
-            logger.warn << "ArgParser missed param: " << target << "<double>, using default value: " << _default << std::endl;
+            logger.warn << "ArgParser missed param: " << target << "<double>, using default value: " << _default
+                        << std::endl;
         }
         return _default;
     } else {

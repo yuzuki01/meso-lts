@@ -236,7 +236,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
         auto tau = tau_face[face.id];
         auto c_eq = half_dt / (2.0 * tau + half_dt);
         auto rho = rho_face[face.id];
-        auto u =vel_face[face.id];
+        auto u = vel_face[face.id];
         auto T = T_face[face.id];
         auto q = q_face[face.id];
         for (int p = 0; p < mpi_task.size; ++p) {
@@ -425,7 +425,6 @@ void CDUGKS_SHAKHOV::fvm_update() {
     }
 }
 
-
 void CDUGKS_SHAKHOV::do_step() {
     reconstruct();
     fvm_update();
@@ -449,7 +448,6 @@ void CDUGKS_SHAKHOV::do_step() {
         }
     }
 }
-
 
 void CDUGKS_SHAKHOV::output() {
     if (Utils::mkdir(case_name) != 0) {

@@ -85,7 +85,7 @@ MESO::Mesh::Mesh Gambit::read() {
                 if (node_list.size() < node_count) {
                     ++i;
                     data = MESO::Utils::split(lines[i]);
-                    for (const auto& it : data) {
+                    for (const auto &it: data) {
                         node_list.push_back(std::stoi(it));
                     }
                 }
@@ -112,7 +112,7 @@ MESO::Mesh::Mesh Gambit::read() {
                 data = MESO::Utils::split(lines[i]);
                 if (data[0] == "ENDOFSECTION") break;
                 /// parse
-                for (const auto &it : data) {
+                for (const auto &it: data) {
                     int cell_id = std::stoi(it) - 1;
                     auto &cell = zone.cells[cell_id];
                     cell.group_id = group_id;
@@ -147,7 +147,7 @@ MESO::Mesh::Mesh Gambit::read() {
             continue;
         }
     }
-    for (auto &face : zone.faces) {
+    for (auto &face: zone.faces) {
         zone.face_groups[face.group_id].push_back(face.id);
     }
     return zone;

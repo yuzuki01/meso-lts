@@ -16,6 +16,7 @@ Solver::BasicSolver::BasicSolver(ArgParser &parser) :
 int Solver::solver_state = 0;
 
 #ifdef SOLVER_CDUGKS_H
+
 template<>
 void Solver::solver_interrupt<Solver::CDUGKS>(int signum) {
     solver_state = signum;
@@ -50,9 +51,11 @@ int Solver::handle_solver<Solver::CDUGKS>(int *p_argc, char ***p_argv, MESO::Arg
     MPI::Finalize();
     return 0;
 }
+
 #endif
 
 #ifdef SOLVER_CDUGKS_SHAKHOV_H
+
 template<>
 void Solver::solver_interrupt<Solver::CDUGKS_SHAKHOV>(int signum) {
     solver_state = signum;
@@ -87,4 +90,5 @@ int Solver::handle_solver<Solver::CDUGKS_SHAKHOV>(int *p_argc, char ***p_argv, M
     MPI::Finalize();
     return 0;
 }
+
 #endif

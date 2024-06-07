@@ -53,7 +53,7 @@ Matrix &Matrix::operator/=(double _s) {
     return *this;
 }
 
-Vector Matrix::operator*(const Vector& vec) {
+Vector Matrix::operator*(const Vector &vec) {
     return {data[0] * vec, data[1] * vec, data[2] * vec};
 }
 
