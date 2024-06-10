@@ -66,11 +66,11 @@ void MPI::Bcast(MESO::Vector &global) {
     MPI_Bcast(&global.z, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
-void MPI::ReduceAll(MESO::Scalar local, MESO::Scalar &global) {
+void MPI::AllReduce(MESO::Scalar local, MESO::Scalar &global) {
     MPI_Allreduce(&local, &global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 }
 
-void MPI::ReduceAll(const MESO::Vector &local, MESO::Vector &global) {
+void MPI::AllReduce(const MESO::Vector &local, MESO::Vector &global) {
     MPI_Allreduce(&local.x, &global.x, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(&local.y, &global.y, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     MPI_Allreduce(&local.z, &global.z, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);

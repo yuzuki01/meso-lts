@@ -10,6 +10,14 @@ int main(int argc, char **argv) {
     }
 
     MESO::String parse_string;
+
+#ifdef MESO_DEMO_H
+    parse_string = parser.parse_param<MESO::String>("demo", "<demo>", false);
+    if (parse_string != "<demo>") {
+        if (parse_string == "omp") return demo_omp(&argc, &argv);
+    }
+#endif
+
     parse_string = parser.parse_param<MESO::String>("mesh", "<mesh-file>", false);
     if (parse_string != "<mesh-file>") {
         auto mesh = MESO::Mesh::load_gambit(parse_string);

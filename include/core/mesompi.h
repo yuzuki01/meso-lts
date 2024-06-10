@@ -33,8 +33,8 @@ namespace MESO::MPI {
 
     void Bcast(Scalar &global);
     void Bcast(MESO::Vector &global);
-    void ReduceAll(Scalar local, Scalar &global);
-    void ReduceAll(const MESO::Vector &local, MESO::Vector &global);
+    void AllReduce(Scalar local, Scalar &global);
+    void AllReduce(const MESO::Vector &local, MESO::Vector &global);
 
     /// defined in solver/field.cpp
     void ReduceAll(Field<Scalar> &local, Field<Scalar> &global);

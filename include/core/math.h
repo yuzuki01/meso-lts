@@ -36,6 +36,10 @@ public:
 
 MESO::Math::Vector operator*(double k, const MESO::Math::Vector &vec);
 
+/// openMP
+#pragma omp declare reduction(+: MESO::Math::Vector : omp_out += omp_in)
+#pragma omp declare reduction(-: MESO::Math::Vector : omp_out -= omp_in)
+
 class MESO::Math::Matrix {
 public:
     std::array<Vector, 3> data;

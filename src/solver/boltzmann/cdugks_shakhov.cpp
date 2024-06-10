@@ -88,11 +88,13 @@ void CDUGKS_SHAKHOV::initial() {
     flux_g.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
     flux_h.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
 
-#pragma omp parallel for default(none)
     for (auto &cell: mesh.cells) {
         auto &group = config.get_cell_group(cell, mesh);
-        double m0 = 0.0, m2 = 0.0;
-        Vector m1(0.0, 0.0, 0.0), m3(0.0, 0.0, 0.0);
+        double m0_local = 0.0, m2_local = 0.0;
+        Vector m1_local(0.0, 0.0, 0.0), m3_local(0.0, 0.0, 0.0);
+#pragma omp parallel for shared(cell, group) \
+        reduction(+:m0_local) reduction(+:m1_local) \
+        reduction(+:m2_local) reduction(+:m3_local) default(none)
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
@@ -103,11 +105,17 @@ void CDUGKS_SHAKHOV::initial() {
             auto h = h_maxwell(group.density, g);
             g_cell[p][cell.id] = g;
             h_cell[p][cell.id] = h;
-            m0 += particle.volume * g;
-            m1 += particle.volume * g * particle.position;
-            m2 += particle.volume * (kk * g + h);
-            m3 += particle.volume * c * (cc * h + h);
+            m0_local += particle.volume * g;
+            m1_local += particle.volume * g * particle.position;
+            m2_local += particle.volume * (kk * g + h);
+            m3_local += particle.volume * c * (cc * g + h);
         }
+        double m0, m2;
+        Vector m1, m3;
+        MPI::AllReduce(m0_local, m0);
+        MPI::AllReduce(m1_local, m1);
+        MPI::AllReduce(m2_local, m2);
+        MPI::AllReduce(m3_local, m3);
         auto u = m1 / m0;
         auto T = (m2 / m0 - u * u) / (2.0 * Cv);
         rho_cell[cell.id] = m0;
@@ -128,6 +136,7 @@ void CDUGKS_SHAKHOV::initial() {
 
     is_crashed = false;
     logger.note << "Initialization finished." << std::endl;
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 inline MESO::Scalar CDUGKS_SHAKHOV::tau_f(double rho, double t) const {

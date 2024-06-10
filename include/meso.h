@@ -4,5 +4,6 @@
 #include "core/core.h"
 #include "mesh/mesh.h"
 #include "solver/solver.h"
+#include "meso/demo.h"
 
 #endif //MESO_H
