@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 #ifdef MESO_DEMO_H
     parse_string = parser.parse_param<MESO::String>("demo", "<demo>", false);
     if (parse_string != "<demo>") {
-        if (parse_string == "omp") return demo_omp(&argc, &argv);
+        if (parse_string == "omp") return demo_omp(&argc, &argv, parser);
     }
 #endif
 
