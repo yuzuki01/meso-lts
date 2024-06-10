@@ -7,6 +7,9 @@ int demo_omp(int *p_argc, char ***p_argv) {
     auto dvs_mesh = Solver::generate_newton_cotes(mesh.dimension(), 3, 33, 4.0);
     mesh.info();
     dvs_mesh.info();
+
+    clock_t start = clock();
+
     MPI::Initialize(p_argc, p_argv, 4);
 
     auto mpi_task = MPI::DVS_partition(dvs_mesh);
@@ -24,16 +27,16 @@ int demo_omp(int *p_argc, char ***p_argv) {
         Vector m1_local(0.0, 0.0, 0.0);
 #pragma omp parallel for shared(f_cell, cell, mpi_task, dvs_mesh, Rho0, T0, U, f_maxwell) \
         reduction(+:m0_local) reduction(+:m1_local) default(none)
-        for (int p = 0; p < mpi_task.size; ++p) {
-            ObjectId dvs_id = p + mpi_task.start;
-            auto &particle = dvs_mesh.cells[dvs_id];
-            auto c = particle.position - U;
-            auto cc = c * c;
-            auto f = f_maxwell(Rho0, T0, cc);
-            f_cell[p][cell.id] = f;
-            m0_local += particle.volume * f;
-            m1_local += particle.volume * f * particle.position;
-        }
+            for (int p = 0; p < mpi_task.size; ++p) {
+                ObjectId dvs_id = p + mpi_task.start;
+                auto &particle = dvs_mesh.cells[dvs_id];
+                auto c = particle.position - U;
+                auto cc = c * c;
+                auto f = f_maxwell(Rho0, T0, cc);
+                f_cell[p][cell.id] = f;
+                m0_local += particle.volume * f;
+                m1_local += particle.volume * f * particle.position;
+            }
         double m0;
         Vector m1;
         MPI::AllReduce(m0_local, m0);
@@ -43,6 +46,9 @@ int demo_omp(int *p_argc, char ***p_argv) {
         vel_cell[cell.id] = u;
     }
     MPI_Barrier(MPI_COMM_WORLD);
+
+    clock_t end = clock();
+    logger.note << "Cost: " << double(start - end) / CLOCKS_PER_SEC << " sec" << std::endl;
     auto Uf = vel_cell.heft(0);
     auto Vf = vel_cell.heft(1);
     mesh.output("demo-omp",
