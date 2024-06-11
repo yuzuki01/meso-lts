@@ -16,9 +16,11 @@ mesh-file   <your-mesh-file>
 
 ### 可选参数
 
+继承于基类的参数
+
 根据求解器内编程定义
 
-对于 `不可压缩 cdugks` ，已经定义有:
+对于 `cdugks@incompressible` ，已经定义有:
 
 流体力学参数：
 

@@ -5,8 +5,8 @@ dvs-file        Newton-Cotes
 
 # Newton-Cotes settings
 newton-cotes-n          3
-newton-cotes-mount      25
-newton-cotes-scale      15.0
+newton-cotes-mount      33
+newton-cotes-scale      4.0
 
 Kn          1.0
 Pr          0.6666666666666667
@@ -30,12 +30,12 @@ density         1.0
 temperature     1.0
 
 [mark]
-name        lid
-type        wall
-velocity-x  0.1483214170493719
+name            lid
+type            wall
+velocity-x      0.1483214170493719
 temperature     1.0
 
 [mark]
-name        wall
-type        wall
+name            wall
+type            wall
 temperature     1.0

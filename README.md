@@ -24,19 +24,16 @@
 
 ### Quick Start
 
-不可压 CDUGKS 求解器
+- 不可压缩方腔
 
-#### 单节点启动: (仅openMP)
-
-```shell
-./meso --case case-re100.txt --max-step 50000 --save-interval 100 --parallel 10
+```sh
+mpirun -n 10 ./meso-mpi --max-step 1000000 --case case-re400.txt --solver cdugks@incompressible
 ```
 
-#### 多节点启动: (跨节点mpi+本地openMP)
+- 稀薄方腔
 
-```shell
-export LD_LIBRARY_PATH=/path/to/meso-libs:$LD_LIBRARY_PATH
-mpirun -host node01, node02 /path/to/meso --parallel <omp_thread_num>
+```sh
+mpirun -n 10 ./meso-mpi --max-step 1000000 --case case-kn1.txt --solver cdugks@shakhov
 ```
 
 ### 配置文件

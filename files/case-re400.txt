@@ -2,7 +2,7 @@
 case-name       re100
 mesh-file       cavity.neu
 
-Re          100.0
+Re          400.0
 Ma          0.1414213562373095
 CFL         0.8
 

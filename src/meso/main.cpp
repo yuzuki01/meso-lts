@@ -11,13 +11,6 @@ int main(int argc, char **argv) {
 
     MESO::String parse_string;
 
-#ifdef MESO_DEMO_H
-    parse_string = parser.parse_param<MESO::String>("demo", "<demo>", false);
-    if (parse_string != "<demo>") {
-        if (parse_string == "omp") return demo_omp(&argc, &argv, parser);
-    }
-#endif
-
     parse_string = parser.parse_param<MESO::String>("mesh", "<mesh-file>", false);
     if (parse_string != "<mesh-file>") {
         auto mesh = MESO::Mesh::load_gambit(parse_string);
@@ -29,13 +22,20 @@ int main(int argc, char **argv) {
 
     parse_string = parser.parse_param<MESO::String>("case", "<case-file>", false);
     if (parse_string != "<case-file>") {
-        auto solver = parser.parse_param<MESO::String>("solver", "cdugks", false);
-        logger.note << "Load solver: " << solver << std::endl;
-        if (solver == "cdugks")
-            return MESO::Solver::handle_solver<MESO::Solver::CDUGKS>(&argc, &argv, parser);
+        auto solver = parser.parse_param<MESO::String>("solver", "<solver>", false);
+        /// MPI init
+        MESO::MPI::Initialize(&argc, &argv);
+        int solver_status;
+        if (solver == "cdugks@incompressible")
+            solver_status = MESO::Solver::handle_solver<MESO::Solver::CDUGKS>(&argc, &argv, parser);
         else if (solver == "cdugks@shakhov")
-            return MESO::Solver::handle_solver<MESO::Solver::CDUGKS_SHAKHOV>(&argc, &argv, parser);
-        else return 0;
+            solver_status = MESO::Solver::handle_solver<MESO::Solver::CDUGKS_SHAKHOV>(&argc, &argv, parser);
+        else {
+            logger.warn << "Load solver: " << solver << " failed." << std::endl;
+            solver_status = -1;
+        }
+        MESO::MPI::Finalize();
+        return solver_status;
     }
     return 0;
 }

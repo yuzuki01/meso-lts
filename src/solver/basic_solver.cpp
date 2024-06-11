@@ -27,14 +27,11 @@ void Solver::solver_interrupt<Solver::CDUGKS>(int signum) {
 
 template<>
 int Solver::handle_solver<Solver::CDUGKS>(int *p_argc, char ***p_argv, MESO::ArgParser &parser) {
-    /// MPI init
-    MESO::MPI::Initialize(p_argc, p_argv);
     int save_interval = parser.parse_param<int>("save-interval", 1000, false);
     MESO::Solver::CDUGKS solver(parser);
     solver.initial();
     solver.output();
     if (parser.parse_switch("not-run")) {
-        MESO::MPI::Finalize();
         return 0;
     }
     std::signal(SIGINT, Solver::solver_interrupt<Solver::CDUGKS>);    // 注册 SIGINT 信号处理
@@ -44,12 +41,10 @@ int Solver::handle_solver<Solver::CDUGKS>(int *p_argc, char ***p_argv, MESO::Arg
         if (solver.step % save_interval == 0) solver.output();
         if (solver_state != 0) {
             solver.output();
-            MPI::Finalize();
             return solver_state;
         }
     }
     solver.output();
-    MPI::Finalize();
     return 0;
 }
 
@@ -66,14 +61,11 @@ void Solver::solver_interrupt<Solver::CDUGKS_SHAKHOV>(int signum) {
 
 template<>
 int Solver::handle_solver<Solver::CDUGKS_SHAKHOV>(int *p_argc, char ***p_argv, MESO::ArgParser &parser) {
-    /// MPI init
-    MESO::MPI::Initialize(p_argc, p_argv);
     int save_interval = parser.parse_param<int>("save-interval", 1000, false);
     MESO::Solver::CDUGKS_SHAKHOV solver(parser);
     solver.initial();
     solver.output();
     if (parser.parse_switch("not-run")) {
-        MESO::MPI::Finalize();
         return 0;
     }
     std::signal(SIGINT, Solver::solver_interrupt<Solver::CDUGKS_SHAKHOV>);    // 注册 SIGINT 信号处理
@@ -83,12 +75,10 @@ int Solver::handle_solver<Solver::CDUGKS_SHAKHOV>(int *p_argc, char ***p_argv, M
         if (solver.step % save_interval == 0) solver.output();
         if (solver_state != 0) {
             solver.output();
-            MPI::Finalize();
             return solver_state;
         }
     }
     solver.output();
-    MPI::Finalize();
     return 0;
 }
 
