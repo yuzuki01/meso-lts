@@ -9,6 +9,7 @@ Solver::BasicSolver::BasicSolver(ArgParser &parser) :
     if (Utils::mkdir(case_name) != 0) {
         logger.warn << "Solver::output() cannot mkdir: " << case_name << std::endl;
     }
+    residual_limit = config.get<double>("residual-limit", 1e-6, false);
 }
 
 
@@ -39,7 +40,7 @@ int Solver::handle_solver<Solver::CDUGKS>(int *p_argc, char ***p_argv, MESO::Arg
     std::signal(SIGINT, Solver::solver_interrupt<Solver::CDUGKS>);    // 注册 SIGINT 信号处理
     for (int i = 0; i < parser.parse_param("max-step", 10000, false); ++i) {
         solver.do_step();
-        if (solver.is_crashed) break;
+        if (not solver.get_run_state()) break;
         if (solver.step % save_interval == 0) solver.output();
         if (solver_state != 0) {
             solver.output();
@@ -78,7 +79,7 @@ int Solver::handle_solver<Solver::CDUGKS_SHAKHOV>(int *p_argc, char ***p_argv, M
     std::signal(SIGINT, Solver::solver_interrupt<Solver::CDUGKS_SHAKHOV>);    // 注册 SIGINT 信号处理
     for (int i = 0; i < parser.parse_param("max-step", 10000, false); ++i) {
         solver.do_step();
-        if (solver.is_crashed) break;
+        if (not solver.get_run_state()) break;
         if (solver.step % save_interval == 0) solver.output();
         if (solver_state != 0) {
             solver.output();

@@ -30,6 +30,7 @@ namespace MESO::MPI {
 
     void Finalize();
 
+    void Bcast(bool &global);
     void Bcast(Scalar &global);
     void Bcast(MESO::Vector &global);
     void AllReduce(Scalar local, Scalar &global);

@@ -22,15 +22,20 @@ namespace MESO::Solver {
         Config config;
         std::string case_name;
         bool output_np;
+        double residual_limit{};
+        bool run_state{};
+        int converge_state{};
     public:
         explicit BasicSolver(ArgParser &parser);
+
+        bool get_run_state() const { return run_state; };
     };
 
     /// Residual
     const int residual_interval = 100;
 
-    template <class T>
-    T residual(Field<T> &_old, Field<T> &_new);
+    Scalar residual(Field<Scalar> &_old, Field<Scalar> &_new);
+    Vector residual(Field<Vector> &_old, Field<Vector> &_new);
 
     typedef std::vector<Field<Scalar>> DistributionFunction;
 

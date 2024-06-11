@@ -51,6 +51,8 @@ namespace MESO::Utils {
     void print_names_and_values(const StringList &names, const ScalarList &values);
 
     int mkdir(const String &dir_name);
+
+    bool is_converged(const std::vector<double> &residual_list, double limit);
 }
 
 #endif //MESO_CORE_H

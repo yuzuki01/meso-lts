@@ -152,20 +152,17 @@ void MPI::AllReduce(Field<MESO::Vector> &local, Field<MESO::Vector> &global) {
 }
 
 /// Residual
-template<>
 Scalar Solver::residual(Field<Scalar> &_old, Field<Scalar> &_new) {
     auto &mesh = *_old.get_mesh();
     Scalar result = 0.0;
     for (auto &cell: mesh.cells) {
         result += std::abs((_new[cell.id] - _old[cell.id]) / _old[cell.id])
-                                   * (cell.volume / mesh.total_volume);
+                          * (cell.volume / mesh.total_volume);
     }
     _old = _new;
     return result;
 }
 
-
-template<>
 Vector Solver::residual(Field<Vector> &_old, Field<Vector> &_new) {
     auto &mesh = *_old.get_mesh();
     Vector result(0.0, 0.0, 0.0);

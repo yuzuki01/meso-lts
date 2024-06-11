@@ -67,6 +67,10 @@ MPI::MPI_Task MPI::get_task_distribution(int total_num) {
     return result;
 }
 
+void MPI::Bcast(bool &global) {
+    MPI_Bcast(&global, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
+}
+
 void MPI::Bcast(MESO::Scalar &global) {
     MPI_Bcast(&global, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }

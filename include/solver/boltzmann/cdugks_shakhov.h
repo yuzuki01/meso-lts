@@ -7,7 +7,7 @@ public:
     Mesh::Mesh dvs_mesh;
     MPI::MPI_TaskObject mpi_task;
 
-    bool is_crashed{}, gradient_switch, limiter_switch;
+    bool gradient_switch, limiter_switch;
     double Ma, Re{}, Kn, Pr, CFL;
     int D, K;
     double R, Rho0, T0, L0;
@@ -17,16 +17,11 @@ public:
     double solution_time{};
 
     /// FieldValue
-    Field<Scalar> rho_cell, T_cell, tau_cell,
-            rho_cell_n, T_cell_n, tau_cell_n;
-    Field<Vector> vel_cell, q_cell,
-            vel_cell_n;
+    Field<Scalar> rho_cell, T_cell;
+    Field<Vector> vel_cell, q_cell;
 
-    Field<Scalar> rho_cell_res, T_cell_res; // res
-    Field<Vector> vel_cell_res, q_cell_res; // res
-
-    Field<Scalar> rho_face, T_face, tau_face;
-    Field<Vector> vel_face, q_face;
+    Field<Scalar> rho_cell_res, T_cell_res;
+    Field<Vector> vel_cell_res, q_cell_res;
 
     DistributionFunction g_cell, h_cell;
     DistributionFunction g_face, h_face;

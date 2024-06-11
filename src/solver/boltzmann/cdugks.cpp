@@ -29,6 +29,7 @@ CDUGKS::CDUGKS(MESO::ArgParser &parser) : BasicSolver(parser) {
 
 void CDUGKS::initial() {
     step = 0;
+    converge_state = 0;
     solution_time = 0.0;
     double c_sound = sqrt(RT);
     tau = (L0 * Ma) / (Re * c_sound);
@@ -39,6 +40,7 @@ void CDUGKS::initial() {
     vel_cell = mesh.zero_vector_field();
     f_cell.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
     f_face.resize(mpi_task.size, Field<Scalar>(mesh, face_field_flag));
+    /// flux
     flux_f.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
 
     auto m0_local = mesh.zero_scalar_field();
@@ -66,13 +68,11 @@ void CDUGKS::initial() {
         vel_cell[cell.id] = u;
     }
 
-    rho_cell_n = rho_cell;
-    vel_cell_n = vel_cell;
     /// residual
     rho_cell_res = rho_cell;
     vel_cell_res = vel_cell;
 
-    is_crashed = false;
+    run_state = true;
     logger.note << "Initialization finished." << std::endl;
     MPI_Barrier(MPI_COMM_WORLD);
 }
@@ -102,8 +102,8 @@ void CDUGKS::reconstruct() {
     {
         auto m0_local = mesh.zero_scalar_field(face_field_flag);
         auto m1_local = mesh.zero_vector_field(face_field_flag);
+        /// face macro vars
         for (auto &face: mesh.faces) {
-            /// face macro vars
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
                 auto &particle = dvs_mesh.cells[dvs_id];
@@ -117,11 +117,11 @@ void CDUGKS::reconstruct() {
         MPI::AllReduce(m0_local, m0);
         MPI::AllReduce(m1_local, m1);
         double c_eq = half_dt / (2.0 * tau + half_dt);
+        /// get original f on face
         for (auto &face: mesh.faces) {
             auto rho = m0[face.id];
             auto rhoU = m1[face.id];
             auto u = rhoU / rho;
-            /// get original f on face
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
                 auto &particle = dvs_mesh.cells[dvs_id];
@@ -134,8 +134,8 @@ void CDUGKS::reconstruct() {
         auto rho_w_local = mesh.zero_scalar_field(face_field_flag);
         auto rho_w0_local = mesh.zero_scalar_field(face_field_flag);
 
+        /// boundary
         for (auto &face: mesh.faces) {
-            /// boundary
             auto &mark = config.get_face_group(face, mesh);
             auto &nv = face.normal_vector[1];
             auto &neighbor = mesh.cells[face.cell_id[0]];
@@ -170,7 +170,6 @@ void CDUGKS::reconstruct() {
                         if (kn >= 0.0) {
                             double f_eq = f_maxwell(1.0, mark.velocity, particle.position);
                             rho_w0 += kn * particle.volume * f_eq;
-                            f_face[p][face.id] = f_eq;
                         } else {
                             rho_w -= kn * particle.volume * f_face[p][face.id];
                         }
@@ -198,7 +197,8 @@ void CDUGKS::reconstruct() {
                         auto &particle = dvs_mesh.cells[dvs_id];
                         double kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            f_face[p][face.id] *= rho_w_global[face.id] / rho_w0_global[face.id];
+                            auto rho_w = rho_w_global[face.id] / rho_w0_global[face.id];
+                            f_face[p][face.id] = f_maxwell(rho_w, mark.velocity, particle.position);
                         }
                     }
                 }
@@ -208,59 +208,50 @@ void CDUGKS::reconstruct() {
             }
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 
 void CDUGKS::fvm_update() {
-    {
-        auto flux_m0_local = mesh.zero_scalar_field();
-        auto flux_m1_local = mesh.zero_vector_field();
+    /// Flux
+    auto flux_m0_local = mesh.zero_scalar_field();
+    auto flux_m1_local = mesh.zero_vector_field();
 
-        for (auto &cell: mesh.cells) {
-            rho_cell_n[cell.id] = rho_cell[cell.id];
-            vel_cell_n[cell.id] = vel_cell[cell.id];
-
-            for (int p = 0; p < mpi_task.size; ++p) {
-                ObjectId dvs_id = p + mpi_task.start;
-                auto &particle = dvs_mesh.cells[dvs_id];
-                double flux = 0.0;
-                for (auto face_id: cell.face_id) {
-                    auto &face = mesh.faces[face_id];
-                    auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
-                    flux += (particle.position * nv) * face.area * f_face[p][face.id];
-                }
-                flux_f[p][cell.id] = flux;
-                flux_m0_local[cell.id] += particle.volume * flux;
-                flux_m1_local[cell.id] += particle.volume * flux * particle.position;
+    for (auto &cell: mesh.cells) {
+        for (int p = 0; p < mpi_task.size; ++p) {
+            ObjectId dvs_id = p + mpi_task.start;
+            auto &particle = dvs_mesh.cells[dvs_id];
+            double flux = 0.0;
+            for (auto face_id: cell.face_id) {
+                auto &face = mesh.faces[face_id];
+                auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
+                flux += (particle.position * nv) * face.area * f_face[p][face.id];
             }
-        }
-        auto flux_m0 = mesh.zero_scalar_field();
-        auto flux_m1 = mesh.zero_vector_field();
-        MPI::AllReduce(flux_m0_local, flux_m0);
-        MPI::AllReduce(flux_m1_local, flux_m1);
-
-        for (auto &cell: mesh.cells) {
-            auto dt_v = dt / cell.volume;
-            auto rho_n = rho_cell[cell.id];
-            auto u_n = vel_cell[cell.id];
-            rho_cell[cell.id] = rho_n - dt_v * flux_m0[cell.id];
-            vel_cell[cell.id] = (rho_n * u_n - dt_v * flux_m1[cell.id]) / rho_n;
+            flux_f[p][cell.id] = flux;
+            flux_m0_local[cell.id] += particle.volume * flux;
+            flux_m1_local[cell.id] += particle.volume * flux * particle.position;
         }
     }
+    auto flux_m0 = mesh.zero_scalar_field();
+    auto flux_m1 = mesh.zero_vector_field();
+    MPI::AllReduce(flux_m0_local, flux_m0);
+    MPI::AllReduce(flux_m1_local, flux_m1);
 
-    auto C = tau / (tau + half_dt);
     auto cm = half_dt / (half_dt - 2.0 * tau);
+    auto C = tau / (tau + half_dt);
     auto c_eq = half_dt / (2.0 * tau);
+
     for (auto &cell: mesh.cells) {
         auto dt_v = dt / cell.volume;
         /// tn = n
-        auto rho_n = rho_cell_n[cell.id];
-        auto u_n = vel_cell_n[cell.id];
+        auto rho_n = rho_cell[cell.id];
+        auto u_n = vel_cell[cell.id];
         /// tn = n + 1
-        auto rho = rho_cell[cell.id];
-        auto u = vel_cell[cell.id];
-
+        auto rho = rho_n - dt_v * flux_m0[cell.id];
+        auto u = (rho_n * u_n - dt_v * flux_m1[cell.id]) / rho_n;
+        /// Cell Macro Vars
+        rho_cell[cell.id] = rho;
+        vel_cell[cell.id] = u;
+        /// Evolution
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
@@ -269,11 +260,11 @@ void CDUGKS::fvm_update() {
             auto f_eq = f_maxwell(rho, u, particle.position);
             // 直接演化得 n + 1 时刻的 f_bp
             f_cell[p][cell.id] = (1.0 - c_eq) *
-                                 (C * (f_n + half_dt * (f_eq / tau + (f_eq_n - f_n) / tau) - dt_v * flux_f[p][cell.id])) +
+                                 (C * (f_n + half_dt * (f_eq / tau + (f_eq_n - f_n) / tau) -
+                                       dt_v * flux_f[p][cell.id])) +
                                  c_eq * f_eq;
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void CDUGKS::do_step() {
@@ -286,15 +277,29 @@ void CDUGKS::do_step() {
             double m0_res = residual(rho_cell_res, rho_cell);
             Vector m1_res = residual(vel_cell_res, vel_cell);
             logger.note << "step: " << step << std::endl;
+            ScalarList residual_list;
             if (mesh.dimension() == 2) {
+                residual_list = {m0_res, m1_res.x, m1_res.y};
                 Utils::print_names_and_values({"Res[Rho]", "Res[U]", "Res[V]"},
-                                              {m0_res, m1_res.x, m1_res.y});
+                                              residual_list);
             } else {
+                residual_list = {m0_res, m1_res.x, m1_res.y, m1_res.z};
                 Utils::print_names_and_values({"Res[Rho]", "Res[U]", "Res[V]", "Res[W]"},
-                                              {m0_res, m1_res.x, m1_res.y, m1_res.z});
+                                              residual_list);
+            }
+            if (Utils::is_converged(residual_list, residual_limit)) {
+                converge_state++;
+            } else {
+                converge_state = 0;
+            }
+            if (converge_state >= 10) {
+                logger.note << "Step " << step << " - Convergence achieved: residual all below " << residual_limit
+                            << std::endl;
+                run_state = false;
             }
         }
     }
+    MPI::Bcast(run_state);
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
@@ -322,7 +327,7 @@ void CDUGKS::output() {
     if (output_np) {
         Utils::mkdir(case_name + "/np-data");
         /// output numpy data
-        rho_cell.output(case_name + "/np-data/rho");
+        rho_cell.output(case_name + "/np-data/Rho");
         vel_cell.output(case_name + "/np-data/vel");
     }
 }

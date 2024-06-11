@@ -57,23 +57,15 @@ void CDUGKS_SHAKHOV::initial() {
     dt = CFL * mesh.min_cell_size / dvs_mesh.max_cell_magnitude;
     half_dt = dt * 0.5;
 
-    rho_cell = Field<Scalar>(mesh, cell_field_flag);
-    T_cell = Field<Scalar>(mesh, cell_field_flag);
-    tau_cell = Field<Scalar>(mesh, cell_field_flag);
-    vel_cell = Field<Vector>(mesh, cell_field_flag);
-    q_cell = Field<Vector>(mesh, cell_field_flag);
-
-    rho_face = Field<Scalar>(mesh, face_field_flag);
-    T_face = Field<Scalar>(mesh, face_field_flag);
-    tau_face = Field<Scalar>(mesh, face_field_flag);
-    vel_face = Field<Vector>(mesh, face_field_flag);
-    q_face = Field<Vector>(mesh, face_field_flag);
+    rho_cell = mesh.zero_scalar_field(cell_field_flag);
+    T_cell = mesh.zero_scalar_field(cell_field_flag);
+    vel_cell = mesh.zero_vector_field(cell_field_flag);
+    q_cell = mesh.zero_vector_field(cell_field_flag);
 
     g_cell.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
     h_cell.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
     g_face.resize(mpi_task.size, Field<Scalar>(mesh, face_field_flag));
     h_face.resize(mpi_task.size, Field<Scalar>(mesh, face_field_flag));
-
     /// flux
     flux_g.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
     flux_h.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
@@ -108,31 +100,25 @@ void CDUGKS_SHAKHOV::initial() {
     MPI::AllReduce(m1_local, m1);
     MPI::AllReduce(m2_local, m2);
     MPI::AllReduce(m3_local, m3);
-    for (auto &cell : mesh.cells) {
+    for (auto &cell: mesh.cells) {
         auto rho = m0[cell.id];
         auto rhoU = m1[cell.id];
-        auto rhoE =  0.5 * m2[cell.id];
+        auto rhoE = 0.5 * m2[cell.id];
         auto q = 0.5 * m3[cell.id];
         auto u = rhoU / rho;
         auto T = (rhoE / rho - 0.5 * u * u) / Cv;
         rho_cell[cell.id] = rho;
         vel_cell[cell.id] = u;
         T_cell[cell.id] = T;
-        tau_cell[cell.id] = tau_f(rho, T);
         q_cell[cell.id] = q;
     }
-
-    rho_cell_n = rho_cell;
-    vel_cell_n = vel_cell;
-    T_cell_n = T_cell;
-    tau_cell_n = tau_cell;
     /// residual
     rho_cell_res = rho_cell;
     vel_cell_res = vel_cell;
     T_cell_res = T_cell;
     q_cell_res = q_cell;
 
-    is_crashed = false;
+    run_state = true;
     logger.note << "Initialization finished." << std::endl;
     MPI_Barrier(MPI_COMM_WORLD);
 }
@@ -194,33 +180,34 @@ void CDUGKS_SHAKHOV::reconstruct() {
                                  + (dr_ij - particle.position * half_dt) * (phi_h * grad_h[cell.id]);
         }
     }
-
     {
+        auto m0_local = mesh.zero_scalar_field(face_field_flag);
+        auto m1_local = mesh.zero_vector_field(face_field_flag);
+        auto m2_local = mesh.zero_scalar_field(face_field_flag);
         /// face macro vars
         for (auto &face: mesh.faces) {
-            double m0 = 0.0, m2 = 0.0;
-            Vector m1(0.0, 0.0, 0.0);
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
                 auto &particle = dvs_mesh.cells[dvs_id];
                 auto kk = particle.position * particle.position;
                 auto g = g_face[p][face.id];
                 auto h = h_face[p][face.id];
-                m0 += particle.volume * g;
-                m1 += particle.volume * g * particle.position;
-                m2 += particle.volume * (kk * g + h);
+                m0_local[face.id] += particle.volume * g;
+                m1_local[face.id] += particle.volume * g * particle.position;
+                m2_local[face.id] += particle.volume * (kk * g + h);
             }
-            auto u = m1 / m0;
-            auto T = (m2 / m0 - u * u) / (2.0 * Cv);
-            rho_face[face.id] = m0;
-            vel_face[face.id] = u;
-            T_face[face.id] = T;
-            tau_face[face.id] = tau_f(m0, T);
         }
+        auto m0 = mesh.zero_scalar_field(face_field_flag);
+        auto m1 = mesh.zero_vector_field(face_field_flag);
+        auto m2 = mesh.zero_scalar_field(face_field_flag);
+        MPI::AllReduce(m0_local, m0);
+        MPI::AllReduce(m1_local, m1);
+        MPI::AllReduce(m2_local, m2);
+        auto m3_local = mesh.zero_vector_field(face_field_flag);
         for (auto &face: mesh.faces) {
-            Vector m3(0.0, 0.0, 0.0);
-            auto u = vel_face[face.id];
-            auto tau = tau_face[face.id];
+            auto rho = m0[face.id];
+            auto rhoU = m1[face.id];
+            auto u = rhoU / rho;
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
                 auto &particle = dvs_mesh.cells[dvs_id];
@@ -228,38 +215,41 @@ void CDUGKS_SHAKHOV::reconstruct() {
                 auto cc = c * c;
                 auto g = g_face[p][face.id];
                 auto h = h_face[p][face.id];
-                m3 += particle.volume * c * (cc * g + h);
+                m3_local[face.id] += particle.volume * c * (cc * g + h);
             }
-            auto cq = tau / (2.0 * tau + half_dt * Pr);
-            q_face[face.id] = cq * m3;
         }
-    }
-
-    for (auto &face: mesh.faces) {
+        auto m3 = mesh.zero_vector_field(face_field_flag);
+        MPI::AllReduce(m3_local, m3);
         /// get original f on face
-        auto tau = tau_face[face.id];
-        auto c_eq = half_dt / (2.0 * tau + half_dt);
-        auto rho = rho_face[face.id];
-        auto u = vel_face[face.id];
-        auto T = T_face[face.id];
-        auto q = q_face[face.id];
-        for (int p = 0; p < mpi_task.size; ++p) {
-            ObjectId dvs_id = p + mpi_task.start;
-            auto &particle = dvs_mesh.cells[dvs_id];
-            auto c = particle.position - u;
-            auto cc = c * c;
-            auto cq = c * q;
-            auto g_m = g_maxwell(rho, T, cc);
-            auto g_s = g_shakhov(rho, T, cc, cq, g_m);
-            auto h_s = h_shakhov(rho, T, cc, cq, g_m);
-            g_face[p][face.id] = (1.0 - c_eq) * g_face[p][face.id] + c_eq * g_s;
-            h_face[p][face.id] = (1.0 - c_eq) * h_face[p][face.id] + c_eq * h_s;
+        for (auto &face: mesh.faces) {
+            auto rho = m0[face.id];
+            auto rhoU = m1[face.id];
+            auto rhoE = 0.5 * m2[face.id];
+            auto u = rhoU / rho;
+            auto T = (rhoE / rho - 0.5 * u * u) / Cv;
+            auto tau = tau_f(rho, T);
+            auto q = (tau / (2.0 * tau + half_dt * Pr)) * m3[face.id];
+            auto C_s = half_dt / (2.0 * tau + half_dt);
+            for (int p = 0; p < mpi_task.size; ++p) {
+                ObjectId dvs_id = p + mpi_task.start;
+                auto &particle = dvs_mesh.cells[dvs_id];
+                auto c = particle.position - u;
+                auto cc = c * c;
+                auto cq = c * q;
+                auto g_m = g_maxwell(rho, T, cc);
+                auto g_s = g_shakhov(rho, T, cc, cq, g_m);
+                auto h_s = h_shakhov(rho, T, cc, cq, g_m);
+                g_face[p][face.id] = (1.0 - C_s) * g_face[p][face.id] + C_s * g_s;
+                h_face[p][face.id] = (1.0 - C_s) * h_face[p][face.id] + C_s * h_s;
+            }
         }
     }
-
     {
+        auto rho_w_local = mesh.zero_scalar_field(face_field_flag);
+        auto rho_w0_local = mesh.zero_scalar_field(face_field_flag);
+
+        /// boundary
         for (auto &face: mesh.faces) {
-            /// boundary
             auto &mark = config.get_face_group(face, mesh);
             auto &nv = face.normal_vector[1];
             auto &neighbor = mesh.cells[face.cell_id[0]];
@@ -271,7 +261,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         if (particle.position * nv >= 0.0) {
                             auto c = particle.position - mark.velocity;
                             auto cc = c * c;
-                            double g_m = g_maxwell(mark.density, mark.temperature, cc);
+                            auto g_m = g_maxwell(mark.density, mark.temperature, cc);
                             g_face[p][face.id] = g_m;
                             h_face[p][face.id] = h_maxwell(mark.temperature, g_m);
                         }
@@ -286,7 +276,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                             auto cc = c * c;
                             auto rho = rho_cell[neighbor.id];
                             auto T = T_cell[neighbor.id];
-                            double g_m = g_maxwell(rho, T, cc);
+                            auto g_m = g_maxwell(rho, T, cc);
                             g_face[p][face.id] = g_m;
                             h_face[p][face.id] = h_maxwell(T, g_m);
                         }
@@ -300,31 +290,50 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
                         if (kn >= 0.0) {
+                            auto T = (mark.temperature <= 0.0) ? T_cell[neighbor.id] : mark.temperature;
                             auto c = particle.position - mark.velocity;
                             auto cc = c * c;
-                            auto T = (mark.temperature <= 0.0) ? T_cell[neighbor.id] : mark.temperature;
                             auto g_m = g_maxwell(1.0, T, cc);
                             rho_w0 += kn * particle.volume * g_m;
                         } else {
                             rho_w -= kn * particle.volume * g_face[p][face.id];
                         }
                     }
-                    rho_w /= rho_w0;
+                    rho_w_local[face.id] = rho_w;
+                    rho_w0_local[face.id] = rho_w0;
+                }
+                case fluid_interior:
+                default:
+                    break;
+            }
+        }
+        auto rho_w_global = mesh.zero_scalar_field(face_field_flag);
+        auto rho_w0_global = mesh.zero_scalar_field(face_field_flag);
+        MPI::AllReduce(rho_w_local, rho_w_global);
+        MPI::AllReduce(rho_w0_local, rho_w0_global);
+
+        for (auto &face: mesh.faces) {
+            auto &mark = config.get_face_group(face, mesh);
+            switch (mark.type) {
+                case wall: {
+                    auto &nv = face.normal_vector[1];
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
                         if (kn >= 0.0) {
+                            auto rho_w = rho_w_global[face.id] / rho_w0_local[face.id];
+                            auto T = mark.temperature;
                             auto c = particle.position - mark.velocity;
                             auto cc = c * c;
-                            auto T = (mark.temperature <= 0.0) ? T_cell[neighbor.id] : mark.temperature;
                             auto g_m = g_maxwell(rho_w, T, cc);
+                            auto h_m = h_maxwell(T, g_m);
                             g_face[p][face.id] = g_m;
-                            h_face[p][face.id] = h_maxwell(T, g_m);
+                            h_face[p][face.id] = h_m;
                         }
                     }
                 }
-                case fluid_interior:
+                    break;
                 default:
                     break;
             }
@@ -333,67 +342,64 @@ void CDUGKS_SHAKHOV::reconstruct() {
 }
 
 void CDUGKS_SHAKHOV::fvm_update() {
-    for (auto &cell: mesh.cells) {
-        rho_cell_n[cell.id] = rho_cell[cell.id];
-        T_cell_n[cell.id] = T_cell[cell.id];
-        tau_cell_n[cell.id] = tau_cell[cell.id];
-        vel_cell_n[cell.id] = vel_cell[cell.id];
+    /// Flux
+    auto flux_m0_local = mesh.zero_scalar_field();
+    auto flux_m1_local = mesh.zero_vector_field();
+    auto flux_m2_local = mesh.zero_scalar_field();
 
-        double flux_m0 = 0.0, flux_m2 = 0.0;
-        Vector flux_m1(0.0, 0.0, 0.0);
+    for (auto &cell: mesh.cells) {
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
-            double flux_g_p = 0.0, flux_h_p = 0.0;
+            double flux_g_tmp = 0.0, flux_h_tmp = 0.0;
             for (auto face_id: cell.face_id) {
                 auto &face = mesh.faces[face_id];
                 auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
-                flux_g_p += (particle.position * nv) * face.area * g_face[p][face.id];
-                flux_h_p += (particle.position * nv) * face.area * h_face[p][face.id];
+                auto knA = (particle.position * nv) * face.area;
+                flux_g_tmp += knA * g_face[p][face.id];
+                flux_h_tmp += knA * h_face[p][face.id];
             }
-            flux_g[p][cell.id] = flux_g_p;
-            flux_h[p][cell.id] = flux_h_p;
-            flux_m0 += particle.volume * flux_g_p;
-            flux_m1 += particle.volume * flux_g_p * particle.position;
-            flux_m2 += particle.volume * ((particle.position * particle.position) * flux_g_p + flux_h_p);
+            flux_g[p][cell.id] = flux_g_tmp;
+            flux_h[p][cell.id] = flux_h_tmp;
+            flux_m0_local[cell.id] += particle.volume * flux_g_tmp;
+            flux_m1_local[cell.id] += particle.volume * flux_g_tmp * particle.position;
+            flux_m2_local[cell.id] +=
+                    particle.volume * ((particle.position * particle.position) * flux_g_tmp + flux_h_tmp);
         }
-        auto dt_v = dt / cell.volume;
-        auto rho_n = rho_cell_n[cell.id];
-        auto u_n = vel_cell_n[cell.id];
-        auto T_n = T_cell_n[cell.id];
-        auto rhoU_n = rho_n * u_n;
-        auto rhoE_n = rho_n * (0.5 * (u_n * u_n) + Cv * T_n);
-        auto rho = rho_n - dt_v * flux_m0;
-        auto rhoU = rhoU_n - dt_v * flux_m1;
-        auto u = rhoU / rho;
-        auto rhoE = rhoE_n - dt_v * flux_m2 * 0.5;
-        auto T = (rhoE / rho - (u * u) * 0.5) / Cv;
-        auto tau = tau_f(rho, T);
-        rho_cell[cell.id] = rho;
-        vel_cell[cell.id] = rhoU / rho;
-        T_cell[cell.id] = T;
-        tau_cell[cell.id] = tau;
     }
+    auto flux_m0 = mesh.zero_scalar_field();
+    auto flux_m1 = mesh.zero_vector_field();
+    auto flux_m2 = mesh.zero_scalar_field();
+    MPI::AllReduce(flux_m0_local, flux_m0);
+    MPI::AllReduce(flux_m1_local, flux_m1);
+    MPI::AllReduce(flux_m2_local, flux_m2);
 
+    auto m3_local = mesh.zero_vector_field();
     for (auto &cell: mesh.cells) {
         auto dt_v = dt / cell.volume;
         /// tn = n
-        auto rho_n = rho_cell_n[cell.id];
-        auto u_n = vel_cell_n[cell.id];
-        auto T_n = T_cell_n[cell.id];
+        auto rho_n = rho_cell[cell.id];
+        auto u_n = vel_cell[cell.id];
+        auto T_n = T_cell[cell.id];
         auto q_n = q_cell[cell.id];
-        auto tau_n = tau_cell_n[cell.id];
+        auto rhoU_n = rho_n * u_n;
+        auto rhoE_n = rho_n * (0.5 * (u_n * u_n) + Cv * T_n);
+        auto tau_n = tau_f(rho_n, T_n);
         /// tn = n + 1
-        auto rho = rho_cell[cell.id];
-        auto u = vel_cell[cell.id];
-        auto T = T_cell[cell.id];
-        auto q = q_cell[cell.id];
-        auto tau = tau_cell[cell.id];
-
+        auto rho = rho_n - dt_v * flux_m0[cell.id];
+        auto rhoU = rhoU_n - dt_v * flux_m1[cell.id];
+        auto rhoE = rhoE_n - dt_v * 0.5 * flux_m2[cell.id];
+        auto u = rhoU / rho;
+        auto T = (rhoE / rho - (u * u) * 0.5) / Cv;
+        auto tau = tau_f(rho, T);
+        /// Cell Macro Vars
+        rho_cell[cell.id] = rho;
+        vel_cell[cell.id] = u;
+        T_cell[cell.id] = T;
+        /// Evolution
+        auto cm = half_dt / (half_dt - 2.0 * tau_n);
         auto C = tau / (tau + half_dt);
-        double cm = half_dt / (half_dt - 2.0 * tau_n);
-        double c_eq = half_dt / (2.0 * tau);
-        Vector m3(0.0, 0.0, 0.0);
+        auto C_s = half_dt / (2.0 * tau);
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
@@ -409,21 +415,21 @@ void CDUGKS_SHAKHOV::fvm_update() {
             /// tn = n + 1
             auto c = particle.position - u;
             auto cc = c * c;
-            auto cq = c * q;
+            auto cq = c * q_n;
             auto g_m = g_maxwell(rho, T, cc);
             auto g_s = g_shakhov(rho, T, cc, cq, g_m);
             auto h_s = h_shakhov(rho, T, cc, cq, g_m);
             /// Evolution
             auto g = C * (g_n + half_dt * (g_s / tau + (g_s_n - g_n) / tau_n) - dt_v * flux_g[p][cell.id]);
             auto h = C * (h_n + half_dt * (h_s / tau + (h_s_n - h_n) / tau_n) - dt_v * flux_h[p][cell.id]);
-            g_cell[p][cell.id] = (1.0 - c_eq) * g + c_eq * g_s;
-            h_cell[p][cell.id] = (1.0 - c_eq) * h + c_eq * h_s;
             /// heat-flux
-            m3 += particle.volume * c * (cc * g + h);
+            m3_local[cell.id] += 0.5 * particle.volume * c * (cc * g + h);
+            /// f -> f_bar_plus
+            g_cell[p][cell.id] = (1.0 - C_s) * g + C_s * g_s;
+            h_cell[p][cell.id] = (1.0 - C_s) * h + C_s * h_s;
         }
-        /// update heat-flux at tn=n+1
-        q_cell[cell.id] = 0.5 * m3;
     }
+    MPI::AllReduce(m3_local, q_cell);
 }
 
 void CDUGKS_SHAKHOV::do_step() {
@@ -438,16 +444,31 @@ void CDUGKS_SHAKHOV::do_step() {
             auto T_res = residual(T_cell_res, T_cell);
             auto q_res = residual(q_cell_res, q_cell);
             logger.note << "step: " << step << std::endl;
+            ScalarList residual_list;
             if (mesh.dimension() == 2) {
-                Utils::print_names_and_values({"Res[rho]", "Res[T]", "Res[u]", "Res[v]", "Res[qx]", "Res[qy]"},
-                                              {rho_res, T_res, vel_res.x, vel_res.y, q_res.x, q_res.y});
+                residual_list = {rho_res, T_res, vel_res.x, vel_res.y, q_res.x, q_res.y};
+                Utils::print_names_and_values({"Res[Rho]", "Res[T]", "Res[u]", "Res[v]", "Res[qx]", "Res[qy]"},
+                                              residual_list);
             } else {
+                residual_list = {rho_res, T_res, vel_res.x, vel_res.y, vel_res.z, q_res.x, q_res.y, q_res.z};
                 Utils::print_names_and_values(
-                        {"Res[rho]", "Res[T]", "Res[u]", "Res[v]", "Res[w]", "Res[qx]", "Res[qy]", "Res[qz]"},
-                        {rho_res, T_res, vel_res.x, vel_res.y, vel_res.z, q_res.x, q_res.y, q_res.z});
+                        {"Res[Rho]", "Res[T]", "Res[u]", "Res[v]", "Res[w]", "Res[qx]", "Res[qy]", "Res[qz]"},
+                        residual_list);
+            }
+            if (Utils::is_converged(residual_list, residual_limit)) {
+                converge_state++;
+            } else {
+                converge_state = 0;
+            }
+            if (converge_state >= 10) {
+                logger.note << "Step " << step << " - Convergence achieved: residual all below " << residual_limit
+                            << std::endl;
+                run_state = false;
             }
         }
     }
+    MPI::Bcast(run_state);
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void CDUGKS_SHAKHOV::output() {
@@ -466,18 +487,18 @@ void CDUGKS_SHAKHOV::output() {
     auto qz = q_cell.heft(2);
     if (mesh.dimension() == 2) {
         mesh.output(file_name.str(),
-                    {"rho", "T", "U", "V", "qx", "qy"},
+                    {"Rho", "T", "U", "V", "qx", "qy"},
                     {&rho_cell, &T_cell, &U, &V, &qx, &qy}, step, solution_time);
     } else {
         mesh.output(file_name.str(),
-                    {"rho", "T", "U", "V", "W", "qx", "qy", "qz"},
+                    {"Rho", "T", "U", "V", "W", "qx", "qy", "qz"},
                     {&rho_cell, &T_cell, &U, &V, &W, &qx, &qy, &qz}, step, solution_time);
     }
 
     if (output_np) {
         Utils::mkdir(case_name + "/np-data");
         /// output numpy data
-        rho_cell.output(case_name + "/np-data/rho");
+        rho_cell.output(case_name + "/np-data/Rho");
         T_cell.output(case_name + "/np-data/T");
         vel_cell.output(case_name + "/np-data/vel");
         q_cell.output(case_name + "/np-data/q");
