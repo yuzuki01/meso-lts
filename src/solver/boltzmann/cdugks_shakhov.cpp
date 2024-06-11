@@ -62,16 +62,6 @@ void CDUGKS_SHAKHOV::initial() {
     tau_cell = Field<Scalar>(mesh, cell_field_flag);
     vel_cell = Field<Vector>(mesh, cell_field_flag);
     q_cell = Field<Vector>(mesh, cell_field_flag);
-    rho_cell_n = Field<Scalar>(mesh, cell_field_flag);
-    T_cell_n = Field<Scalar>(mesh, cell_field_flag);
-    tau_cell_n = Field<Scalar>(mesh, cell_field_flag);
-    vel_cell_n = Field<Vector>(mesh, cell_field_flag);
-
-    // res
-    rho_cell_res = Field<Scalar>(mesh, cell_field_flag);
-    T_cell_res = Field<Scalar>(mesh, cell_field_flag);
-    vel_cell_res = Field<Vector>(mesh, cell_field_flag);
-    q_cell_res = Field<Vector>(mesh, cell_field_flag);
 
     rho_face = Field<Scalar>(mesh, face_field_flag);
     T_face = Field<Scalar>(mesh, face_field_flag);
@@ -88,13 +78,12 @@ void CDUGKS_SHAKHOV::initial() {
     flux_g.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
     flux_h.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
 
+    auto m0_local = mesh.zero_scalar_field();
+    auto m1_local = mesh.zero_vector_field();
+    auto m2_local = mesh.zero_scalar_field();
+    auto m3_local = mesh.zero_vector_field();
     for (auto &cell: mesh.cells) {
         auto &group = config.get_cell_group(cell, mesh);
-        double m0_local = 0.0, m2_local = 0.0;
-        Vector m1_local(0.0, 0.0, 0.0), m3_local(0.0, 0.0, 0.0);
-#pragma omp parallel for shared(cell, group) \
-        reduction(+:m0_local) reduction(+:m1_local) \
-        reduction(+:m2_local) reduction(+:m3_local) default(none)
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
@@ -105,25 +94,34 @@ void CDUGKS_SHAKHOV::initial() {
             auto h = h_maxwell(group.density, g);
             g_cell[p][cell.id] = g;
             h_cell[p][cell.id] = h;
-            m0_local += particle.volume * g;
-            m1_local += particle.volume * g * particle.position;
-            m2_local += particle.volume * (kk * g + h);
-            m3_local += particle.volume * c * (cc * g + h);
+            m0_local[cell.id] += particle.volume * g;
+            m1_local[cell.id] += particle.volume * g * particle.position;
+            m2_local[cell.id] += particle.volume * (kk * g + h);
+            m3_local[cell.id] += particle.volume * c * (cc * g + h);
         }
-        double m0, m2;
-        Vector m1, m3;
-        MPI::AllReduce(m0_local, m0);
-        MPI::AllReduce(m1_local, m1);
-        MPI::AllReduce(m2_local, m2);
-        MPI::AllReduce(m3_local, m3);
-        auto u = m1 / m0;
-        auto T = (m2 / m0 - u * u) / (2.0 * Cv);
-        rho_cell[cell.id] = m0;
+    }
+    auto m0 = mesh.zero_scalar_field();
+    auto m1 = mesh.zero_vector_field();
+    auto m2 = mesh.zero_scalar_field();
+    auto m3 = mesh.zero_vector_field();
+    MPI::AllReduce(m0_local, m0);
+    MPI::AllReduce(m1_local, m1);
+    MPI::AllReduce(m2_local, m2);
+    MPI::AllReduce(m3_local, m3);
+    for (auto &cell : mesh.cells) {
+        auto rho = m0[cell.id];
+        auto rhoU = m1[cell.id];
+        auto rhoE =  0.5 * m2[cell.id];
+        auto q = 0.5 * m3[cell.id];
+        auto u = rhoU / rho;
+        auto T = (rhoE / rho - 0.5 * u * u) / Cv;
+        rho_cell[cell.id] = rho;
         vel_cell[cell.id] = u;
         T_cell[cell.id] = T;
-        tau_cell[cell.id] = tau_f(m0, T);
-        q_cell[cell.id] = m3 * 0.5;
+        tau_cell[cell.id] = tau_f(rho, T);
+        q_cell[cell.id] = q;
     }
+
     rho_cell_n = rho_cell;
     vel_cell_n = vel_cell;
     T_cell_n = T_cell;
@@ -177,10 +175,9 @@ void CDUGKS_SHAKHOV::reconstruct() {
         ObjectId dvs_id = p + mpi_task.start;
         auto &particle = dvs_mesh.cells[dvs_id];
         /// cell gradient
-        Field <Vector> grad_g = g_cell[p].gradient(gradient_switch);  // Field<Scalar>.gradient 内置 openMP 并行
-        Field <Vector> grad_h = h_cell[p].gradient(gradient_switch);  // Field<Scalar>.gradient 内置 openMP 并行
+        Field <Vector> grad_g = g_cell[p].gradient(gradient_switch);
+        Field <Vector> grad_h = h_cell[p].gradient(gradient_switch);
         /// interp to face
-#pragma omp parallel for shared(particle, grad_g, grad_h, p) default(none)
         for (auto &face: mesh.faces) {
             Vector &nv = face.normal_vector[0];
             auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
@@ -200,7 +197,6 @@ void CDUGKS_SHAKHOV::reconstruct() {
 
     {
         /// face macro vars
-#pragma omp parallel for default(none)
         for (auto &face: mesh.faces) {
             double m0 = 0.0, m2 = 0.0;
             Vector m1(0.0, 0.0, 0.0);
@@ -239,7 +235,6 @@ void CDUGKS_SHAKHOV::reconstruct() {
         }
     }
 
-#pragma omp parallel for default(none)
     for (auto &face: mesh.faces) {
         /// get original f on face
         auto tau = tau_face[face.id];
@@ -263,7 +258,6 @@ void CDUGKS_SHAKHOV::reconstruct() {
     }
 
     {
-#pragma omp parallel for default(none)
         for (auto &face: mesh.faces) {
             /// boundary
             auto &mark = config.get_face_group(face, mesh);
@@ -339,7 +333,6 @@ void CDUGKS_SHAKHOV::reconstruct() {
 }
 
 void CDUGKS_SHAKHOV::fvm_update() {
-#pragma omp parallel for default(none)
     for (auto &cell: mesh.cells) {
         rho_cell_n[cell.id] = rho_cell[cell.id];
         T_cell_n[cell.id] = T_cell[cell.id];
@@ -382,7 +375,6 @@ void CDUGKS_SHAKHOV::fvm_update() {
         tau_cell[cell.id] = tau;
     }
 
-#pragma omp parallel for default(none)
     for (auto &cell: mesh.cells) {
         auto dt_v = dt / cell.volume;
         /// tn = n

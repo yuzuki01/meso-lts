@@ -27,7 +27,7 @@ void Solver::solver_interrupt<Solver::CDUGKS>(int signum) {
 template<>
 int Solver::handle_solver<Solver::CDUGKS>(int *p_argc, char ***p_argv, MESO::ArgParser &parser) {
     /// MPI init
-    MESO::MPI::Initialize(p_argc, p_argv, parser.parse_param<int>("parallel", 1, true));
+    MESO::MPI::Initialize(p_argc, p_argv);
     int save_interval = parser.parse_param<int>("save-interval", 1000, false);
     MESO::Solver::CDUGKS solver(parser);
     solver.initial();
@@ -66,7 +66,7 @@ void Solver::solver_interrupt<Solver::CDUGKS_SHAKHOV>(int signum) {
 template<>
 int Solver::handle_solver<Solver::CDUGKS_SHAKHOV>(int *p_argc, char ***p_argv, MESO::ArgParser &parser) {
     /// MPI init
-    MESO::MPI::Initialize(p_argc, p_argv, parser.parse_param<int>("parallel", 1, true));
+    MESO::MPI::Initialize(p_argc, p_argv);
     int save_interval = parser.parse_param<int>("save-interval", 1000, false);
     MESO::Solver::CDUGKS_SHAKHOV solver(parser);
     solver.initial();

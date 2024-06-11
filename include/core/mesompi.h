@@ -16,9 +16,8 @@ namespace MESO {
 namespace MESO::MPI {
 
     const int main_rank = 0;
-    extern int node_num;
+    extern int process_num;
     extern int rank;
-    extern int omp_num;
 
     struct MPI_TaskObject {
         int start = 0;
@@ -27,7 +26,7 @@ namespace MESO::MPI {
     typedef std::vector<MPI_TaskObject> MPI_Task;
     MPI_Task get_task_distribution(int total_num);
 
-    void Initialize(int *p_argc, char*** p_argv, int omp_threads_num);
+    void Initialize(int *p_argc, char*** p_argv);
 
     void Finalize();
 
@@ -36,9 +35,20 @@ namespace MESO::MPI {
     void AllReduce(Scalar local, Scalar &global);
     void AllReduce(const MESO::Vector &local, MESO::Vector &global);
 
-    /// defined in solver/field.cpp
-    void ReduceAll(Field<Scalar> &local, Field<Scalar> &global);
-    void ReduceAll(Field<Vector> &local, Field<Vector> &global);
+    /// coded in solver/field.cpp
+    void AllReduce(Field<Scalar> &local, Field<Scalar> &global);
+    void AllReduce(Field<Vector> &local, Field<Vector> &global);
+
+    /// UDF MPI DataType
+    namespace UDF {
+        extern MPI_Datatype MPI_Vector;
+        extern MPI_Datatype type[3];
+        extern int block_len[3];
+        extern MPI_Aint disp[3];
+        extern MPI_Op MPI_VectorSum;
+        void vector_sum(void* invec, void* inoutvec, const int* len, MPI_Datatype* datatype);
+        void MPI_UDF_VectorReduce();
+    }
 }
 
 #endif //CORE_MESOMPI_H

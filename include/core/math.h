@@ -3,7 +3,6 @@
 
 namespace MESO::Math {
     class Vector;
-    class Matrix;
 }
 
 class MESO::Math::Vector {
@@ -39,34 +38,5 @@ MESO::Math::Vector operator*(double k, const MESO::Math::Vector &vec);
 /// openMP
 #pragma omp declare reduction(+: MESO::Math::Vector : omp_out += omp_in)
 #pragma omp declare reduction(-: MESO::Math::Vector : omp_out -= omp_in)
-
-class MESO::Math::Matrix {
-public:
-    std::array<Vector, 3> data;
-    Matrix();
-    Matrix(const Matrix &other) = default;
-    Matrix& operator=(const Matrix& other) = default;
-    Matrix(const std::initializer_list<double> &init_list);
-    Vector& operator[](int row);
-    Matrix& operator+=(Matrix& other);
-    Matrix& operator-=(Matrix& other);
-    Matrix& operator*=(double _s);
-    Matrix& operator/=(double _s);
-
-    Vector operator*(const Vector& vec);
-    Matrix operator*(double _s);
-    Matrix operator/(double _s);
-
-    Matrix operator+(Matrix& other);
-    Matrix operator-(Matrix& other);
-    Matrix operator*(const Matrix& other);
-
-    [[nodiscard]] double Det() const;
-    [[nodiscard]] Matrix T() const;
-    [[nodiscard]] Matrix I() const;
-    std::string str();
-};
-
-MESO::Math::Matrix operator*(double k, MESO::Math::Matrix mat);
 
 #endif //CORE_MATH_H

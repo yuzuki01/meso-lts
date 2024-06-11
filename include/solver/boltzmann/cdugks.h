@@ -15,18 +15,19 @@ public:
     double solution_time{};
 
     /// FieldValue
-    Field<Scalar> m0_cell, m0_cell_n, m0_face;
-    Field<Vector> m1_cell, m1_cell_n, m1_face;
-    Field<Scalar> m0_cell_res;
-    Field<Vector> m1_cell_res;
+    Field<Scalar> rho_cell, rho_cell_n;
+    Field<Vector> vel_cell, vel_cell_n;
+    Field<Scalar> rho_cell_res;
+    Field<Vector> vel_cell_res;
     DistributionFunction f_cell;
     DistributionFunction f_face;
+    DistributionFunction flux_f;
 
     explicit CDUGKS(ArgParser &parser);
 
     void initial();
 
-    Scalar f_maxwell(double m0, const Vector &m1, const Vector &particle_velocity) const;
+    Scalar f_maxwell(double rho, const Vector &u, const Vector &particle_velocity) const;
 
     void reconstruct();
 

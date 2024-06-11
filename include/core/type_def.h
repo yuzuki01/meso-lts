@@ -9,7 +9,6 @@ namespace MESO {
     typedef double Scalar;
     typedef std::string KeyString;
     typedef MESO::Math::Vector Vector;
-    typedef MESO::Math::Matrix Matrix;
     typedef MESO::Math::Vector Position;
     typedef std::array<ObjectId, 2> ObjectIdSet;
     typedef std::array<Vector, 2> VectorSet;

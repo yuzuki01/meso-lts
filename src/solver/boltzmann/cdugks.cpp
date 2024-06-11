@@ -35,49 +35,53 @@ void CDUGKS::initial() {
     dt = CFL * ((mesh.min_cell_size / 2.0) / dvs_mesh.max_cell_magnitude);
     half_dt = 0.5 * dt;
 
-    m0_cell = Field<Scalar>(mesh, cell_field_flag);
-    m0_cell_n = Field<Scalar>(mesh, cell_field_flag);
-    m0_cell_res = Field<Scalar>(mesh, cell_field_flag);
-    m1_cell = Field<Vector>(mesh, cell_field_flag);
-    m1_cell_n = Field<Vector>(mesh, cell_field_flag);
-    m1_cell_res = Field<Vector>(mesh, cell_field_flag);
-    m0_face = Field<Scalar>(mesh, face_field_flag);
-    m1_face = Field<Vector>(mesh, face_field_flag);
+    rho_cell = mesh.zero_scalar_field();
+    vel_cell = mesh.zero_vector_field();
     f_cell.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
     f_face.resize(mpi_task.size, Field<Scalar>(mesh, face_field_flag));
+    flux_f.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
 
-#pragma omp parallel for default(none)
+    auto m0_local = mesh.zero_scalar_field();
+    auto m1_local = mesh.zero_vector_field();
     for (auto &cell: mesh.cells) {
         auto &group = config.get_cell_group(cell, mesh);
-        double m0 = 0.0;
-        Vector m1(0.0, 0.0, 0.0);
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
             double f = f_maxwell(group.density, group.velocity, particle.position);
             f_cell[p][cell.id] = f;
-            m0 += particle.volume * f;
-            m1 += particle.volume * f * particle.position;
+            m0_local[cell.id] += particle.volume * f;
+            m1_local[cell.id] += particle.volume * f * particle.position;
         }
-        m0_cell_n[cell.id] = m0;
-        m1_cell_n[cell.id] = m1;
     }
-    /// X_cell_n as X_cell_local here
-    MPI::ReduceAll(m0_cell_n, m0_cell);
-    MPI::ReduceAll(m1_cell_n, m1_cell);
-    MPI_Barrier(MPI_COMM_WORLD);
-    m0_cell_n.values = m0_cell.values;
-    m1_cell_n.values = m1_cell.values;
+    auto m0 = mesh.zero_scalar_field();
+    auto m1 = mesh.zero_vector_field();
+    MPI::AllReduce(m0_local, m0);
+    MPI::AllReduce(m1_local, m1);
+    for (auto &cell: mesh.cells) {
+        auto rho = m0[cell.id];
+        auto rhoU = m1[cell.id];
+        auto u = rhoU / rho;
+        rho_cell[cell.id] = rho;
+        vel_cell[cell.id] = u;
+    }
+
+    rho_cell_n = rho_cell;
+    vel_cell_n = vel_cell;
+    /// residual
+    rho_cell_res = rho_cell;
+    vel_cell_res = vel_cell;
+
     is_crashed = false;
     logger.note << "Initialization finished." << std::endl;
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
-MESO::Scalar CDUGKS::f_maxwell(double m0, const Vector &m1, const Vector &particle_velocity) const {
+MESO::Scalar CDUGKS::f_maxwell(double rho, const Vector &u, const Vector &particle_velocity) const {
     double over_RT = 1.0 / RT;
-    Vector flow_velocity = m1 / m0;
-    double ku_RT = (flow_velocity * particle_velocity) * over_RT;
-    double uu_RT = (flow_velocity * flow_velocity) * over_RT;
-    return m0 * (1.0 + ku_RT + (ku_RT * ku_RT - uu_RT) * 0.5);
+    double ku_RT = (u * particle_velocity) * over_RT;
+    double uu_RT = (u * u) * over_RT;
+    return rho * (1.0 + ku_RT + (ku_RT * ku_RT - uu_RT) * 0.5);
 }
 
 void CDUGKS::reconstruct() {
@@ -86,9 +90,8 @@ void CDUGKS::reconstruct() {
         ObjectId dvs_id = p + mpi_task.start;
         auto &particle = dvs_mesh.cells[dvs_id];
         /// cell gradient
-        Field <Vector> grad_f = f_cell[p].gradient(gradient_switch);  // Field<Scalar>.gradient 内置 openMP 并行
+        Field <Vector> grad_f = f_cell[p].gradient(gradient_switch);
         /// interp to face
-#pragma omp parallel for shared(particle, grad_f, p) default(none)
         for (auto &face: mesh.faces) {
             Vector &nv = face.normal_vector[0];
             auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
@@ -96,52 +99,41 @@ void CDUGKS::reconstruct() {
                                  + (face.position - cell.position - particle.position * half_dt) * grad_f[cell.id];
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-
     {
-        Field <Scalar> m0_local(mesh, face_field_flag);
-        Field <Vector> m1_local(mesh, face_field_flag);
-#pragma omp parallel for shared(m0_local, m1_local) default(none)
+        auto m0_local = mesh.zero_scalar_field(face_field_flag);
+        auto m1_local = mesh.zero_vector_field(face_field_flag);
         for (auto &face: mesh.faces) {
-            double m0 = 0.0;
-            Vector m1(0.0, 0.0, 0.0);
             /// face macro vars
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
                 auto &particle = dvs_mesh.cells[dvs_id];
                 double f = f_face[p][face.id];
-                m0 += particle.volume * f;
-                m1 += particle.volume * f * particle.position;
+                m0_local[face.id] += particle.volume * f;
+                m1_local[face.id] += particle.volume * f * particle.position;
             }
-            m0_local[face.id] = m0;
-            m1_local[face.id] = m1;
         }
-        MPI::ReduceAll(m0_local, m0_face);
-        MPI::ReduceAll(m1_local, m1_face);
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
-
-#pragma omp parallel for default(none)
-    for (auto &face: mesh.faces) {
-        /// get original f on face
+        auto m0 = mesh.zero_scalar_field(face_field_flag);
+        auto m1 = mesh.zero_vector_field(face_field_flag);
+        MPI::AllReduce(m0_local, m0);
+        MPI::AllReduce(m1_local, m1);
         double c_eq = half_dt / (2.0 * tau + half_dt);
-        for (int p = 0; p < mpi_task.size; ++p) {
-            // openMP parallel runs on mesh
-            ObjectId dvs_id = p + mpi_task.start;
-            auto &particle = dvs_mesh.cells[dvs_id];
-            double f_eq = f_maxwell(m0_face[face.id], m1_face[face.id], particle.position);
-            f_face[p][face.id] = (1.0 - c_eq) * f_face[p][face.id] + c_eq * f_eq;
+        for (auto &face: mesh.faces) {
+            auto rho = m0[face.id];
+            auto rhoU = m1[face.id];
+            auto u = rhoU / rho;
+            /// get original f on face
+            for (int p = 0; p < mpi_task.size; ++p) {
+                ObjectId dvs_id = p + mpi_task.start;
+                auto &particle = dvs_mesh.cells[dvs_id];
+                auto f_eq = f_maxwell(rho, u, particle.position);
+                f_face[p][face.id] = (1.0 - c_eq) * f_face[p][face.id] + c_eq * f_eq;
+            }
         }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-
     {
-        Field <Scalar> rho_w_local(mesh, face_field_flag);
-        Field <Scalar> rho_w0_local(mesh, face_field_flag);
-        Field <Scalar> rho_w_global(mesh, face_field_flag);
-        Field <Scalar> rho_w0_global(mesh, face_field_flag);
+        auto rho_w_local = mesh.zero_scalar_field(face_field_flag);
+        auto rho_w0_local = mesh.zero_scalar_field(face_field_flag);
 
-#pragma omp parallel for shared(rho_w_local, rho_w0_local) default(none)
         for (auto &face: mesh.faces) {
             /// boundary
             auto &mark = config.get_face_group(face, mesh);
@@ -163,7 +155,7 @@ void CDUGKS::reconstruct() {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         if (particle.position * nv >= 0.0) {
-                            f_face[p][face.id] = f_maxwell(m0_cell[neighbor.id], m1_cell[neighbor.id],
+                            f_face[p][face.id] = f_maxwell(rho_cell[neighbor.id], vel_cell[neighbor.id],
                                                            particle.position);
                         }
                     }
@@ -191,12 +183,11 @@ void CDUGKS::reconstruct() {
                     break;
             }
         }
-        MPI_Barrier(MPI_COMM_WORLD);
-        MPI::ReduceAll(rho_w_local, rho_w_global);
-        MPI::ReduceAll(rho_w0_local, rho_w0_global);
-        MPI_Barrier(MPI_COMM_WORLD);
+        auto rho_w_global = mesh.zero_scalar_field(face_field_flag);
+        auto rho_w0_global = mesh.zero_scalar_field(face_field_flag);
+        MPI::AllReduce(rho_w_local, rho_w_global);
+        MPI::AllReduce(rho_w0_local, rho_w0_global);
 
-#pragma omp parallel for shared(rho_w_global, rho_w0_global) default(none)
         for (auto &face: mesh.faces) {
             auto &mark = config.get_face_group(face, mesh);
             switch (mark.type) {
@@ -216,22 +207,20 @@ void CDUGKS::reconstruct() {
                     break;
             }
         }
-        MPI_Barrier(MPI_COMM_WORLD);
     }
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 
 void CDUGKS::fvm_update() {
     {
-        Field <Scalar> flux_m0_local(mesh, cell_field_flag);
-        Field <Vector> flux_m1_local(mesh, cell_field_flag);
-        Field <Scalar> flux_m0_global(mesh, cell_field_flag);
-        Field <Vector> flux_m1_global(mesh, cell_field_flag);
+        auto flux_m0_local = mesh.zero_scalar_field();
+        auto flux_m1_local = mesh.zero_vector_field();
 
-#pragma omp parallel for shared(flux_m0_local, flux_m1_local) default(none)
         for (auto &cell: mesh.cells) {
-            double flux_m0 = 0.0;
-            Vector flux_m1(0.0, 0.0, 0.0);
+            rho_cell_n[cell.id] = rho_cell[cell.id];
+            vel_cell_n[cell.id] = vel_cell[cell.id];
+
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
                 auto &particle = dvs_mesh.cells[dvs_id];
@@ -241,47 +230,50 @@ void CDUGKS::fvm_update() {
                     auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
                     flux += (particle.position * nv) * face.area * f_face[p][face.id];
                 }
-                flux_m0 += particle.volume * flux;
-                flux_m1 += particle.volume * flux * particle.position;
+                flux_f[p][cell.id] = flux;
+                flux_m0_local[cell.id] += particle.volume * flux;
+                flux_m1_local[cell.id] += particle.volume * flux * particle.position;
             }
-            flux_m0_local[cell.id] = flux_m0;
-            flux_m1_local[cell.id] = flux_m1;
         }
-        MPI_Barrier(MPI_COMM_WORLD);
-        MPI::ReduceAll(flux_m0_local, flux_m0_global);
-        MPI::ReduceAll(flux_m1_local, flux_m1_global);
-        MPI_Barrier(MPI_COMM_WORLD);
+        auto flux_m0 = mesh.zero_scalar_field();
+        auto flux_m1 = mesh.zero_vector_field();
+        MPI::AllReduce(flux_m0_local, flux_m0);
+        MPI::AllReduce(flux_m1_local, flux_m1);
 
-#pragma omp parallel for shared(flux_m0_global, flux_m1_global) default(none)
         for (auto &cell: mesh.cells) {
-            double dt_v = dt / cell.volume;
-            m0_cell[cell.id] = m0_cell_n[cell.id] - dt_v * flux_m0_global[cell.id];
-            m1_cell[cell.id] = m1_cell_n[cell.id] - dt_v * flux_m1_global[cell.id];
-            double C = tau / (tau + half_dt);
-            double cm = half_dt / (half_dt - 2.0 * tau);
-            double c_eq = half_dt / (2.0 * tau);
-            for (int p = 0; p < mpi_task.size; ++p) {
-                ObjectId dvs_id = p + mpi_task.start;
-                auto &particle = dvs_mesh.cells[dvs_id];
-                double flux = 0.0;
-                for (auto face_id: cell.face_id) {
-                    auto &face = mesh.faces[face_id];
-                    auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
-                    flux += (particle.position * nv) * face.area * f_face[p][face.id];
-                }
-                double f_eq_n = f_maxwell(m0_cell_n[cell.id], m1_cell_n[cell.id], particle.position);
-                double f_n = cm * f_eq_n + (1.0 - cm) * f_cell[p][cell.id];
-                double f_eq = f_maxwell(m0_cell[cell.id], m1_cell[cell.id], particle.position);
-                // 直接演化得 n + 1 时刻的 f_bp
-                f_cell[p][cell.id] = (1.0 - c_eq) *
-                                     (C * (f_n + half_dt * (f_eq / tau + (f_eq_n - f_n) / tau) - dt_v * flux)) +
-                                     c_eq * f_eq;
-            }
-            m0_cell_n[cell.id] = m0_cell[cell.id];
-            m1_cell_n[cell.id] = m1_cell[cell.id];
+            auto dt_v = dt / cell.volume;
+            auto rho_n = rho_cell[cell.id];
+            auto u_n = vel_cell[cell.id];
+            rho_cell[cell.id] = rho_n - dt_v * flux_m0[cell.id];
+            vel_cell[cell.id] = (rho_n * u_n - dt_v * flux_m1[cell.id]) / rho_n;
         }
-        MPI_Barrier(MPI_COMM_WORLD);
     }
+
+    auto C = tau / (tau + half_dt);
+    auto cm = half_dt / (half_dt - 2.0 * tau);
+    auto c_eq = half_dt / (2.0 * tau);
+    for (auto &cell: mesh.cells) {
+        auto dt_v = dt / cell.volume;
+        /// tn = n
+        auto rho_n = rho_cell_n[cell.id];
+        auto u_n = vel_cell_n[cell.id];
+        /// tn = n + 1
+        auto rho = rho_cell[cell.id];
+        auto u = vel_cell[cell.id];
+
+        for (int p = 0; p < mpi_task.size; ++p) {
+            ObjectId dvs_id = p + mpi_task.start;
+            auto &particle = dvs_mesh.cells[dvs_id];
+            auto f_eq_n = f_maxwell(rho_n, u_n, particle.position);
+            auto f_n = cm * f_eq_n + (1.0 - cm) * f_cell[p][cell.id];
+            auto f_eq = f_maxwell(rho, u, particle.position);
+            // 直接演化得 n + 1 时刻的 f_bp
+            f_cell[p][cell.id] = (1.0 - c_eq) *
+                                 (C * (f_n + half_dt * (f_eq / tau + (f_eq_n - f_n) / tau) - dt_v * flux_f[p][cell.id])) +
+                                 c_eq * f_eq;
+        }
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void CDUGKS::do_step() {
@@ -291,18 +283,19 @@ void CDUGKS::do_step() {
     solution_time += dt;
     if (MPI::rank == MPI::main_rank) {
         if (step % residual_interval == 0) {
-            double m0_res = residual(m0_cell_res, m0_cell);
-            Vector m1_res = residual(m1_cell_res, m1_cell);
+            double m0_res = residual(rho_cell_res, rho_cell);
+            Vector m1_res = residual(vel_cell_res, vel_cell);
             logger.note << "step: " << step << std::endl;
             if (mesh.dimension() == 2) {
-                Utils::print_names_and_values({"Res[m0]", "Res[m1x]", "Res[m1y]"},
+                Utils::print_names_and_values({"Res[Rho]", "Res[U]", "Res[V]"},
                                               {m0_res, m1_res.x, m1_res.y});
             } else {
-                Utils::print_names_and_values({"Res[m0]", "Res[m1x]", "Res[m1y]", "Res[m1z]"},
+                Utils::print_names_and_values({"Res[Rho]", "Res[U]", "Res[V]", "Res[W]"},
                                               {m0_res, m1_res.x, m1_res.y, m1_res.z});
             }
         }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void CDUGKS::output() {
@@ -313,23 +306,23 @@ void CDUGKS::output() {
     std::stringstream file_name;
     file_name << "./" << case_name << "/result-" << step;
 
-    auto m1x = m1_cell.heft(0);
-    auto m1y = m1_cell.heft(1);
-    auto m1z = m1_cell.heft(2);
+    auto U = vel_cell.heft(0);
+    auto V = vel_cell.heft(1);
+    auto W = vel_cell.heft(2);
     if (mesh.dimension() == 2) {
         mesh.output(file_name.str(),
-                    {"m0", "m1x", "m1y"},
-                    {&m0_cell, &m1x, &m1y}, step, solution_time);
+                    {"Rho", "U", "V"},
+                    {&rho_cell, &U, &V}, step, solution_time);
     } else {
         mesh.output(file_name.str(),
-                    {"m0", "m1x", "m1y", "m1z"},
-                    {&m0_cell, &m1x, &m1y, &m1z}, step, solution_time);
+                    {"Rho", "U", "V", "W"},
+                    {&rho_cell, &U, &V, &W}, step, solution_time);
     }
 
     if (output_np) {
         Utils::mkdir(case_name + "/np-data");
         /// output numpy data
-        m0_cell.output(case_name + "/np-data/m0");
-        m1_cell.output(case_name + "/np-data/m1");
+        rho_cell.output(case_name + "/np-data/rho");
+        vel_cell.output(case_name + "/np-data/vel");
     }
 }
