@@ -302,6 +302,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     rho_w_local[face.id] = rho_w;
                     rho_w0_local[face.id] = rho_w0;
                 }
+                    break;
                 case fluid_interior:
                 default:
                     break;
@@ -317,12 +318,12 @@ void CDUGKS_SHAKHOV::reconstruct() {
             switch (mark.type) {
                 case wall: {
                     auto &nv = face.normal_vector[1];
+                    auto rho_w = rho_w_global[face.id] / rho_w0_global[face.id];
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            auto rho_w = rho_w_global[face.id] / rho_w0_local[face.id];
                             auto T = mark.temperature;
                             auto c = particle.position - mark.velocity;
                             auto cc = c * c;
