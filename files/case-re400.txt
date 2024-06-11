@@ -1,4 +1,5 @@
 [settings]
+solver          cdugks@incompressible
 case-name       re100
 mesh-file       cavity.neu
 

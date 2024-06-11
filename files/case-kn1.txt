@@ -1,4 +1,5 @@
 [settings]
+solver          cdugks@shakhov
 case-name       kn1
 mesh-file       cavity.neu
 dvs-file        Newton-Cotes

@@ -27,7 +27,7 @@ public:
     DistributionFunction g_face, h_face;
     DistributionFunction flux_g, flux_h;
 
-    explicit CDUGKS_SHAKHOV(ArgParser &parser);
+    CDUGKS_SHAKHOV(ArgParser &parser, Config &config);
 
     void initial();
 

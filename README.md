@@ -24,16 +24,22 @@
 
 ### Quick Start
 
+- 启动参数解析
+
+```sh
+./meso-mpi -h
+```
+
 - 不可压缩方腔
 
 ```sh
-mpirun -n 10 ./meso-mpi --max-step 1000000 --case case-re400.txt --solver cdugks@incompressible
+mpirun -n 9 ./meso-mpi --max-step 1000000 --case case-re400.txt
 ```
 
 - 稀薄方腔
 
 ```sh
-mpirun -n 10 ./meso-mpi --max-step 1000000 --case case-kn1.txt --solver cdugks@shakhov
+mpirun -n 10 ./meso-mpi --max-step 1000000 --case case-kn1.txt
 ```
 
 ### 配置文件
@@ -77,11 +83,15 @@ type        wall
 
 ### 结果
 
-| 输出  |        含义         |      |
-|:---:|:-----------------:|:----:|
-| m0  |   动理学分布函数 0 阶矩    |  质量  |
-| m1x | 动理学分布函数 1 阶矩 x 分量 | x 动量 |
-| m1y | 动理学分布函数 1 阶矩 y 分量 | y 动量 |
-| m1z | 动理学分布函数 1 阶矩 z 分量 | z 动量 |
+| 输出  |   含义   |
+|:---:|:------:|
+| Rho |   质量   |
+|  T  |   温度   |
+|  U  | X 方向速度 |
+|  V  | Y 方向速度 |
+|  W  | Z 方向速度 |
+| qx  | X 方向热流 |
+| qy  | Y 方向热流 |
+| qz  | Z 方向热流 |
 
 ![result](files/result.gif)

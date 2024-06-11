@@ -4,7 +4,7 @@
 using namespace MESO::Solver;
 
 
-CDUGKS::CDUGKS(MESO::ArgParser &parser) : BasicSolver(parser) {
+CDUGKS::CDUGKS(MESO::ArgParser &parser, Config &config) : BasicSolver(parser, config) {
     /// params
     RT = config.get("gas-constant", 0.5) * config.get("ref-temperature", 1.0);
     Rho0 = config.get("ref-density", 1.0);

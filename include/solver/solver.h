@@ -28,6 +28,8 @@ namespace MESO::Solver {
     public:
         explicit BasicSolver(ArgParser &parser);
 
+        BasicSolver(ArgParser &parser, Config &config);
+
         bool get_run_state() const { return run_state; };
     };
 
@@ -50,7 +52,7 @@ namespace MESO::Solver {
 
 /// handle Solver
     template <class SolverClass>
-    int handle_solver(int *p_argc, char ***p_argv, MESO::ArgParser &parser);
+    int handle_solver(MESO::ArgParser &parser, MESO::Solver::Config &config);
 
     extern int solver_state;
 

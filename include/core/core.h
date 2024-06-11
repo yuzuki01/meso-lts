@@ -45,6 +45,11 @@
 #include "core/logger.h"
 #include "core/argparser.h"
 
+namespace MESO::DefaultValue {
+    const int max_step = 1000000;
+    const int save_interval = 1000;
+}
+
 namespace MESO::Utils {
     StringList split(const std::string &_str);
 

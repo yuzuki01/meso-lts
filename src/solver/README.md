@@ -16,9 +16,17 @@ mesh-file   <your-mesh-file>
 
 ### 可选参数
 
-继承于基类的参数
+继承于基类 `MESO::Solver::BasicSolver` 的参数：
 
-根据求解器内编程定义
+`case-name`：算例名称，默认 `unnamed`
+
+`output-np`：是否打开 `numpy` 格式字符输出，默认`False`
+
+`residual-limit`：残差限，默认 `1e-6`，在所有监测量的残差连续 `10` 次监测都小于残差限后，即使未达到最大迭代步数求解器也会停止并保存。
+
+---
+
+根据求解器内编程定义（具体定义根据求解器代码而定）：
 
 对于 `cdugks@incompressible` ，已经定义有:
 
@@ -33,8 +41,6 @@ mesh-file   <your-mesh-file>
  - `venkata-limiter-k`：限制器参数，默认`1.0`，设置为`0`时限制效果最强
 
 `gradient-switch`：是否打开梯度计算，默认`True`
-
-`output-np`：是否打开 `numpy` 格式字符输出，默认`False`
 
 ## group
 

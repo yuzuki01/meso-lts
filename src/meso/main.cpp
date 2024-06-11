@@ -6,7 +6,12 @@ int main(int argc, char **argv) {
 
     if (parser.parse_switch("debug")) {
         logger.level = -1;
-        logger.debug << "Running in debug mode." << std::endl;
+    }
+    logger.debug << "Running in debug mode." << std::endl;
+
+    if (parser.parse_switch("h")) {
+        MESO::help();
+        return 0;
     }
 
     MESO::String parse_string;
@@ -26,16 +31,21 @@ int main(int argc, char **argv) {
         /// MPI init
         MESO::MPI::Initialize(&argc, &argv);
         int solver_status;
+        MESO::Solver::Config config(parse_string);
+        if (solver == "<solver>") solver = config.get<std::string>("solver", "<solver>", false);
         if (solver == "cdugks@incompressible")
-            solver_status = MESO::Solver::handle_solver<MESO::Solver::CDUGKS>(&argc, &argv, parser);
+            solver_status = MESO::Solver::handle_solver<MESO::Solver::CDUGKS>(parser, config);
         else if (solver == "cdugks@shakhov")
-            solver_status = MESO::Solver::handle_solver<MESO::Solver::CDUGKS_SHAKHOV>(&argc, &argv, parser);
+            solver_status = MESO::Solver::handle_solver<MESO::Solver::CDUGKS_SHAKHOV>(parser, config);
         else {
             logger.warn << "Load solver: " << solver << " failed." << std::endl;
-            solver_status = -1;
+            solver_status = 0;
         }
         MESO::MPI::Finalize();
         return solver_status;
     }
+
+    /// run with no params
+    logger.warn << "type \"./meso-mpi -h\" to get help." << std::endl;
     return 0;
 }

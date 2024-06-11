@@ -23,7 +23,7 @@ public:
     DistributionFunction f_face;
     DistributionFunction flux_f;
 
-    explicit CDUGKS(ArgParser &parser);
+    CDUGKS(ArgParser &parser, Config &config);
 
     void initial();
 

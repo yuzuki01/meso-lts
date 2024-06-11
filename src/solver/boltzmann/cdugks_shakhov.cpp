@@ -4,7 +4,7 @@
 using namespace MESO::Solver;
 
 
-CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser) : BasicSolver(parser) {
+CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicSolver(parser, config) {
     /// params
     Kn = config.get("Kn", 1.0);
     Pr = config.get("Pr", 0.67);
