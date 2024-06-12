@@ -151,4 +151,11 @@ namespace MESO::Mesh {
     };
 }
 
+template<class FieldType>
+void MESO::Field<FieldType>::MeshCellValueToField(const std::function<FieldType(Mesh::Cell &)> &func) {
+    for (int i = 0; i < len; ++i) {
+        values[i] = func(mesh_ptr->cells[i]);
+    }
+}
+
 #endif //MESH_OBJECT_H

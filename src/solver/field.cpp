@@ -6,13 +6,13 @@ using namespace MESO;
 
 template<>
 Field<Scalar>::Field(Mesh::Mesh &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
-    len = (flag == cell_field_flag) ? mesh.NCELL : int(mesh.faces.size());
+    len = (flag == cell_field_flag) ? mesh.NCELL : mesh.NFACE;
     values.resize(len, 0.0);
 }
 
 template<>
 Field<Vector>::Field(Mesh::Mesh &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
-    len = (flag == cell_field_flag) ? mesh.NCELL : int(mesh.faces.size());
+    len = (flag == cell_field_flag) ? mesh.NCELL : mesh.NFACE;
     values.resize(len, Vector(0.0, 0.0, 0.0));
 }
 
@@ -54,20 +54,6 @@ Field<Scalar> Mesh::Mesh::zero_scalar_field(int flag) {
 
 Field<Vector> Mesh::Mesh::zero_vector_field(int flag) {
     return {*this, flag};
-}
-
-template<>
-void Field<Scalar>::MeshCellValueToField(const std::function<Scalar(Mesh::Cell &)> &func) {
-    for (int i = 0; i < len; ++i) {
-        *(values.begin() + i) = func(*(mesh_ptr->cells.begin() + i));
-    }
-}
-
-template<>
-void Field<Vector>::MeshCellValueToField(const std::function<Vector(Mesh::Cell &)> &func) {
-    for (int i = 0; i < len; ++i) {
-        *(values.begin() + i) = func(*(mesh_ptr->cells.begin() + i));
-    }
 }
 
 template<>
