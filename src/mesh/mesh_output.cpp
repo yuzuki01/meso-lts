@@ -28,7 +28,9 @@ void Mesh::output(const std::string &file_name) {
     fp << R"(, "GroupId")";
     fp << std::endl;
     fp << "ZONE T=\"" << "MeshData" << "\", N=" << NNODE << ", E=" << NCELL << ", VARLOCATION=([1-" << dim
-       << "]=NODAL, [3]=CELLCENTERED), DATAPACKING=BLOCK, ZONETYPE="
+       << "]=NODAL, [";
+    fp << dim + 1;
+    fp << "]=CELLCENTERED), DATAPACKING=BLOCK, ZONETYPE="
        << (dim == 2 ? "FEQUADRILATERAL" : "FEBRICK")
        << std::endl;
     int count;
@@ -224,7 +226,8 @@ void write_mesh_geom(std::fstream &fp, MESO::Mesh::Mesh *mesh_ptr) {
                    << " " << node[4] << " " << node[4] << " " << node[4] << " " << node[4];
                 break;
             default:
-                fp << " unsupported type.";
+                logger.warn << " unsupported type." << std::endl;
+                break;
         }
         fp << std::endl;
     }

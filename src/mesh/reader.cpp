@@ -86,7 +86,7 @@ MESO::Mesh::Mesh Gambit::read() {
                     ++i;
                     data = MESO::Utils::split(lines[i]);
                     for (const auto &it: data) {
-                        node_list.push_back(std::stoi(it));
+                        node_list.push_back(std::stoi(it) - 1);
                     }
                 }
                 zone.cells.emplace_back(cell_id, geom_type, node_list);
