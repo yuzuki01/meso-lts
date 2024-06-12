@@ -1,9 +1,5 @@
 #!/bin/bash
 
-SRC_DIR="./"
-CMAKE_DIR="./cmake-build-release"
-TARGET_NAME="meso-mpi"
-
-cmake -DCMAKE_BUILD_TYPE=Relaese -G "Unix Makefiles" -S "$SRC_DIR" -B "$CMAKE_DIR"
-cmake --build "$CMAKE_DIR" --target clean
-cmake --build "$CMAKE_DIR" --target "$TARGET_NAME" -- -j 8
+cmake -DCMAKE_BUILD_TYPE=Relaese -G "Unix Makefiles" -S "./" -B "./cmake-build-linux"
+cmake --build "./cmake-build-linux" --target clean
+cmake --build "./cmake-build-linux" --target "meso-mpi" -- -j 18

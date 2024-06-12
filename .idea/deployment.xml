@@ -12,7 +12,8 @@
             <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-release" />
             <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-release-cluster" />
             <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-release" />
-            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-release-cluster" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-linux" />
+            <excludedPath local="true" path="$PROJECT_DIR$/cmake-build-windows" />
           </excludedPaths>
         </serverdata>
       </paths>
