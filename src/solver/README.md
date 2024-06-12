@@ -42,6 +42,10 @@ mesh-file   <your-mesh-file>
 
 `gradient-switch`：是否打开梯度计算，默认`True`
 
+对于 `cdugks@shakhov` ，已经定义有：
+
+`dvs-file`：离散速度空间网格文件，填写 `Newton-Cotes` 则采用牛顿科特斯网格，自动生成。
+
 ## group
 
 网格内划分的单元区域
@@ -50,6 +54,7 @@ mesh-file   <your-mesh-file>
 [group]
 name        <group-name>
 density     <value>
+temperature <value>
 veloxity-x  <value>
 ...
 ```

@@ -7,10 +7,12 @@ int MPI::process_num = 1;
 int MPI::rank = 0;
 
 MPI_Datatype MPI::UDF::MPI_Vector;
-MPI_Datatype MPI::UDF::type[3] = {MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE};
-int MPI::UDF::block_len[3] = {1, 1, 1};
-MPI_Aint MPI::UDF::disp[3] = {offsetof(MESO::Vector, x), offsetof(MESO::Vector, y), offsetof(MESO::Vector, z)};
 MPI_Op MPI::UDF::MPI_VectorSum;
+
+/// local
+MPI_Datatype vec_type[3] = {MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE};
+int block_len[3] = {1, 1, 1};
+MPI_Aint disp[3] = {offsetof(MESO::Vector, x), offsetof(MESO::Vector, y), offsetof(MESO::Vector, z)};
 
 
 void MPI::UDF::vector_sum(void *invec, void *inoutvec, const int *len, MPI_Datatype *datatype) {
@@ -22,7 +24,7 @@ void MPI::UDF::vector_sum(void *invec, void *inoutvec, const int *len, MPI_Datat
 }
 
 void MPI::UDF::MPI_UDF_VectorReduce() {
-    MPI_Type_create_struct(3, block_len, disp, type, &MPI_Vector);
+    MPI_Type_create_struct(3, block_len, disp, vec_type, &MPI_Vector);
     MPI_Type_commit(&MPI_Vector);
 
     MPI_Op_create((MPI_User_function *) vector_sum, 1, &MPI_VectorSum);

@@ -43,9 +43,9 @@ namespace MESO::MPI {
     /// UDF MPI DataType
     namespace UDF {
         extern MPI_Datatype MPI_Vector;
-        extern MPI_Datatype type[3];
-        extern int block_len[3];
-        extern MPI_Aint disp[3];
+        // extern MPI_Datatype type[3];
+        // extern int block_len[3];
+        // extern MPI_Aint disp[3];
         extern MPI_Op MPI_VectorSum;
         void vector_sum(void* invec, void* inoutvec, const int* len, MPI_Datatype* datatype);
         void MPI_UDF_VectorReduce();
