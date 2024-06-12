@@ -1,0 +1,28 @@
+[settings]
+solver          cdugks@incompressible
+case-name       re400-3d
+mesh-file       cavity-3d.neu
+
+Re          400.0
+Ma          0.1414213562373095
+CFL         0.8
+
+gradient-switch     True
+
+gas-constant        0.5
+ref-density         1.0
+ref-length          1.0
+ref-temperature     1.0
+
+[group]
+name        fluid
+density     1.0
+
+[mark]
+name        lid
+type        wall
+velocity-x  0.1
+
+[mark]
+name        wall
+type        wall
