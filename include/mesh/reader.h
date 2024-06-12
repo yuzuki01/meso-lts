@@ -11,7 +11,7 @@ namespace MESO::Mesh::Reader {
 class MESO::Mesh::Reader::BasicReader {
 public:
     String file;
-    explicit BasicReader(String file) : file(std::move(file)) {
+    explicit BasicReader(String file_path) : file(std::move(file_path)) {
         logger.debug << "Read file: " << file << std::endl;
     };
 
