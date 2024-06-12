@@ -94,6 +94,7 @@ Config::Config(const std::string &file_path) {
             continue;
         }
     }
+    logger.info << "Load case file: " << file_path << std::endl;
 }
 
 template<>
