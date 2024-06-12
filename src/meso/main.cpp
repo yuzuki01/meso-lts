@@ -18,11 +18,7 @@ int main(int argc, char **argv) {
 
     parse_string = parser.parse_param<MESO::String>("mesh", "<mesh-file>", false);
     if (parse_string != "<mesh-file>") {
-        auto mesh = MESO::Mesh::load_gambit(parse_string);
-        mesh.build_geom();
-        mesh.info();
-        mesh.output(parse_string);
-        return 0;
+        return MESO::handle_mesh(parse_string);
     }
 
     parse_string = parser.parse_param<MESO::String>("case", "<case-file>", false);
