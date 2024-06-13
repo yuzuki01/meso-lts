@@ -52,6 +52,7 @@ int Solver::handle_solver<Solver::CDUGKS>(MESO::ArgParser &parser, MESO::Solver:
     solver.initial();
     solver.output();
     if (parser.parse_switch("not-run")) {
+        MPI_Barrier(MPI_COMM_WORLD);
         return 0;
     }
     std::signal(SIGINT, Solver::solver_interrupt<Solver::CDUGKS>);    // 注册 SIGINT 信号处理
@@ -62,11 +63,13 @@ int Solver::handle_solver<Solver::CDUGKS>(MESO::ArgParser &parser, MESO::Solver:
         if (solver.step % save_interval == 0) solver.output();
         if (solver_state != 0) {
             solver.output();
+            MPI_Barrier(MPI_COMM_WORLD);
             return solver_state;
         }
     }
     logger.note << "Reached the maximum number of iterations: " << max_step << std::endl;
     solver.output();
+    MPI_Barrier(MPI_COMM_WORLD);
     return 0;
 }
 
@@ -88,6 +91,7 @@ int Solver::handle_solver<Solver::CDUGKS_SHAKHOV>(MESO::ArgParser &parser, MESO:
     solver.initial();
     solver.output();
     if (parser.parse_switch("not-run")) {
+        MPI_Barrier(MPI_COMM_WORLD);
         return 0;
     }
     std::signal(SIGINT, Solver::solver_interrupt<Solver::CDUGKS_SHAKHOV>);    // 注册 SIGINT 信号处理
@@ -98,11 +102,13 @@ int Solver::handle_solver<Solver::CDUGKS_SHAKHOV>(MESO::ArgParser &parser, MESO:
         if (solver.step % save_interval == 0) solver.output();
         if (solver_state != 0) {
             solver.output();
+            MPI_Barrier(MPI_COMM_WORLD);
             return solver_state;
         }
     }
     logger.note << "Reached the maximum number of iterations: " << max_step << std::endl;
     solver.output();
+    MPI_Barrier(MPI_COMM_WORLD);
     return 0;
 }
 
