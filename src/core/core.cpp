@@ -9,10 +9,10 @@ using namespace MESO;
 
 Logger logger;
 
-StringList Utils::split(const std::string &_str) {
+StringList Utils::split(const String &_str) {
     std::istringstream iss(_str);
-    std::vector<std::string> data;
-    std::string token;
+    StringList data;
+    String token;
     while (iss >> token) {
         token.erase(std::remove(token.begin(), token.end(), '\r'), token.end());
         token.erase(std::remove(token.begin(), token.end(), '\n'), token.end());
