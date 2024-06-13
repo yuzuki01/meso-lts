@@ -14,6 +14,8 @@ StringList Utils::split(const std::string &_str) {
     std::vector<std::string> data;
     std::string token;
     while (iss >> token) {
+        token.erase(std::remove(token.begin(), token.end(), '\r'), token.end());
+        token.erase(std::remove(token.begin(), token.end(), '\n'), token.end());
         data.push_back(token);
     }
     return data;
