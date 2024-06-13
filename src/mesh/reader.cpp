@@ -15,6 +15,8 @@ MESO::StringList BasicReader::read_lines() const {
     String line;
     StringList lines;
     while (std::getline(fp, line)) {
+        line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+        line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
         /// skip empty line
         if (!line.empty()) {
             lines.push_back(line);
