@@ -108,6 +108,6 @@ mpirun -n 9 ./meso-mpi --case case-re400-3d.txt --max-step 2000
 
 ### 1 维求解器
 
-Sod 激波管求解器为 1 维 CDUGKS，[代码](https://github.com/yuzuki01/tube)为整合进本项目.
+Sod 激波管求解器为 1 维 CDUGKS，[代码](https://github.com/yuzuki01/tube)未整合进本项目.
 
 ![result-sod-tube](./files/sod-shock-tube.png)
