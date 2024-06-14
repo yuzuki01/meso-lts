@@ -14,6 +14,12 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    if (parser.parse_switch("mpi-test")) {
+        MESO::MPI::Initialize(&argc, &argv);
+        MESO::MPI::Finalize();
+        return 0;
+    }
+
     MESO::String parse_string;
 
     parse_string = parser.parse_param<MESO::String>("mesh", "<mesh-file>", false);
