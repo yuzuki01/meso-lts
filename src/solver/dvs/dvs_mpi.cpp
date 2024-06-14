@@ -2,7 +2,7 @@
 
 using namespace MESO;
 
-MPI::MPI_TaskObject MPI::DVS_partition(Mesh::Mesh &mesh) {
+MESO::MPI::MPI_TaskObject MESO::MPI::DVS_partition(Mesh::Mesh &mesh) {
     auto task_list = MPI::get_task_distribution(mesh.NCELL);
     mesh.cell_names.resize(MPI::process_num);
     mesh.cell_groups.resize(MPI::process_num);

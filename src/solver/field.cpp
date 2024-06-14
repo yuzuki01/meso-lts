@@ -128,11 +128,11 @@ void Field<Vector>::output(const std::string &file_name) {
 }
 
 /// MPI
-void MPI::AllReduce(Field<MESO::Scalar> &local, Field<MESO::Scalar> &global) {
+void MESO::MPI::AllReduce(Field<MESO::Scalar> &local, Field<MESO::Scalar> &global) {
     MPI_Allreduce(local.values.data(), global.values.data(), global.len, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 }
 
-void MPI::AllReduce(Field<MESO::Vector> &local, Field<MESO::Vector> &global) {
+void MESO::MPI::AllReduce(Field<MESO::Vector> &local, Field<MESO::Vector> &global) {
     MPI_Allreduce(local.values.data(), global.values.data(), global.len, UDF::MPI_Vector, UDF::MPI_VectorSum,
                   MPI_COMM_WORLD);
 }

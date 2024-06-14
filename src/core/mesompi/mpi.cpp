@@ -3,11 +3,11 @@
 
 using namespace MESO;
 
-int MPI::process_num = 1;
-int MPI::rank = 0;
+int MESO::MPI::process_num = 1;
+int MESO::MPI::rank = 0;
 
-MPI_Datatype MPI::UDF::MPI_Vector;
-MPI_Op MPI::UDF::MPI_VectorSum;
+MPI_Datatype MESO::MPI::UDF::MPI_Vector;
+MPI_Op MESO::MPI::UDF::MPI_VectorSum;
 
 /// local
 MPI_Datatype vec_type[3] = {MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE};
@@ -15,7 +15,7 @@ int block_len[3] = {1, 1, 1};
 MPI_Aint disp[3] = {offsetof(MESO::Vector, x), offsetof(MESO::Vector, y), offsetof(MESO::Vector, z)};
 
 
-void MPI::UDF::vector_sum(void *invec, void *inoutvec, const int *len, MPI_Datatype *datatype) {
+void MESO::MPI::UDF::vector_sum(void *invec, void *inoutvec, const int *len, MPI_Datatype *datatype) {
     auto *in = (MESO::Vector *) invec;
     auto *inout = (MESO::Vector *) inoutvec;
     for (int i = 0; i < *len; i++) {
@@ -23,7 +23,7 @@ void MPI::UDF::vector_sum(void *invec, void *inoutvec, const int *len, MPI_Datat
     }
 }
 
-void MPI::UDF::MPI_UDF_VectorReduce() {
+void MESO::MPI::UDF::MPI_UDF_VectorReduce() {
     MPI_Type_create_struct(3, block_len, disp, vec_type, &MPI_Vector);
     MPI_Type_commit(&MPI_Vector);
 
@@ -31,7 +31,7 @@ void MPI::UDF::MPI_UDF_VectorReduce() {
 }
 
 
-void MPI::Initialize(int *p_argc, char ***p_argv) {
+void MESO::MPI::Initialize(int *p_argc, char ***p_argv) {
     MPI_Init(p_argc, p_argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -49,7 +49,7 @@ void MPI::Initialize(int *p_argc, char ***p_argv) {
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
-void MPI::Finalize() {
+void MESO::MPI::Finalize() {
     /// 清理
     MPI_Op_free(&UDF::MPI_VectorSum);
     MPI_Type_free(&UDF::MPI_Vector);
@@ -57,7 +57,7 @@ void MPI::Finalize() {
     MPI_Finalize();
 }
 
-MPI::MPI_Task MPI::get_task_distribution(int total_num) {
+MESO::MPI::MPI_Task MESO::MPI::get_task_distribution(int total_num) {
     int taskPerNode = total_num / process_num;
     int extraTask = total_num % process_num;
     MPI_Task result(MPI::process_num);
@@ -69,22 +69,22 @@ MPI::MPI_Task MPI::get_task_distribution(int total_num) {
     return result;
 }
 
-void MPI::Bcast(bool &global) {
+void MESO::MPI::Bcast(bool &global) {
     MPI_Bcast(&global, 1, MPI_C_BOOL, 0, MPI_COMM_WORLD);
 }
 
-void MPI::Bcast(MESO::Scalar &global) {
+void MESO::MPI::Bcast(MESO::Scalar &global) {
     MPI_Bcast(&global, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
-void MPI::Bcast(MESO::Vector &global) {
+void MESO::MPI::Bcast(MESO::Vector &global) {
     MPI_Bcast(&global, 1, UDF::MPI_Vector, 0, MPI_COMM_WORLD);
 }
 
-void MPI::AllReduce(MESO::Scalar local, MESO::Scalar &global) {
+void MESO::MPI::AllReduce(MESO::Scalar local, MESO::Scalar &global) {
     MPI_Allreduce(&local, &global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 }
 
-void MPI::AllReduce(const MESO::Vector &local, MESO::Vector &global) {
+void MESO::MPI::AllReduce(const MESO::Vector &local, MESO::Vector &global) {
     MPI_Allreduce(&local, &global, 1, UDF::MPI_Vector, UDF::MPI_VectorSum, MPI_COMM_WORLD);
 }
