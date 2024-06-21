@@ -10,7 +10,9 @@ int main(int argc, char **argv) {
     logger.debug << "Running in debug mode." << std::endl;
 
     if (parser.parse_switch("h")) {
+        MESO::MPI::Initialize(&argc, &argv);
         MESO::help();
+        MESO::MPI::Finalize();
         return 0;
     }
 
