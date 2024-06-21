@@ -1,5 +1,6 @@
 /.idea
 /bin
 /cmake-build-release
+/cmake-build-release-windows
 /cmake-build-release-cluster
 /demo.py
