@@ -8,7 +8,7 @@
 
 3 维向量
 
-### Field<Scalar>
+### Field\<Scalar\>
 
 与网格相关联的标量场
 
@@ -16,11 +16,30 @@
 
 界面 `Field<Scalar>(MESO::Mesh::Mesh, face_field_flag)`
 
-`gradient()` 方法可以得到网格格心 `Field<Vector>`
+`gradient()` 方法可以得到网格格心梯度，数据类型为 `Field<Vector>`
 
-### Field<Vector>
+### Field\<Vector\>
 
 与网格相关联的矢量场
+
+### Numpy 接口
+
+通过配置文件增加 `output-np` 开关，可以输出 numpy 可读的文件
+
+```c++
+MESO::Field<Vector> vec_field(mesh, cell_field_flag);
+vec_field.output("output.field.dat");
+```
+
+```python
+import numpy as np
+
+data = np.loadtxt("path/to/output.field.dat")
+print(data.shape)
+
+# (NCELL,) for Field<Scalar>
+# (NCELL, 3) for Field<Vector>
+```
 
 ### Quick Start
 
