@@ -30,23 +30,23 @@ MESO::Mesh::Mesh Gambit::read() {
     StringList lines = read_lines();
     int line_size = int(lines.size());
     StringList data;
-    Mesh zone;
+    Mesh mesh;
     for (int i = 0; i < line_size; ++i) {
         data = MESO::Utils::split(lines[i]);
         if (data[0] == "NUMNP") {
             data = MESO::Utils::split(lines[++i]);
-            zone.NNODE = std::stoi(data[0]);
-            zone.nodes.reserve(zone.NNODE);
-            zone.NCELL = std::stoi(data[1]);
-            zone.cells.reserve(zone.NCELL);
-            zone.NZONE = std::stoi(data[2]);
-            zone.cell_names.reserve(zone.NZONE);
-            zone.cell_groups.resize(zone.NZONE);
-            zone.NMARK = std::stoi(data[3]);
-            zone.face_names.reserve(zone.NMARK + 1);
-            zone.face_groups.resize(zone.NMARK + 1);
-            zone.NDFCD = std::stoi(data[4]);
-            zone.NDFVL = std::stoi(data[5]);
+            mesh.NNODE = std::stoi(data[0]);
+            mesh.nodes.reserve(mesh.NNODE);
+            mesh.NCELL = std::stoi(data[1]);
+            mesh.cells.reserve(mesh.NCELL);
+            mesh.NZONE = std::stoi(data[2]);
+            mesh.cell_names.reserve(mesh.NZONE);
+            mesh.cell_groups.resize(mesh.NZONE);
+            mesh.NMARK = std::stoi(data[3]);
+            mesh.face_names.reserve(mesh.NMARK + 1);
+            mesh.face_groups.resize(mesh.NMARK + 1);
+            mesh.NDFCD = std::stoi(data[4]);
+            mesh.NDFVL = std::stoi(data[5]);
             continue;
         }
         if (data[0] == "NODAL" and data[1] == "COORDINATES") {
@@ -64,10 +64,10 @@ MESO::Mesh::Mesh Gambit::read() {
                 if (data.size() >= 4) {
                     nz = std::stod(data[3]);
                 }
-                zone.nodes.emplace_back(node_id, Vector{nx, ny, nz});
+                mesh.nodes.emplace_back(node_id, Vector(nx, ny, nz));
                 ++i;
             }
-            logger.debug << "mesh - read nodes, NDODE=" << zone.NNODE << std::endl;
+            logger.debug << "mesh - read nodes, NDODE=" << mesh.NNODE << std::endl;
             continue;
         }
         if (data[0] == "ELEMENTS/CELLS") {
@@ -82,22 +82,26 @@ MESO::Mesh::Mesh Gambit::read() {
                 int data_len = int(data.size());
                 ObjectIdList node_list;
                 for (int j = 3; j < data_len; ++j) {
-                    node_list.push_back(std::stoi(data[j]) - 1);
+                    int node_id = std::stoi(data[j]) - 1;
+                    node_list.push_back(node_id);
+                    mesh.nodes[node_id].neighbors.push_back(cell_id);
                 }
                 if (node_list.size() < node_count) {
                     ++i;
                     data = MESO::Utils::split(lines[i]);
                     for (const auto &it: data) {
-                        node_list.push_back(std::stoi(it) - 1);
+                        int node_id = std::stoi(it) - 1;
+                        node_list.push_back(node_id);
+                        mesh.nodes[node_id].neighbors.push_back(cell_id);
                     }
                 }
-                zone.cells.emplace_back(cell_id, geom_type, node_list);
+                mesh.cells.emplace_back(cell_id, geom_type, node_list);
                 ++i;
             }
-            logger.debug << "mesh - read cells, NCELL=" << zone.NCELL << std::endl;
+            logger.debug << "mesh - read cells, NCELL=" << mesh.NCELL << std::endl;
             /// generate face
-            zone.generate_face();
-            logger.debug << "mesh - build faces: " << zone.NFACE << std::endl;
+            mesh.generate_face();
+            logger.debug << "mesh - build faces: " << mesh.NFACE << std::endl;
             continue;
         }
         if (data[0] == "ELEMENT" and data[1] == "GROUP") {
@@ -108,7 +112,7 @@ MESO::Mesh::Mesh Gambit::read() {
             ++i;
             data = MESO::Utils::split(lines[i]);
             std::string group_name = data[0];
-            zone.cell_names.push_back(group_name);
+            mesh.cell_names.push_back(group_name);
             i += 2;
             while (i < line_size) {
                 data = MESO::Utils::split(lines[i]);
@@ -116,9 +120,9 @@ MESO::Mesh::Mesh Gambit::read() {
                 /// parse
                 for (const auto &it: data) {
                     int cell_id = std::stoi(it) - 1;
-                    auto &cell = zone.cells[cell_id];
+                    auto &cell = mesh.cells[cell_id];
                     cell.group_id = group_id;
-                    zone.cell_groups[group_id].push_back(cell_id);
+                    mesh.cell_groups[group_id].push_back(cell_id);
                 }
                 ++i;
             }
@@ -130,9 +134,9 @@ MESO::Mesh::Mesh Gambit::read() {
             data = MESO::Utils::split(lines[i]);
             std::string name = data[0];
             int face_num = stoi(data[2]);
-            int group_id = int(zone.face_names.size());
-            zone.face_names.push_back(name);
-            zone.face_groups[group_id].reserve(face_num);
+            int group_id = int(mesh.face_names.size());
+            mesh.face_names.push_back(name);
+            mesh.face_groups[group_id].reserve(face_num);
             ++i;
             while (i < line_size) {
                 data = MESO::Utils::split(lines[i]);
@@ -140,8 +144,8 @@ MESO::Mesh::Mesh Gambit::read() {
                 /// parse bset
                 int cell_id = std::stoi(data[0]) - 1;
                 int face_on_cell_id = std::stoi(data[2]) - 1;
-                auto &cell = zone.cells[cell_id];
-                auto &face = zone.faces[cell.face_id[face_on_cell_id]];
+                auto &cell = mesh.cells[cell_id];
+                auto &face = mesh.faces[cell.face_id[face_on_cell_id]];
                 face.group_id = group_id;
                 ++i;
             }
@@ -149,8 +153,8 @@ MESO::Mesh::Mesh Gambit::read() {
             continue;
         }
     }
-    for (auto &face: zone.faces) {
-        zone.face_groups[face.group_id].push_back(face.id);
+    for (auto &face: mesh.faces) {
+        mesh.face_groups[face.group_id].push_back(face.id);
     }
-    return zone;
+    return mesh;
 }

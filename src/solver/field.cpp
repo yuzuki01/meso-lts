@@ -6,13 +6,39 @@ using namespace MESO;
 
 template<>
 Field<Scalar>::Field(Mesh::Mesh &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
-    len = (flag == cell_field_flag) ? mesh.NCELL : mesh.NFACE;
+    switch (flag) {
+        case cell_field_flag:
+            len = mesh.NCELL;
+            break;
+        case face_field_flag:
+            len = mesh.NFACE;
+            break;
+        case node_field_flag:
+            len = mesh.NNODE;
+            break;
+        default:
+            logger.error << "Field<Scalar> caught wrong flag: " << flag << std::endl;
+            throw std::invalid_argument("Field<Scalar> caught wrong flag");
+    }
     values.resize(len, 0.0);
 }
 
 template<>
 Field<Vector>::Field(Mesh::Mesh &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
-    len = (flag == cell_field_flag) ? mesh.NCELL : mesh.NFACE;
+    switch (flag) {
+        case cell_field_flag:
+            len = mesh.NCELL;
+            break;
+        case face_field_flag:
+            len = mesh.NFACE;
+            break;
+        case node_field_flag:
+            len = mesh.NNODE;
+            break;
+        default:
+            logger.error << "Field<Scalar> caught wrong flag: " << flag << std::endl;
+            throw std::invalid_argument("Field<Vector> caught wrong flag");
+    }
     values.resize(len, Vector(0.0, 0.0, 0.0));
 }
 
@@ -59,28 +85,46 @@ Field<Vector> Mesh::Mesh::zero_vector_field(int flag) {
 template<>
 void Field<Scalar>::set_zero() {
     for (int i = 0; i < len; ++i) {
-        *(values.begin() + i) = 0.0;
+        values[i] = 0.0;
     }
 }
 
 template<>
 void Field<Vector>::set_zero() {
     for (int i = 0; i < len; ++i) {
-        *(values.begin() + i) = {0.0, 0.0, 0.0};
+        values[i] = {0.0, 0.0, 0.0};
     }
 }
 
 template<>
 Field<Vector> Field<Scalar>::gradient(bool _switch) {
-    Field<Vector> result(*mesh_ptr, cell_field_flag);
+    Field<Vector> result(*mesh_ptr, flag);
     if (not _switch) return result;
-    for (auto &cell: mesh_ptr->cells) {
-        Vector Sfr(0.0, 0.0, 0.0);
-        for (int j = 0; j < cell.least_square.neighbor_num; ++j) {
-            int &neighbor_id = cell.neighbors[j];
-            Sfr += (values[neighbor_id] - values[cell.id]) * cell.least_square.weight[j] * cell.least_square.dr[j];
-        }
-        result[cell.id] = {cell.least_square.Cx * Sfr, cell.least_square.Cy * Sfr, cell.least_square.Cz * Sfr};
+    switch (flag) {
+        case cell_field_flag:
+            for (auto &cell: mesh_ptr->cells) {
+                Vector Sfr(0.0, 0.0, 0.0);
+                for (int j = 0; j < cell.least_square.neighbor_num; ++j) {
+                    int &neighbor_id = cell.neighbors[j];
+                    Sfr += (values[neighbor_id] - values[cell.id]) * cell.least_square.weight[j] * cell.least_square.dr[j];
+                }
+                result[cell.id] = {cell.least_square.Cx * Sfr, cell.least_square.Cy * Sfr, cell.least_square.Cz * Sfr};
+            }
+            break;
+        case face_field_flag:
+            throw std::invalid_argument("Field<Scalar>.gradient() for flag<face> is not supported.");
+        case node_field_flag:
+            for (auto &node: mesh_ptr->nodes) {
+                Vector Sfr(0.0, 0.0, 0.0);
+                for (int j = 0; j < node.least_square.neighbor_num; ++j) {
+                    int &neighbor_id = node.neighbors[j];
+                    Sfr += (values[neighbor_id] - values[node.id]) * node.least_square.weight[j] * node.least_square.dr[j];
+                }
+                result[node.id] = {node.least_square.Cx * Sfr, node.least_square.Cy * Sfr, node.least_square.Cz * Sfr};
+            }
+            break;
+        default:
+            break;
     }
     return result;
 }
@@ -101,7 +145,6 @@ void Field<Scalar>::output(const std::string &file_name) {
     for (auto &it: values) {
         fp << std::setprecision(DATA_PRECISION) << it << std::endl;
     }
-    // fp close
     fp.close();
 }
 
@@ -123,7 +166,6 @@ void Field<Vector>::output(const std::string &file_name) {
            << std::setprecision(DATA_PRECISION) << it.y << " "
            << std::setprecision(DATA_PRECISION) << it.z << std::endl;
     }
-    // fp close
     fp.close();
 }
 

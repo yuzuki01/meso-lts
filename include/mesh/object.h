@@ -32,7 +32,7 @@ namespace MESO {
 
 namespace MESO {
 
-    enum {cell_field_flag, face_field_flag};
+    enum {cell_field_flag, face_field_flag, node_field_flag};
     template<class FieldType>
     class Field {
     protected:
@@ -74,8 +74,12 @@ namespace MESO::Mesh {
     public:
         ObjectId id;
         Position position;
+        ObjectIdList neighbors;     /// neighbor cells contained the node
+        LeastSquare least_square;
 
         Node(ObjectId id, const Position &position) : id(id), position(position) {};
+
+        void compute_least_square(const CellList &neighbor_cells, int dimension);   // defined in geom.cpp
     };
 
     class Face {
@@ -102,14 +106,14 @@ namespace MESO::Mesh {
         Scalar volume{};
         ObjectIdList node_id;
         ObjectIdList face_id;
-        ObjectIdList neighbors;     // neighbor cells shared faces
+        ObjectIdList neighbors;     /// neighbor cells shared the face
         LeastSquare least_square;
 
         explicit Cell(ObjectId id) : id(id) {};     // dvs init
 
         Cell(ObjectId id, ObjectType geom_type, ObjectIdList &node_list);
 
-        void calculate_least_square(const CellList &neighbor_cells, int dimension);  // defined in geom.cpp
+        void compute_least_square(const CellList &neighbor_cells, int dimension);  // defined in geom.cpp
     };
 
     class Mesh {

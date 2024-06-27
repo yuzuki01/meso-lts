@@ -161,7 +161,56 @@ KeyString Geom::generate_key(const MESO::ObjectIdList &node_list) {
     return ss.str();
 }
 
-void Mesh::Cell::calculate_least_square(const MESO::CellList &neighbor_cells, int dimension) {
+void Mesh::Node::compute_least_square(const CellList &neighbor_cells, int dimension) {
+    least_square.neighbor_num = int(neighbor_cells.size());
+    least_square.dr.resize(least_square.neighbor_num);
+    least_square.weight.resize(least_square.neighbor_num);
+    double Sxx, Sxy, Sxz, Syy, Syz, Szz;
+    Sxx = Sxy = Sxz = Syy = Syz = Szz = 0.0;
+    for (int i = 0; i < least_square.neighbor_num; i++) {
+        auto &near_cell = neighbor_cells[i];
+        Vector dr = near_cell.position - position;
+        double wi = 1.0 / (dr * dr);
+        least_square.dr[i] = dr;
+        least_square.weight[i] = wi;
+        // sum
+        Sxx += wi * dr.x * dr.x;
+        Sxy += wi * dr.x * dr.y;
+        Sxz += wi * dr.x * dr.z;
+        Syy += wi * dr.y * dr.y;
+        Syz += wi * dr.y * dr.z;
+        Szz += wi * dr.z * dr.z;
+    }
+    least_square.dr.shrink_to_fit();
+    least_square.weight.shrink_to_fit();
+    if (dimension == 2) {
+        double FM = Sxx * Syy - Sxy * Sxy;
+        least_square.Cx = {Syy / FM, -Sxy / FM, 0.0};
+        least_square.Cy = {-Sxy / FM, Sxx / FM, 0.0};
+        least_square.Cz = {0.0, 0.0, 0.0};
+    } else {
+        double FM = -Sxz * Sxz * Syy + 2.0 * Sxy * Sxz * Syz - Sxx * Syz * Syz - Sxy * Sxy * Szz +
+                    Sxx * Syy * Szz;
+        double SxyyzNxzyy = Sxy * Syz - Sxz * Syy;
+        double SxzyzNxyzz = Sxz * Syz - Sxy * Szz;
+        double SyyzzNyzyz = Syy * Szz - Syz * Syz;
+        double SxxzzNxzxz = Sxx * Szz - Sxz * Sxz;
+        double SxyxzNxxyz = Sxy * Sxz - Sxx * Syz;
+        double SxxyyNxyxy = Sxx * Syy - Sxy * Sxy;
+        least_square.Cx = {
+                SyyzzNyzyz / FM, SxzyzNxyzz / FM, SxyyzNxzyy / FM
+        };
+        least_square.Cy = {
+                SxzyzNxyzz / FM, SxxzzNxzxz / FM, SxyxzNxxyz / FM
+        };
+        least_square.Cz = {
+                SxyyzNxzyy / FM, SxyxzNxxyz / FM, SxxyyNxyxy / FM
+        };
+    }
+}
+
+
+void Mesh::Cell::compute_least_square(const CellList &neighbor_cells, int dimension) {
     least_square.neighbor_num = int(neighbor_cells.size());
     least_square.dr.resize(least_square.neighbor_num);
     least_square.weight.resize(least_square.neighbor_num);
