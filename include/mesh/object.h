@@ -73,6 +73,7 @@ namespace MESO::Mesh {
     class Node {
     public:
         ObjectId id;
+        ObjectId group_id = 0;      /// 0 for interior node
         Position position;
         ObjectIdList neighbors;     /// neighbor cells contained the node
         LeastSquare least_square;

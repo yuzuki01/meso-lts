@@ -125,7 +125,9 @@ void Mesh::build_geom() {
     for (auto &face: faces) {
         NodeList node_list;
         for (auto &it: face.node_id) {
-            node_list.push_back(nodes[it]);
+            auto &node = nodes[it];
+            node_list.push_back(node);
+            node.group_id = face.group_id;
         }
         face.position = Geom::calculate_position(node_list);
         face.area = Geom::calculate_area(face.geom_type, node_list);
