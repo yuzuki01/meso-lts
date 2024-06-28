@@ -254,7 +254,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
             auto &nv = face.normal_vector[1];
             auto &neighbor = mesh.cells[face.cell_id[0]];
             switch (mark.type) {
-                case inlet:
+                case BoundaryType::inlet:
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
@@ -267,7 +267,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         }
                     }
                     break;
-                case outlet:
+                case BoundaryType::farfield_outlet:
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
@@ -282,7 +282,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         }
                     }
                     break;
-                case wall: {
+                case BoundaryType::wall: {
                     double rho_w, rho_w0;
                     rho_w = rho_w0 = 0.0;
                     for (int p = 0; p < mpi_task.size; ++p) {
@@ -303,7 +303,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     rho_w0_local[face.id] = rho_w0;
                 }
                     break;
-                case fluid_interior:
+                case BoundaryType::fluid_interior:
                 default:
                     break;
             }

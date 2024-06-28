@@ -3,10 +3,11 @@
 using namespace MESO::Solver;
 
 std::unordered_map<std::string, int> MESO::Solver::mark_type_map = {
-        {"fluid-interior", fluid_interior},
-        {"inlet",          inlet},
-        {"outlet",         outlet},
-        {"wall",           wall}
+        {"fluid-interior",  BoundaryType::fluid_interior},
+        {"inlet",           BoundaryType::inlet},
+        {"farfield-outlet", BoundaryType::farfield_outlet},
+        {"pressure-outlet", BoundaryType::pressure_outlet},
+        {"wall",            BoundaryType::wall},
 };
 
 

@@ -10,7 +10,13 @@ namespace MESO::Solver {
 
     extern std::unordered_map<std::string, int> mark_type_map;
 
-    enum {fluid_interior, inlet, outlet, wall};
+    enum BoundaryType {
+        fluid_interior,
+        inlet,
+        farfield_outlet,
+        pressure_outlet,
+        wall,
+    };
 
     struct Mark {
         std::string name;
