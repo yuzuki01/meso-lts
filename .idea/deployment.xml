@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="Cluster-mayc" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeDeletion="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="远程开发" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeDeletion="false">
     <option name="confirmBeforeDeletion" value="false" />
     <serverData>
       <paths name="Cluster-mayc">
