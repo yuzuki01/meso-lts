@@ -4,6 +4,10 @@
 
 ## New Features
 
+### Modules
+
+**Core** - [README](./include/core/README.md)
+
 ### Vector
 
 3 维向量
