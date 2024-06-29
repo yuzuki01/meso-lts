@@ -2,7 +2,7 @@
 
 此处进入 [旧版代码](https://github.com/yuzuki01/meso-archive)
 
-## 新特性
+## New Features
 
 ### Vector
 
@@ -16,13 +16,15 @@
 
 界面 `Field<Scalar>(MESO::Mesh::Mesh, face_field_flag)`
 
+界面 `Field<Scalar>(MESO::Mesh::Mesh, node_field_flag)`
+
 `gradient()` 方法可以得到网格格心梯度，数据类型为 `Field<Vector>`
 
 ### Field\<Vector\>
 
 与网格相关联的矢量场
 
-### Numpy 接口
+### Numpy API
 
 通过配置文件增加 `output-np` 开关，可以输出 numpy 可读的文件
 
@@ -49,19 +51,19 @@ print(data.shape)
 ./meso-mpi -h
 ```
 
-- 不可压缩方腔
+- 不可压缩方腔 (Incompressible cavity flow)
 
 ```sh
 mpirun -n 9 ./meso-mpi --max-step 1000000 --case case-re400.txt
 ```
 
-- 稀薄方腔
+- 稀薄方腔 (Rarefied cavity flow)
 
 ```sh
 mpirun -n 10 ./meso-mpi --max-step 1000000 --case case-kn1.txt
 ```
 
-### 配置文件
+### Configure File
 
 [详细文档](src/solver/README.md)
 
@@ -96,11 +98,11 @@ type        wall
 
 ```
 
-### 网格
+### Mesh
 
 使用 gambit `.neu` 格式
 
-### 结果
+### Result
 
 | 输出  |   含义   |
 |:---:|:------:|
@@ -115,7 +117,7 @@ type        wall
 
 ![result](files/result.gif)
 
-### 3 维测试
+### 3D Test
 
 注意：该结果未经对比验证，仅计算了 `2000` 步
 
@@ -125,7 +127,7 @@ mpirun -n 9 ./meso-mpi --case case-re400-3d.txt --max-step 2000
 
 ![result-3d](./files/cavity-3d.png)
 
-### 1 维求解器
+### 1D Solver
 
 Sod 激波管求解器为 1 维 CDUGKS，[代码](https://github.com/yuzuki01/tube)未整合进本项目.
 

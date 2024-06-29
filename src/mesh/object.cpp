@@ -149,14 +149,6 @@ void Mesh::build_geom() {
         /// least square
         cell.compute_least_square(neighbors, dimension());
     }
-    for (auto &node: nodes) {
-        CellList neighbors;
-        for (int cell_id: node.neighbors) {
-            neighbors.push_back(cells[cell_id]);
-        }
-        /// least square
-        node.compute_least_square(neighbors, dimension());
-    }
     /// shrink_to_fit
     nodes.shrink_to_fit();
     faces.shrink_to_fit();

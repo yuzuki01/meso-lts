@@ -76,11 +76,8 @@ namespace MESO::Mesh {
         ObjectId group_id = 0;      /// 0 for interior node
         Position position;
         ObjectIdList neighbors;     /// neighbor cells contained the node
-        LeastSquare least_square;
 
         Node(ObjectId id, const Position &position) : id(id), position(position) {};
-
-        void compute_least_square(const CellList &neighbor_cells, int dimension);   // defined in geom.cpp
     };
 
     class Face {

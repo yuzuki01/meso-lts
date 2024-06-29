@@ -13,6 +13,7 @@ namespace MESO::Solver {
     enum BoundaryType {
         fluid_interior,
         farfield_inlet,
+        pressure_inlet,
         farfield_outlet,
         pressure_outlet,
         wall,

@@ -113,18 +113,8 @@ Field<Vector> Field<Scalar>::gradient(bool _switch) {
             }
             break;
         case face_field_flag:
-            throw std::invalid_argument("Field<Scalar>.gradient() for flag<face> is not supported.");
         case node_field_flag:
-            for (auto &node: mesh_ptr->nodes) {
-                Vector Sfr(0.0, 0.0, 0.0);
-                for (int j = 0; j < node.least_square.neighbor_num; ++j) {
-                    int &neighbor_id = node.neighbors[j];
-                    Sfr += (values[neighbor_id] - values[node.id]) * node.least_square.weight[j] *
-                           node.least_square.dr[j];
-                }
-                result[node.id] = {node.least_square.Cx * Sfr, node.least_square.Cy * Sfr, node.least_square.Cz * Sfr};
-            }
-            break;
+            throw std::invalid_argument("Field<Scalar>.gradient() for flag<face> is not supported.");
         default:
             break;
     }
