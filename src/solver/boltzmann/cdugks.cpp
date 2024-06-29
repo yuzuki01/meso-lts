@@ -131,8 +131,8 @@ void CDUGKS::reconstruct() {
         }
     }
     {
-        auto rho_w_local = mesh.zero_scalar_field(face_field_flag);
-        auto rho_w0_local = mesh.zero_scalar_field(face_field_flag);
+        ObjectIdMap wall_rho_map;
+        ScalarList wall_rho_local, wall_rho0_local;
 
         /// boundary
         for (auto &face: mesh.faces) {
@@ -140,7 +140,7 @@ void CDUGKS::reconstruct() {
             auto &nv = face.normal_vector[1];
             auto &neighbor = mesh.cells[face.cell_id[0]];
             switch (mark.type) {
-                case BoundaryType::inlet:
+                case BoundaryType::farfield_inlet:
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
@@ -174,18 +174,19 @@ void CDUGKS::reconstruct() {
                             rho_w -= kn * particle.volume * f_face[p][face.id];
                         }
                     }
-                    rho_w_local[face.id] = rho_w;
-                    rho_w0_local[face.id] = rho_w0;
+                    wall_rho_map[face.id] = int(wall_rho_local.size());
+                    wall_rho_local.push_back(rho_w);
+                    wall_rho0_local.push_back(rho_w0);
                 }
                 case BoundaryType::fluid_interior:
                 default:
                     break;
             }
         }
-        auto rho_w_global = mesh.zero_scalar_field(face_field_flag);
-        auto rho_w0_global = mesh.zero_scalar_field(face_field_flag);
-        MPI::AllReduce(rho_w_local, rho_w_global);
-        MPI::AllReduce(rho_w0_local, rho_w0_global);
+        ScalarList wall_rho_global;
+        ScalarList wall_rho0_global;
+        MPI::AllReduce(wall_rho_local, wall_rho_global);
+        MPI::AllReduce(wall_rho0_local, wall_rho0_global);
 
         for (auto &face: mesh.faces) {
             auto &mark = config.get_face_group(face, mesh);
@@ -197,7 +198,8 @@ void CDUGKS::reconstruct() {
                         auto &particle = dvs_mesh.cells[dvs_id];
                         double kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            auto rho_w = rho_w_global[face.id] / rho_w0_global[face.id];
+                            int wall_rho_list_id = wall_rho_map[face.id];
+                            auto rho_w = wall_rho_global[wall_rho_list_id] / wall_rho0_global[wall_rho_list_id];
                             f_face[p][face.id] = f_maxwell(rho_w, mark.velocity, particle.position);
                         }
                     }

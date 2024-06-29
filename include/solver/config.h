@@ -12,7 +12,7 @@ namespace MESO::Solver {
 
     enum BoundaryType {
         fluid_interior,
-        inlet,
+        farfield_inlet,
         farfield_outlet,
         pressure_outlet,
         wall,
@@ -48,12 +48,12 @@ namespace MESO::Solver {
 
         explicit Config(const std::string &file_path);
 
-        template<class T>
         /**
          * T = [int, double, bool, std::string]
          * 用法:
          *  auto is_limiter_open = config.get<bool>("limiter-switch", true);
          **/
+        template<class T>
         T get(const ConfigKey &key, T default_value, bool print_error = true);
 
         Group & get_cell_group(MESO::Mesh::Cell &cell, MESO::Mesh::Mesh &mesh);

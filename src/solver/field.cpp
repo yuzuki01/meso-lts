@@ -106,7 +106,8 @@ Field<Vector> Field<Scalar>::gradient(bool _switch) {
                 Vector Sfr(0.0, 0.0, 0.0);
                 for (int j = 0; j < cell.least_square.neighbor_num; ++j) {
                     int &neighbor_id = cell.neighbors[j];
-                    Sfr += (values[neighbor_id] - values[cell.id]) * cell.least_square.weight[j] * cell.least_square.dr[j];
+                    Sfr += (values[neighbor_id] - values[cell.id]) * cell.least_square.weight[j] *
+                           cell.least_square.dr[j];
                 }
                 result[cell.id] = {cell.least_square.Cx * Sfr, cell.least_square.Cy * Sfr, cell.least_square.Cz * Sfr};
             }
@@ -118,7 +119,8 @@ Field<Vector> Field<Scalar>::gradient(bool _switch) {
                 Vector Sfr(0.0, 0.0, 0.0);
                 for (int j = 0; j < node.least_square.neighbor_num; ++j) {
                     int &neighbor_id = node.neighbors[j];
-                    Sfr += (values[neighbor_id] - values[node.id]) * node.least_square.weight[j] * node.least_square.dr[j];
+                    Sfr += (values[neighbor_id] - values[node.id]) * node.least_square.weight[j] *
+                           node.least_square.dr[j];
                 }
                 result[node.id] = {node.least_square.Cx * Sfr, node.least_square.Cy * Sfr, node.least_square.Cz * Sfr};
             }
@@ -170,6 +172,11 @@ void Field<Vector>::output(const std::string &file_name) {
 }
 
 /// MPI
+void MESO::MPI::AllReduce(MESO::ScalarList &local, MESO::ScalarList &global) {
+    if (local.size() != global.size()) global.resize(local.size());
+    MPI_Allreduce(local.data(), global.data(), int(global.size()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+}
+
 void MESO::MPI::AllReduce(Field<MESO::Scalar> &local, Field<MESO::Scalar> &global) {
     MPI_Allreduce(local.values.data(), global.values.data(), global.len, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 }
@@ -185,7 +192,7 @@ Scalar Solver::residual(Field<Scalar> &_old, Field<Scalar> &_new) {
     Scalar result = 0.0;
     for (auto &cell: mesh.cells) {
         result += std::abs((_new[cell.id] - _old[cell.id]) / _old[cell.id])
-                          * (cell.volume / mesh.total_volume);
+                  * (cell.volume / mesh.total_volume);
     }
     _old = _new;
     return result;

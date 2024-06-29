@@ -37,6 +37,7 @@ namespace MESO::MPI {
     void AllReduce(const MESO::Vector &local, MESO::Vector &global);
 
     /// coded in solver/field.cpp
+    void AllReduce(ScalarList &local, ScalarList &global);
     void AllReduce(Field<Scalar> &local, Field<Scalar> &global);
     void AllReduce(Field<Vector> &local, Field<Vector> &global);
 

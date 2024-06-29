@@ -30,7 +30,7 @@ void Utils::print_names_and_values(const StringList &names, const ScalarList &va
     }
     logger.info << std::endl;
     for (auto &it: values) {
-        logger.info << std::scientific << std::setw(15) << std::right << std::setprecision(6) << it;
+        logger.info << std::scientific << std::setw(15) << std::right << std::setprecision(4) << it;
     }
     logger.info << std::endl;
 }
