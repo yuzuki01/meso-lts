@@ -123,10 +123,10 @@ type        wall
 
 ### 3D Test
 
-注意：该结果未经对比验证，仅计算了 `2000` 步
+注意：该结果未经对比验证，仅计算了 `20000` 步
 
 ```sh
-mpirun -n 9 ./meso-mpi --case case-re400-3d.txt --max-step 2000
+mpirun -n 12 ./meso-mpi --case case-re400-3d.txt --max-step 20000
 ```
 
 ![result-3d](./files/cavity-3d.png)

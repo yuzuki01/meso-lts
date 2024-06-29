@@ -1,6 +1,6 @@
 [settings]
 solver          cdugks@incompressible
-case-name       re100
+case-name       re400
 mesh-file       cavity.neu
 
 Re          400.0
