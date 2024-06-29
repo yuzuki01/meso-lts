@@ -2,5 +2,5 @@
 /bin
 /cmake-build-release
 /cmake-build-release-windows
-/cmake-build-release-cluster
+/cmake-build-release-linux
 /demo.py
