@@ -57,7 +57,7 @@ int Solver::handle_solver<Solver::CDUGKS>(MESO::ArgParser &parser, MESO::Solver:
     }
     std::signal(SIGINT, Solver::solver_interrupt<Solver::CDUGKS>);    // 注册 SIGINT 信号处理
     const int max_step = parser.parse_param("max-step", DefaultValue::max_step, false);
-    for (int i = 0; i < max_step; ++i) {
+    for (int i = 0; (i < max_step) || (max_step < 0); ++i) {
         solver.do_step();
         if (not solver.get_run_state()) break;
         if (solver.step % save_interval == 0) solver.output();
@@ -96,7 +96,7 @@ int Solver::handle_solver<Solver::CDUGKS_SHAKHOV>(MESO::ArgParser &parser, MESO:
     }
     std::signal(SIGINT, Solver::solver_interrupt<Solver::CDUGKS_SHAKHOV>);    // 注册 SIGINT 信号处理
     const int max_step = parser.parse_param("max-step", DefaultValue::max_step, false);
-    for (int i = 0; i < max_step; ++i) {
+    for (int i = 0; (i < max_step) || (max_step < 0); ++i) {
         solver.do_step();
         if (not solver.get_run_state()) break;
         if (solver.step % save_interval == 0) solver.output();
