@@ -167,6 +167,11 @@ void MESO::MPI::AllReduce(MESO::ScalarList &local, MESO::ScalarList &global) {
     MPI_Allreduce(local.data(), global.data(), int(global.size()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 }
 
+void MESO::MPI::AllReduce(MESO::VectorList &local, MESO::VectorList &global) {
+    if (local.size() != global.size()) global.resize(local.size());
+    MPI_Allreduce(local.data(), global.data(), int(global.size()), UDF::MPI_Vector, UDF::MPI_VectorSum, MPI_COMM_WORLD);
+}
+
 void MESO::MPI::AllReduce(Field<MESO::Scalar> &local, Field<MESO::Scalar> &global) {
     MPI_Allreduce(local.values.data(), global.values.data(), global.len, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 }
