@@ -69,7 +69,7 @@ mpirun -n 10 ./meso-mpi --max-step 1000000 --case case-kn1.txt
 
 ### Configure File
 
-[详细文档](src/solver/README.md)
+[详细文档](include/solver/README.md)
 
 ```
 [settings]
