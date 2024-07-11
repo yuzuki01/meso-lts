@@ -1,0 +1,38 @@
+[settings]
+solver          cdugks@shakhov
+case-name       kn1
+mesh-file       cavity.neu
+dvs-file        nc.dvs
+dvs-type        Newton-Cotes
+
+Kn          1.0
+Pr          0.6666666666666667
+Ma          0.1772780010344274
+CFL         0.8
+
+gradient-switch     True
+output-np           False
+
+gas-constant        0.5
+gas-k               0
+ref-density         1.0
+ref-length          1.0
+ref-temperature     1.0
+vhs-omega           0.5
+vhs-index           0.5
+
+[group]
+name            fluid
+density         1.0
+temperature     1.0
+
+[mark]
+name            lid
+type            wall
+velocity-x      0.1483214170493719
+temperature     1.0
+
+[mark]
+name            wall
+type            wall
+temperature     1.0
