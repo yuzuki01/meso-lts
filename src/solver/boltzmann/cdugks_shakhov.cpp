@@ -253,20 +253,29 @@ void CDUGKS_SHAKHOV::reconstruct() {
             auto &neighbor = mesh.cells[face.cell_id[0]];
             switch (mark.type) {
                 case BoundaryType::pressure_inlet: {
-                    auto &u_b = vel_cell[neighbor.id];
-                    auto P = Boundary::Compressible::solve_pressure(mark.pressure, R,
-                                                                    mark.temperature, u_b,
-                                                                    gamma);
-                    auto rho_b = P / (R * mark.temperature);
+                    /**
+                     * DSMC boundary
+                    auto rho_m = rho_cell[neighbor.id];
+                    auto T_m = T_cell[neighbor.id];
+                    auto p_m = rho_m * R * T_m;
+                    auto a_m = sqrt(gamma * R * T_m);
+                    auto u_inm = (vel_cell[neighbor.id] * nv + (mark.pressure - p_m) / (rho_m * a_m)) * nv;
+                     */
+
+                    auto T_m = mark.temperature;
+                    auto u_m = vel_cell[neighbor.id];
+                    auto p_in = Boundary::Compressible::solve_pressure(mark.pressure, R,
+                                                                       T_m, u_m, gamma);
+                    auto rho_m = p_in / (R * T_m);
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         if (particle.position * nv >= 0.0) {
-                            auto c = particle.position - vel_cell[neighbor.id];
+                            auto c = particle.position - u_m;
                             auto cc = c * c;
-                            auto g_m = g_maxwell(rho_b, mark.temperature, cc);
+                            auto g_m = g_maxwell(rho_m, T_m, cc);
                             g_face[p][face.id] = g_m;
-                            h_face[p][face.id] = h_maxwell(mark.temperature, g_m);
+                            h_face[p][face.id] = h_maxwell(T_m, g_m);
                         }
                     }
                 }
@@ -285,20 +294,31 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     }
                     break;
                 case BoundaryType::pressure_outlet: {
-                    auto &u_b = vel_cell[neighbor.id];
-                    auto P = Boundary::Compressible::solve_pressure(mark.pressure, R,
-                                                                    mark.temperature, u_b,
-                                                                    gamma);
-                    auto rho_b = P / (R * mark.temperature);
+                    /**
+                     * DSMC boundary
+                    auto rho_m = rho_cell[neighbor.id];
+                    auto T_m = T_cell[neighbor.id];
+                    auto a_m = sqrt(gamma * R * T_m);
+                    auto p_m = rho_m * R * T_m;
+                    auto rho_em = rho_m + (mark.pressure - p_m) / (a_m * a_m);
+                    auto u_em = vel_cell[neighbor.id] + nv * ((p_m - mark.pressure) / (rho_m * a_m));
+                    auto T_em = mark.pressure / (rho_em * R);
+                     */
+
+                    auto T_m = mark.temperature;
+                    auto u_m = vel_cell[neighbor.id];
+                    auto p_in = Boundary::Compressible::solve_pressure(mark.pressure, R,
+                                                                       T_m, u_m, gamma);
+                    auto rho_m = p_in / (R * T_m);
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         if (particle.position * nv >= 0.0) {
-                            auto c = particle.position - vel_cell[neighbor.id];
+                            auto c = particle.position - u_m;
                             auto cc = c * c;
-                            auto g_m = g_maxwell(rho_b, mark.temperature, cc);
+                            auto g_m = g_maxwell(rho_m, T_m, cc);
                             g_face[p][face.id] = g_m;
-                            h_face[p][face.id] = h_maxwell(mark.temperature, g_m);
+                            h_face[p][face.id] = h_maxwell(T_m, g_m);
                         }
                     }
                 }
@@ -466,6 +486,15 @@ void CDUGKS_SHAKHOV::fvm_update() {
             /// f -> f_bar_plus
             g_cell[p][cell.id] = (1.0 - C_s) * g + C_s * g_s;
             h_cell[p][cell.id] = (1.0 - C_s) * h + C_s * h_s;
+        }
+        /// Monitor
+        if (std::isnan(rho)) {
+            logger.warn << "[WARN] cell<" << cell.id + 1<< "> caught rho=nan." << std::endl;
+            run_state = false;
+        }
+        if (T < 0.0 or std::isnan(T)) {
+            logger.warn << "[WARN] cell<" << cell.id + 1<< "> caught T < 0 or T=nan." << std::endl;
+            run_state = false;
         }
     }
     MPI::AllReduce(m3_local, q_cell);

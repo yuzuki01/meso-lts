@@ -13,7 +13,6 @@ MESO::Scalar Incompressible::solve_pressure(Scalar P0, Scalar Rho, Vector &U, Sc
 }
 
 MESO::Scalar Compressible::solve_pressure(Scalar P0, Scalar R, Scalar T, Vector &U, Scalar gamma) {
-    auto M = U.magnitude() / sqrt(gamma * R * T);
-    auto MM = M * M;
-    return P0 / pow(1.0 + (gamma - 1.0) / 2.0 * MM, gamma / (gamma - 1.0));
+    auto Ma = U.magnitude() / sqrt(gamma * R * T);
+    return P0 / pow(1.0 + (gamma - 1.0) / 2.0 * (Ma * Ma), gamma / (gamma - 1.0));
 }
