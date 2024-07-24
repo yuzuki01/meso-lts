@@ -64,7 +64,7 @@ fvmMesh::Mesh DVS::generate_dvs(const std::string &file_path, GaussHermiteParams
             }
         }
     }
-    mesh.update_num();
+    mesh.update_mesh_params();
     mesh.max_cell_magnitude = max_mag;
     return mesh;
 }
@@ -138,7 +138,7 @@ fvmMesh::Mesh DVS::generate_dvs(const std::string &file_path, NewtonCotesParams 
             }
         }
     }
-    mesh.update_num();
+    mesh.update_mesh_params();
     mesh.max_cell_magnitude = max_mag;
     return mesh;
 }

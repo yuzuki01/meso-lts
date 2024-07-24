@@ -12,7 +12,7 @@
 #include "mesh/reader.h"
 
 namespace MESO::fvmMesh {
-    MESO::fvmMesh::Mesh load_gambit(const std::string &file_path);
+    MESO::fvmMesh::Mesh load_gambit(const std::string &file_path, double mesh_scale=1.0);
 }
 
 #endif //MESO_MESH_H

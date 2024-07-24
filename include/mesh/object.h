@@ -138,9 +138,9 @@ namespace MESO::fvmMesh {
 
         void generate_face();
 
-        void update_num();
+        void update_mesh_params();
 
-        void build_geom();
+        void build_geom(double scale_ratio=1.0);
 
 #ifdef _METIS_H_
         void partition();

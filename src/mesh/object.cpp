@@ -84,7 +84,7 @@ void Mesh::generate_face() {
     NFACE = int(faces.size());
 }
 
-void Mesh::update_num() {
+void Mesh::update_mesh_params() {
     NNODE = int(nodes.size());
     NFACE = int(faces.size());
     NCELL = int(cells.size());
@@ -92,8 +92,13 @@ void Mesh::update_num() {
     NMARK = int(face_groups.size());
 }
 
-void Mesh::build_geom() {
-    update_num();
+void Mesh::build_geom(double scale_ratio) {
+    /// scale
+    for (auto &node : nodes) {
+        node.position *= scale_ratio;
+    }
+    /// update mesh params
+    update_mesh_params();
     /// cell
     total_volume = 0.0;
     const int D = dimension();

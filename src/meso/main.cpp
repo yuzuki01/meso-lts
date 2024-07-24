@@ -27,7 +27,8 @@ int main(int argc, char **argv) {
     parse_string = parser.parse_param<MESO::String>("mesh", "<mesh-file>", false);
     if (parse_string != "<mesh-file>") {
         MESO::MPI::Initialize(&argc, &argv);
-        auto code = MESO::handle_mesh(parse_string);
+        auto code = MESO::handle_mesh(parse_string,
+                                      parser.parse_param<double>("scale", 1.0, false));
         MESO::MPI::Finalize();
         return code;
     }

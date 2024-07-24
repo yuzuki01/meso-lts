@@ -24,7 +24,8 @@ CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicS
     limiter_switch = config.get("limiter-switch", false);
     venkata_k = config.get("venkata-limiter-k", 1.0);
 
-    mesh = MESO::fvmMesh::load_gambit(config.get<String>("mesh-file", "<mesh-file>"));
+    mesh = MESO::fvmMesh::load_gambit(config.get<String>("mesh-file", "<mesh-file>"),
+            mesh_scale);
     mesh.info();
     D = mesh.dimension();
     config.info();
