@@ -254,23 +254,13 @@ void CDUGKS_SHAKHOV::reconstruct() {
             auto &neighbor = mesh.cells[face.cell_id[0]];
             switch (mark.type) {
                 case BoundaryType::pressure_inlet: {
-                    /**
-                     * DSMC boundary
-                    auto rho_m = rho_cell[neighbor.id];
                     auto T_m = T_cell[neighbor.id];
-                    auto p_m = rho_m * R * T_m;
-                    auto a_m = sqrt(gamma * R * T_m);
-                    auto T_in = mark.temperature;
-                    auto p_in = mark.pressure;
-                    auto rho_in = p_in / (R * T_in);
-                    auto u_in = (vel_cell[neighbor.id] * nv + (p_in - p_m) / (rho_m * a_m)) * nv;
-                    */
-                    auto T_in = mark.temperature;
-                    auto u_in = vel_cell[neighbor.id];
+                    auto u_m = vel_cell[neighbor.id];
                     auto p_in = Boundary::Compressible::solve_pressure(mark.pressure, R,
-                                                                       T_in, u_in, gamma);
+                                                                       T_m, u_m, gamma);
+                    auto u_in = (u_m * nv) * nv;
+                    auto T_in = mark.temperature;
                     auto rho_in = p_in / (R * T_in);
-
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
@@ -298,25 +288,13 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     }
                     break;
                 case BoundaryType::pressure_outlet: {
-                    /**
-                     * DSMC boundary
-                    auto rho_m = rho_cell[neighbor.id];
-                    auto T_m = T_cell[neighbor.id];
-                    auto p_m = rho_m * R * T_m;
-                    auto p_e = mark.pressure;
-                    auto a_m = sqrt(gamma * R * T_m);
-                    auto rho_e = rho_m + (p_e - p_m) / (a_m * a_m);
-                    auto T_e = p_e / (rho_e * R);
                     auto u_m = vel_cell[neighbor.id];
-                    auto u_e = (u_m * nv + (p_m - p_e) / (rho_m * a_m)) * nv;
-                     */
-
                     auto T_m = T_cell[neighbor.id];
-                    auto T_e = mark.temperature;
-                    auto u_e = vel_cell[neighbor.id];
                     auto p_e = Boundary::Compressible::solve_pressure(mark.pressure, R,
-                                                                      T_m, u_e, gamma);
+                                                                      T_m, u_m, gamma);
+                    auto T_e = mark.temperature;
                     auto rho_e = p_e / (R * T_e);
+                    auto u_e = u_m;
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
