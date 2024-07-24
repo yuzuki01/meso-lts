@@ -24,7 +24,8 @@ CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicS
     limiter_switch = config.get("limiter-switch", false);
     venkata_k = config.get("venkata-limiter-k", 1.0);
 
-    mesh = MESO::fvmMesh::load_gambit(config.get<String>("mesh-file", "<mesh-file>"));
+    mesh = MESO::fvmMesh::load_gambit(config.get<String>("mesh-file", "<mesh-file>"),
+                                      mesh_scale);
     mesh.info();
     D = mesh.dimension();
     config.info();
@@ -47,7 +48,7 @@ void CDUGKS_SHAKHOV::initial() {
     step = 0;
     solution_time = 0.0;
     gamma = (K + 5.0) / (K + 3.0);
-    Cv = R / (gamma - 1.0);
+    Cv = (K + 3.0) * R * 0.5;
     double RT = R * T0;
     double c_sound = sqrt(gamma * RT);
     miu0 = (Kn * L0) * (15 * Rho0 * sqrt(2.0 * M_PI * RT)) / ((7.0 - 2.0 * vhs_omega) * (5.0 - 2.0 * vhs_omega));
@@ -81,7 +82,7 @@ void CDUGKS_SHAKHOV::initial() {
             auto cc = c * c;
             auto kk = particle.position * particle.position;
             auto g = g_maxwell(group.density, group.temperature, cc);
-            auto h = h_maxwell(group.density, g);
+            auto h = h_maxwell(group.temperature, g);
             g_cell[p][cell.id] = g;
             h_cell[p][cell.id] = h;
             m0_local[cell.id] += particle.volume * g;
@@ -131,11 +132,11 @@ inline MESO::Scalar CDUGKS_SHAKHOV::g_maxwell(double rho, double t, double cc) c
         return rho * over_RT2 / M_PI * exp(-cc * over_RT2);
     }
     double RT = R * t;
-    return rho / pow(2.0 * M_PI * RT, 1.5) * exp(-cc / (2.0 * RT));
+    return rho / pow(2.0 * M_PI * RT, 1.5) * exp(-cc * 0.5 / RT);
 }
 
 inline MESO::Scalar CDUGKS_SHAKHOV::h_maxwell(double t, double gm) const {
-    return (K + 3.0 - D) * R * t * gm;
+    return (K + 3.0 - D) * (R * t) * gm;
 }
 
 inline MESO::Scalar CDUGKS_SHAKHOV::g_shakhov(double rho, double t, double cc, double cq, double gm) const {
@@ -314,7 +315,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     auto T_e = mark.temperature;
                     auto u_e = vel_cell[neighbor.id];
                     auto p_e = Boundary::Compressible::solve_pressure(mark.pressure, R,
-                                                                       T_m, u_e, gamma);
+                                                                      T_m, u_e, gamma);
                     auto rho_e = p_e / (R * T_e);
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
@@ -495,11 +496,11 @@ void CDUGKS_SHAKHOV::fvm_update() {
         }
         /// Monitor
         if (std::isnan(rho)) {
-            logger.warn << "[WARN] cell<" << cell.id + 1<< "> caught rho=nan." << std::endl;
+            logger.warn << "[WARN] cell<" << cell.id + 1 << "> caught rho=nan." << std::endl;
             run_state = false;
         }
         if (T < 0.0 or std::isnan(T)) {
-            logger.warn << "[WARN] cell<" << cell.id + 1<< "> caught T < 0 or T=nan." << std::endl;
+            logger.warn << "[WARN] cell<" << cell.id + 1 << "> caught T < 0 or T=nan." << std::endl;
             run_state = false;
         }
     }

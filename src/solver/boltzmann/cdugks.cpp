@@ -17,7 +17,8 @@ CDUGKS::CDUGKS(MESO::ArgParser &parser, Config &config) : BasicSolver(parser, co
         logger.warn << "[Warn] gradient-switch was CLOSED." << std::endl;
     }
 
-    mesh = MESO::fvmMesh::load_gambit(config.get<String>("mesh-file", "<mesh-file>"));
+    mesh = MESO::fvmMesh::load_gambit(config.get<String>("mesh-file", "<mesh-file>"),
+            mesh_scale);
     mesh.info();
     config.info();
 

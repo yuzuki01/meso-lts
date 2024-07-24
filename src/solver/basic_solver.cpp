@@ -10,6 +10,7 @@ Solver::BasicSolver::BasicSolver(ArgParser &parser) :
         logger.warn << "Solver::output() cannot mkdir: " << case_name << std::endl;
     }
     residual_limit = config.get<double>("residual-limit", 1e-6, false);
+    mesh_scale = config.get<double>("mesh-scale", 1.0, false);
 }
 
 
@@ -21,4 +22,5 @@ Solver::BasicSolver::BasicSolver(MESO::ArgParser &parser, MESO::Solver::Config &
         logger.warn << "Solver::output() cannot mkdir: " << case_name << std::endl;
     }
     residual_limit = config.get<double>("residual-limit", 1e-6, false);
+    mesh_scale = config.get<double>("mesh-scale", 1.0, false);
 }

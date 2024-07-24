@@ -28,6 +28,7 @@ namespace MESO::Solver {
         double residual_limit{};
         bool run_state{};
         int converge_state{};
+        double mesh_scale{};
     public:
         explicit BasicSolver(ArgParser &parser);
 

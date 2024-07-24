@@ -23,6 +23,6 @@ MESO::MPI::MPI_TaskObject MESO::MPI::DVS_partition(fvmMesh::Mesh &mesh) {
             partition[j] = id;
         }
     }
-    mesh.update_num();
+    mesh.update_mesh_params();
     return task_list[MPI::rank];
 }

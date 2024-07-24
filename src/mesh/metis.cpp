@@ -6,9 +6,21 @@ using namespace MESO::fvmMesh;
 void Mesh::partition() {
     auto numCells = static_cast<idx_t>(cells.size());
     auto numParts = static_cast<idx_t>(MPI::process_num);
+    if (MPI::process_num == 1) {
+        /// if process_num == 1   mesh has only 1 part.
+        cell_partition_groups.resize(numParts, {});
+        for (auto &cell : cells) {
+            cell.partition_id = MPI::rank;
+            cell.partition_cell_id = cell.id;
+            cell_partition_groups[0].push_back(cell.id);
+        }
+        cell_partition_groups[0].shrink_to_fit();
+
+        logger.info << "Partition mesh by METIS into " << numParts << " part(s)." << std::endl;
+        return;
+    }
 
     cell_partition_groups.resize(numParts, {});
-    face_partition_groups.resize(numParts, {});
 
     typedef std::vector<idx_t> MetisIdList;
 
@@ -43,6 +55,9 @@ void Mesh::partition() {
         cell.partition_id = static_cast<int>(parts[i]);
         cell.partition_cell_id = int(group.size());
         group.push_back(cell.id);
+    }
+    for (auto &group : cell_partition_groups) {
+        group.shrink_to_fit();
     }
 
     logger.info << "Partition mesh by METIS into " << numParts << " part(s)." << std::endl;

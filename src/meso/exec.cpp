@@ -19,9 +19,9 @@ void MESO::help() {
 }
 
 
-int MESO::handle_mesh(const std::string &mesh_file) {
+int MESO::handle_mesh(const std::string &mesh_file, double mesh_scale) {
     auto mesh = MESO::fvmMesh::load_gambit(mesh_file);
-    mesh.build_geom();
+    mesh.build_geom(mesh_scale);
     mesh.partition();
     mesh.info();
     mesh.output(mesh_file);
