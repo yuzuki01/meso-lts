@@ -9,6 +9,7 @@ std::unordered_map<std::string, int> MESO::Solver::mark_type_map = {
         {"farfield-outlet", BoundaryType::farfield_outlet},
         {"pressure-outlet", BoundaryType::pressure_outlet},
         {"wall",            BoundaryType::wall},
+        {"slip-wall",       BoundaryType::slip_wall},
 };
 
 
@@ -67,6 +68,7 @@ Config::Config(const std::string &file_path) {
                 else if (data[0] == "velocity-x") mark.velocity.x = stod(data[1]);
                 else if (data[0] == "velocity-y") mark.velocity.y = stod(data[1]);
                 else if (data[0] == "velocity-z") mark.velocity.z = stod(data[1]);
+                else if (data[0] == "slip-wall-alpha") mark.slip_wall_alpha = stod(data[1]);
                 ++i;
             }
             marks[mark.name] = mark;

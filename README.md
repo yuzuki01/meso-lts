@@ -8,9 +8,17 @@
 
 **KarypisLab/METIS** - [here](https://github.com/KarypisLab/METIS)
 
-物理网格划分使用 `METIS-5.1.0` ，按照 `MPI::processor_num` 进行划分
+> 物理网格划分使用 `METIS-5.1.0` ，按照 `MPI::processor_num` 进行划分
 
-**Core** - [README](./include/core/README.md)
+**Mesh Scale**
+
+> 网格缩放，支持带量纲直接进行计算
+
+**Boundary** - [README](./include/solver/README.md)
+
+> pressure-inlet / pressure-outlet
+
+> slip wall
 
 ### Vector
 
@@ -79,6 +87,7 @@ mpirun -n 10 ./meso-mpi --max-step 1000000 --case case-kn1.txt
 [settings]
 case-name       demo
 mesh-file       <path-to>/<mesh>.neu
+mesh-scale      1.0
 dvs-file        <path-to>/<dvs-mesh>.neu/.dvs
 dvs-type        <dvs-type>
 
@@ -144,9 +153,5 @@ Sod 激波管求解器为 1 维 CDUGKS，[代码](https://github.com/yuzuki01/tu
 ![result-sod-tube](./files/sod-shock-tube.png)
 
 ## Future
-
- > 镜面反射处理
-
- > 完善 numpy 数据接口
 
  > 物理网格并行求解器开发

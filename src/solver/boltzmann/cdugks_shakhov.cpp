@@ -244,8 +244,10 @@ void CDUGKS_SHAKHOV::reconstruct() {
         }
     }
     {
-        ObjectIdMap wall_rho_map;
+        ObjectIdMap wall_id_map;
         ScalarList wall_rho_local, wall_rho0_local;
+        ScalarList wall_temperature;
+        VectorList wall_velocity;
 
         /// boundary
         for (auto &face: mesh.faces) {
@@ -323,26 +325,40 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         }
                     }
                     break;
+                case BoundaryType::slip_wall:
                 case BoundaryType::wall: {
                     double rho_w, rho_w0;
                     rho_w = rho_w0 = 0.0;
+                    Vector u_w = mark.velocity;
+                    Scalar T_w = (mark.temperature <= 0.0) ? T_cell[neighbor.id] : mark.temperature;
+                    Scalar mfp = Kn * L0;
+                    if (mark.type == BoundaryType::slip_wall) {
+                        u_w = Boundary::SlipWall::solve_slip_velocity(u_w, vel_cell[neighbor.id],
+                                                                      face.position, neighbor.position,
+                                                                      nv, mark.slip_wall_alpha, mfp);
+                        T_w = Boundary::SlipWall::solve_slip_temperature(T_w, T_cell[neighbor.id],
+                                                                         face.position, neighbor.position,
+                                                                         nv, mark.slip_wall_alpha, mfp,
+                                                                         gamma, Pr);
+                    }
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            auto T = (mark.temperature <= 0.0) ? T_cell[neighbor.id] : mark.temperature;
-                            auto c = particle.position - mark.velocity;
+                            auto c = particle.position - u_w;
                             auto cc = c * c;
-                            auto g_m = g_maxwell(1.0, T, cc);
+                            auto g_m = g_maxwell(1.0, T_w, cc);
                             rho_w0 += kn * particle.volume * g_m;
                         } else {
                             rho_w -= kn * particle.volume * g_face[p][face.id];
                         }
                     }
-                    wall_rho_map[face.id] = int(wall_rho_local.size());
+                    wall_id_map[face.id] = int(wall_rho_local.size());
                     wall_rho_local.push_back(rho_w);
                     wall_rho0_local.push_back(rho_w0);
+                    wall_velocity.push_back(u_w);
+                    wall_temperature.push_back(T_w);
                 }
                     break;
                 case BoundaryType::fluid_interior:
@@ -358,20 +374,21 @@ void CDUGKS_SHAKHOV::reconstruct() {
         for (auto &face: mesh.faces) {
             auto &mark = config.get_face_group(face, mesh);
             switch (mark.type) {
-                case wall: {
+                case BoundaryType::slip_wall:
+                case BoundaryType::wall: {
                     auto &nv = face.normal_vector[1];
-                    int wall_rho_list_id = wall_rho_map[face.id];
-                    auto rho_w = wall_rho_global[wall_rho_list_id] / wall_rho0_global[wall_rho_list_id];
+                    int wall_list_id = wall_id_map[face.id];
+                    auto rho_w = wall_rho_global[wall_list_id] / wall_rho0_global[wall_list_id];
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            auto T = mark.temperature;
-                            auto c = particle.position - mark.velocity;
+                            auto T_w = wall_temperature[wall_list_id];
+                            auto c = particle.position - wall_velocity[wall_list_id];
                             auto cc = c * c;
-                            auto g_m = g_maxwell(rho_w, T, cc);
-                            auto h_m = h_maxwell(T, g_m);
+                            auto g_m = g_maxwell(rho_w, T_w, cc);
+                            auto h_m = h_maxwell(T_w, g_m);
                             g_face[p][face.id] = g_m;
                             h_face[p][face.id] = h_m;
                         }

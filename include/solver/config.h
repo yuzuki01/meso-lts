@@ -17,6 +17,7 @@ namespace MESO::Solver {
         farfield_outlet,
         pressure_outlet,
         wall,
+        slip_wall,
     };
 
     struct Mark {
@@ -24,10 +25,11 @@ namespace MESO::Solver {
         ObjectId id;
         ObjectType type;
         std::string type_name;
-        double density;
-        double temperature;
-        double pressure;
-        Vector velocity;
+        double density;             // inlet density
+        double temperature=0.0;         // wall temperature, flow temperature
+        double pressure;            // total pressure
+        Vector velocity;            // inlet velocity, wall velocity
+        double slip_wall_alpha=2.0;     // slip wall alpha
     };
 
     struct Group {
