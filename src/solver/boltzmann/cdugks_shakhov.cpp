@@ -379,12 +379,12 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     auto &nv = face.normal_vector[1];
                     int wall_list_id = wall_id_map[face.id];
                     auto rho_w = wall_rho_global[wall_list_id] / wall_rho0_global[wall_list_id];
+                    auto T_w = wall_temperature[wall_list_id];
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            auto T_w = wall_temperature[wall_list_id];
                             auto c = particle.position - wall_velocity[wall_list_id];
                             auto cc = c * c;
                             auto g_m = g_maxwell(rho_w, T_w, cc);
