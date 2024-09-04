@@ -1,0 +1,6 @@
+/.idea
+/lib
+/build
+/cmake-build-linux
+/cmake-build-remote
+/demo.py
