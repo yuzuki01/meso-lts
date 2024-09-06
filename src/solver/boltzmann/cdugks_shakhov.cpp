@@ -8,7 +8,7 @@ void CDUGKS_SHAKHOV::read_np_data<MESO::Scalar>(const std::string &file, Field<S
 template<>
 void CDUGKS_SHAKHOV::read_np_data<MESO::Vector>(const std::string &file, Field<Vector> &field);
 
-
+/// solver coding
 CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicSolver(parser, config) {
     /// params
     Kn = config.get("Kn", 1.0);
@@ -314,6 +314,20 @@ void CDUGKS_SHAKHOV::reconstruct() {
                             auto c = particle.position - mark.velocity;
                             auto cc = c * c;
                             auto g_m = g_maxwell(mark.density, mark.temperature, cc);
+                            g_face[p][face.id] = g_m;
+                            h_face[p][face.id] = h_maxwell(mark.temperature, g_m);
+                        }
+                    }
+                    break;
+                case BoundaryType::freestream_inlet:
+                    for (int p = 0; p < mpi_task.size; ++p) {
+                        ObjectId dvs_id = p + mpi_task.start;
+                        auto &particle = dvs_mesh.cells[dvs_id];
+                        auto rho = mark.pressure / (R * mark.temperature);
+                        if (particle.position * nv >= 0.0) {
+                            auto c = particle.position - mark.velocity;
+                            auto cc = c * c;
+                            auto g_m = g_maxwell(rho, mark.temperature, cc);
                             g_face[p][face.id] = g_m;
                             h_face[p][face.id] = h_maxwell(mark.temperature, g_m);
                         }
@@ -641,7 +655,6 @@ void CDUGKS_SHAKHOV::read_np_data(const std::string &file, Field<Scalar> &field)
         field[i] = stod(data);
     }
 }
-
 
 template<>
 void CDUGKS_SHAKHOV::read_np_data(const std::string &file, Field<Vector> &field) {

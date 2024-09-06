@@ -8,7 +8,7 @@ omega = 0.74
 # Boltzmann constant
 k = 1.38066e-23
 # Molecular mass, kg
-m = 4.65e-26
+m = 46.5e-27
 # Molecular hard sphere diameter, m
 d = 4.17e-10
 # Gas specific gas constant

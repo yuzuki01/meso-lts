@@ -14,6 +14,7 @@ namespace MESO::Solver {
         fluid_interior,
         farfield_inlet,
         pressure_inlet,
+        freestream_inlet,
         farfield_outlet,
         pressure_outlet,
         wall,

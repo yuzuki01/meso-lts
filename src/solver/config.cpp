@@ -6,6 +6,7 @@ std::unordered_map<std::string, int> MESO::Solver::mark_type_map = {
         {"fluid-interior",  BoundaryType::fluid_interior},
         {"farfield-inlet",  BoundaryType::farfield_inlet},
         {"pressure-inlet",  BoundaryType::pressure_inlet},
+        {"freestream-inlet", BoundaryType::freestream_inlet},
         {"farfield-outlet", BoundaryType::farfield_outlet},
         {"pressure-outlet", BoundaryType::pressure_outlet},
         {"wall",            BoundaryType::wall},
