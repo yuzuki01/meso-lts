@@ -4,9 +4,10 @@
 using namespace MESO::Solver;
 
 template<>
-void CDUGKS_SHAKHOV::read_np_data<MESO::Scalar>(const std::string &file, Field<Scalar> &field);
+void CDUGKS_SHAKHOV::read_np_data<MESO::Scalar>(const std::string &file, Field <Scalar> &field);
+
 template<>
-void CDUGKS_SHAKHOV::read_np_data<MESO::Vector>(const std::string &file, Field<Vector> &field);
+void CDUGKS_SHAKHOV::read_np_data<MESO::Vector>(const std::string &file, Field <Vector> &field);
 
 /// solver coding
 CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicSolver(parser, config) {
@@ -560,11 +561,13 @@ void CDUGKS_SHAKHOV::fvm_update() {
         }
         /// Monitor
         if (std::isnan(rho)) {
-            logger.warn << "[WARN] cell<" << cell.id + 1 << "> caught rho=nan." << std::endl;
+            logger.warn << "[WARN] cell<" << cell.id + 1 << ">@" << cell.position.str()
+                        << " caught rho=nan." << std::endl;
             run_state = false;
         }
         if (T < 0.0 or std::isnan(T)) {
-            logger.warn << "[WARN] cell<" << cell.id + 1 << "> caught T < 0 or T=nan." << std::endl;
+            logger.warn << "[WARN] cell<" << cell.id + 1 << ">@" << cell.position.str()
+                        << " caught T < 0 or T=nan." << std::endl;
             run_state = false;
         }
     }
@@ -646,7 +649,7 @@ void CDUGKS_SHAKHOV::output() {
 
 /// Read Field Data
 template<>
-void CDUGKS_SHAKHOV::read_np_data(const std::string &file, Field<Scalar> &field) {
+void CDUGKS_SHAKHOV::read_np_data(const std::string &file, Field <Scalar> &field) {
     MESO::FileReader::BasicReader reader(file);
     auto lines = reader.read_lines();
     auto line_num = static_cast<int>(lines.size());
@@ -657,7 +660,7 @@ void CDUGKS_SHAKHOV::read_np_data(const std::string &file, Field<Scalar> &field)
 }
 
 template<>
-void CDUGKS_SHAKHOV::read_np_data(const std::string &file, Field<Vector> &field) {
+void CDUGKS_SHAKHOV::read_np_data(const std::string &file, Field <Vector> &field) {
     MESO::FileReader::BasicReader reader(file);
     auto lines = reader.read_lines();
     auto line_num = static_cast<int>(lines.size());
