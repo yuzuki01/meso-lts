@@ -210,6 +210,9 @@ void CDUGKS_SHAKHOV::reconstruct() {
                                  + (dr_ij - particle.position * half_dt) * (phi_g * grad_g[cell.id]);
             h_face[p][face.id] = h_cell[p][cell.id]
                                  + (dr_ij - particle.position * half_dt) * (phi_h * grad_h[cell.id]);
+            /// negative distribution function
+            g_face[p][face.id] = (g_face[p][face.id] < 0.0) ? 0.0 : g_face[p][face.id];
+            h_face[p][face.id] = (h_face[p][face.id] < 0.0) ? 0.0 : h_face[p][face.id];
         }
     }
     {

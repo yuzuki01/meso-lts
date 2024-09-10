@@ -26,11 +26,11 @@ void Utils::print_names_and_values(const StringList &names, const ScalarList &va
         throw std::invalid_argument("MESO::Utils::print_names_and_values() got unmatched size.");
     }
     for (auto &it: names) {
-        logger.info << std::setw(15) << std::right << it.c_str();
+        logger.info << std::setw(10) << std::left << it.c_str() << "\t";
     }
     logger.info << std::endl;
     for (auto &it: values) {
-        logger.info << std::scientific << std::setw(15) << std::right << std::setprecision(4) << it;
+        logger.info<< std::setw(10) << std::left << std::scientific << std::setprecision(2) << it << "\t";
     }
     logger.info << std::endl;
 }
