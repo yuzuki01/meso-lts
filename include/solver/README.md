@@ -84,14 +84,30 @@ veloxity-x  <value>
 |      wall       |  等温固壁  | **给定温度**<br>**计算无穿透密度**<br>_Maxwell 扩散_ |
 |    slip-wall    | 等温滑移固壁 |            Maxwell 扩散 + 镜面反射            |
 |    symmetry     |  对称边界  |               分布函数按界面对称赋值               |
+|      patch      | 自定义边界  |     通过定义 `PatchType` 实现不同的边界变量计算方式      |
+
+### Patch
+
+**PatchType**
+
+`calculated`: 标记为需要计算，具体算法在代码中实现
+
+`fixedValue`: 标记为定值，类型包含 `scalar` 和 `vector`
+
+* 示例: `density    fixedValue    scalar    1.0`
+
+`zeroGradient`: 标记为临近单元赋值，对于界面使用其临近单元的值进行赋值
+
+`fromFile`: 标记为从 `.np.dat` 格式文件读取，按照网格对象的编号进行索引，类型包含 `scalar` 和 `vector`
+
+* 示例: `velocity    fromFile    vector    vel.np.dat`
 
 ```
 [mark]
-name        <name>
-type        <mark-type>
-density     <value>
-pressure    <value>
-direction   <value:int>
-slip-wall-alpha <value>
+name            <name>
+type            <mark-type>
+density         fixedValue    scalar    1.0
+velocity        fixedValue    vector    1.0 0.0 0.0
+temperature     fromFile      scalar    inlet-T.np.dat
 ...
 ```
