@@ -3,15 +3,15 @@
 using namespace MESO::Solver;
 
 std::unordered_map<std::string, int> MESO::Solver::mark_type_map = {
-        {"fluid-interior",  BoundaryType::fluid_interior},
-        {"farfield-inlet",  BoundaryType::farfield_inlet},
-        {"pressure-inlet",  BoundaryType::pressure_inlet},
+        {"fluid-interior",   BoundaryType::fluid_interior},
+        {"farfield-inlet",   BoundaryType::farfield_inlet},
+        {"pressure-inlet",   BoundaryType::pressure_inlet},
         {"freestream-inlet", BoundaryType::freestream_inlet},
-        {"farfield-outlet", BoundaryType::farfield_outlet},
-        {"pressure-outlet", BoundaryType::pressure_outlet},
-        {"wall",            BoundaryType::wall},
-        {"slip-wall",       BoundaryType::slip_wall},
-        {"symmetry",        BoundaryType::symmetry},
+        {"farfield-outlet",  BoundaryType::farfield_outlet},
+        {"pressure-outlet",  BoundaryType::pressure_outlet},
+        {"wall",             BoundaryType::wall},
+        {"slip-wall",        BoundaryType::slip_wall},
+        {"symmetry",         BoundaryType::symmetry},
 };
 
 
@@ -64,14 +64,7 @@ Config::Config(const std::string &file_path) {
                 else if (data[0] == "type") {
                     mark.type_name = data[1];
                     mark.type = mark_type_map[mark.type_name];
-                } else if (data[0] == "density") mark.density = stod(data[1]);
-                else if (data[0] == "temperature") mark.temperature = stod(data[1]);
-                else if (data[0] == "pressure") mark.pressure = stod(data[1]);
-                else if (data[0] == "velocity-x") mark.velocity.x = stod(data[1]);
-                else if (data[0] == "velocity-y") mark.velocity.y = stod(data[1]);
-                else if (data[0] == "velocity-z") mark.velocity.z = stod(data[1]);
-                else if (data[0] == "slip-wall-alpha") mark.slip_wall_alpha = stod(data[1]);
-                else if (data[0] == "direction") mark.direction = stoi(data[1]);
+                } else mark.patch.set_value(data);
                 ++i;
             }
             marks[mark.name] = mark;
@@ -90,12 +83,9 @@ Config::Config(const std::string &file_path) {
                     --i;
                     break;
                 }
-                if (data[0] == "name") group.name = data[1];
-                else if (data[0] == "density") group.density = stod(data[1]);
-                else if (data[0] == "temperature") group.temperature = stod(data[1]);
-                else if (data[0] == "velocity-x") group.velocity.x = stod(data[1]);
-                else if (data[0] == "velocity-y") group.velocity.y = stod(data[1]);
-                else if (data[0] == "velocity-z") group.velocity.z = stod(data[1]);
+                if (data[0] == "name") {
+                    group.name = data[1];
+                } else group.patch.set_value(data);
                 ++i;
             }
             groups[group.name] = group;

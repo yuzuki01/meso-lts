@@ -21,6 +21,9 @@ namespace MESO {
     typedef std::vector<Vector> VectorList;
     /// map
     typedef std::unordered_map<ObjectId, ObjectId> ObjectIdMap;
+    typedef std::unordered_map<String, ObjectType> ObjectTypeMap;
+    typedef std::unordered_map<String, Scalar> ScalarMap;
+    typedef std::unordered_map<String, Vector> VectorMap;
 }
 
 #endif //CORE_TYPE_DEF_H

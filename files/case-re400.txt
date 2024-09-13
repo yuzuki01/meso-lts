@@ -18,12 +18,12 @@ ref-temperature     1.0
 
 [group]
 name        fluid
-density     1.0
+density     fixedValue  scalar  1.0
 
 [mark]
 name        lid
 type        wall
-velocity-x  0.1
+velocity    fixedValue  vector  0.1 0.0 0.0
 
 [mark]
 name        wall

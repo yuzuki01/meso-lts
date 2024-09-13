@@ -107,14 +107,15 @@ void CDUGKS_SHAKHOV::initial() {
         /// Init by cell group
         for (auto &cell: mesh.cells) {
             auto &group = config.get_cell_group(cell, mesh);
+            auto T_patch = group.patch.get_scalar("temperature");
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
                 auto &particle = dvs_mesh.cells[dvs_id];
-                auto c = particle.position - group.velocity;
+                auto c = particle.position - group.patch.get_vector("velocity");
                 auto cc = c * c;
                 auto kk = particle.position * particle.position;
-                auto g = g_maxwell(group.density, group.temperature, cc);
-                auto h = h_maxwell(group.temperature, g);
+                auto g = g_maxwell(group.patch.get_scalar("density"), T_patch, cc);
+                auto h = h_maxwell(T_patch, g);
                 g_cell[p][cell.id] = g;
                 h_cell[p][cell.id] = h;
                 m0_local[cell.id] += particle.volume * g;
@@ -293,9 +294,9 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     auto T_m = T_cell[neighbor.id];
                     auto u_m = vel_cell[neighbor.id];
                     auto u_in = (u_m * nv) * nv;
-                    auto T_in = mark.temperature;
-                    auto p_in = Boundary::Compressible::solve_pressure(mark.pressure, R,
-                                                                       T_m, u_in, gamma);
+                    auto T_in = mark.patch.get_scalar("temperature");
+                    auto p_in = Boundary::Compressible::solve_pressure(
+                            mark.patch.get_scalar("pressure"), R, T_m, u_in, gamma);
                     auto rho_in = p_in / (R * T_m);
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
@@ -310,41 +311,51 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     }
                 }
                     break;
-                case BoundaryType::farfield_inlet:
+                case BoundaryType::farfield_inlet: {
+                    auto rho_patch = mark.patch.get_scalar("density");
+                    auto u_patch = mark.patch.get_vector("velocity");
+                    auto T_patch = mark.patch.get_scalar("temperature");
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         if (particle.position * nv >= 0.0) {
-                            auto c = particle.position - mark.velocity;
+                            auto c = particle.position - u_patch;
                             auto cc = c * c;
-                            auto g_m = g_maxwell(mark.density, mark.temperature, cc);
+                            auto g_m = g_maxwell(rho_patch, T_patch, cc);
                             g_face[p][face.id] = g_m;
-                            h_face[p][face.id] = h_maxwell(mark.temperature, g_m);
+                            h_face[p][face.id] = h_maxwell(T_patch, g_m);
                         }
                     }
+                }
                     break;
-                case BoundaryType::freestream_inlet:
+                case BoundaryType::freestream_inlet: {
+                    auto p_patch = mark.patch.get_scalar("pressure");
+                    auto u_patch = mark.patch.get_vector("velocity");
+                    auto T_patch = mark.patch.get_scalar("temperature");
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
-                        auto rho = mark.pressure / (R * mark.temperature);
+                        auto rho_patch = p / (R * T_patch);
                         if (particle.position * nv >= 0.0) {
-                            auto c = particle.position - mark.velocity;
+                            auto c = particle.position - u_patch;
                             auto cc = c * c;
-                            auto g_m = g_maxwell(rho, mark.temperature, cc);
+                            auto g_m = g_maxwell(rho_patch, T_patch, cc);
                             g_face[p][face.id] = g_m;
-                            h_face[p][face.id] = h_maxwell(mark.temperature, g_m);
+                            h_face[p][face.id] = h_maxwell(T_patch, g_m);
                         }
                     }
+                }
                     break;
                 case BoundaryType::pressure_outlet: {
+                    auto p_patch = mark.patch.get_scalar("pressure");
+
                     auto u_m = vel_cell[neighbor.id];
                     auto T_m = T_cell[neighbor.id];
-                    auto p_e = Boundary::Compressible::solve_pressure(mark.pressure, R,
+                    auto p_e = Boundary::Compressible::solve_pressure(p_patch, R,
                                                                       T_m, u_m, gamma);
                     auto rho_e = p_e / (R * T_m);
                     auto u_e = u_m;
-                    auto T_e = mark.temperature;
+                    auto T_e = mark.patch.get_scalar("temperature");
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
@@ -377,8 +388,14 @@ void CDUGKS_SHAKHOV::reconstruct() {
                 case BoundaryType::wall: {
                     double rho_w, rho_w0;
                     rho_w = rho_w0 = 0.0;
-                    Vector u_w = mark.velocity;
-                    Scalar T_w = (mark.temperature <= 0.0) ? T_cell[neighbor.id] : mark.temperature;
+                    Vector u_w = mark.patch.get_vector("velocity");
+                    auto T_patch_type = mark.patch.get_type("temperature");
+                    Scalar T_w = 0.0;
+                    if (T_patch_type == PatchType::zeroGradient) {
+                        T_w = T_cell[neighbor.id];
+                    } else if (T_patch_type == PatchType::fixedValue) {
+                        T_w = mark.patch.get_scalar("temperature");
+                    }
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
@@ -398,6 +415,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                 }
                     break;
                 case BoundaryType::symmetry: {
+                    auto direction = mark.patch.get_int("direction");
                     ScalarList g_all(dvs_mesh.NCELL), h_all(dvs_mesh.NCELL);
                     MPI::GatherFieldList(g_face, g_all, face.id);
                     MPI::GatherFieldList(h_face, h_all, face.id);
@@ -406,8 +424,8 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            g_face[p][face.id] = g_all[particle.symmetry.id[mark.direction]];
-                            h_face[p][face.id] = h_all[particle.symmetry.id[mark.direction]];
+                            g_face[p][face.id] = g_all[particle.symmetry.id[direction]];
+                            h_face[p][face.id] = h_all[particle.symmetry.id[direction]];
                         }
                     }
                 }
@@ -426,6 +444,9 @@ void CDUGKS_SHAKHOV::reconstruct() {
             auto &mark = config.get_face_group(face, mesh);
             switch (mark.type) {
                 case BoundaryType::wall: {
+                    auto u_patch = mark.patch.get_vector("velocity");
+                    auto T_patch = mark.patch.get_scalar("temperature");
+
                     auto &nv = face.normal_vector[1];
                     int wall_list_id = wall_id_map[face.id];
                     auto rho_w = wall_rho_global[wall_list_id] / wall_rho0_global[wall_list_id];
@@ -434,10 +455,10 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            auto c = particle.position - mark.velocity;
+                            auto c = particle.position - u_patch;
                             auto cc = c * c;
-                            auto g_m = g_maxwell(rho_w, mark.temperature, cc);
-                            auto h_m = h_maxwell(mark.temperature, g_m);
+                            auto g_m = g_maxwell(rho_w, T_patch, cc);
+                            auto h_m = h_maxwell(T_patch, g_m);
                             g_face[p][face.id] = g_m;
                             h_face[p][face.id] = h_m;
                         }
@@ -445,6 +466,12 @@ void CDUGKS_SHAKHOV::reconstruct() {
                 }
                     break;
                 case BoundaryType::slip_wall: {
+                    auto u_patch = mark.patch.get_vector("velocity");
+                    auto T_patch = mark.patch.get_scalar("temperature");
+                    auto direction = mark.patch.get_int("direction");
+                    auto alpha_u = mark.patch.get_scalar("slip-wall-alpha-u");
+                    auto alpha_T = mark.patch.get_scalar("slip-wall-alpha-T");
+
                     ScalarList g_all(dvs_mesh.NCELL), h_all(dvs_mesh.NCELL);
                     MPI::GatherFieldList(g_face, g_all, face.id);
                     MPI::GatherFieldList(h_face, h_all, face.id);
@@ -456,14 +483,14 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            auto c = particle.position - mark.velocity;
+                            auto c = particle.position - u_patch;
                             auto cc = c * c;
-                            auto g_m = g_maxwell(rho_w, mark.temperature, cc);
-                            auto h_m = h_maxwell(mark.temperature, g_m);
-                            auto g_r = g_all[particle.symmetry.id[mark.direction]];
-                            auto h_r = h_all[particle.symmetry.id[mark.direction]];
-                            g_face[p][face.id] = (1.0 - mark.slip_wall_alpha) * g_m + mark.slip_wall_alpha * g_r;
-                            h_face[p][face.id] = (1.0 - mark.slip_wall_alpha) * h_m + mark.slip_wall_alpha * h_r;
+                            auto g_m = g_maxwell(rho_w, T_patch, cc);
+                            auto h_m = h_maxwell(T_patch, g_m);
+                            auto g_r = g_all[particle.symmetry.id[direction]];
+                            auto h_r = h_all[particle.symmetry.id[direction]];
+                            g_face[p][face.id] = (1.0 - alpha_u) * g_m + alpha_u * g_r;
+                            h_face[p][face.id] = (1.0 - alpha_T) * h_m + alpha_T * h_r;
                         }
                     }
                 }

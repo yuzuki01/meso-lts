@@ -58,10 +58,12 @@ void CDUGKS::initial() {
     auto m1_local = mesh.zero_vector_field();
     for (auto &cell: mesh.cells) {
         auto &group = config.get_cell_group(cell, mesh);
+        auto rho_patch = group.patch.get_scalar("density");
+        auto u_patch = group.patch.get_vector("velocity");
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
-            double f = f_maxwell(group.density, group.velocity, particle.position);
+            double f = f_maxwell(rho_patch,u_patch, particle.position);
             f_cell[p][cell.id] = f;
             m0_local[cell.id] += particle.volume * f;
             m1_local[cell.id] += particle.volume * f * particle.position;
@@ -156,7 +158,8 @@ void CDUGKS::reconstruct() {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         if (particle.position * nv >= 0.0) {
-                            f_face[p][face.id] = f_maxwell(mark.density, mark.density * mark.velocity,
+                            f_face[p][face.id] = f_maxwell(mark.patch.get_scalar("density"),
+                                                           mark.patch.get_vector("velocity"),
                                                            particle.position);
                         }
                     }
@@ -179,7 +182,8 @@ void CDUGKS::reconstruct() {
                         auto &particle = dvs_mesh.cells[dvs_id];
                         double kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            double f_eq = f_maxwell(1.0, mark.velocity, particle.position);
+                            double f_eq = f_maxwell(1.0, mark.patch.get_vector("velocity"),
+                                                    particle.position);
                             rho_w0 += kn * particle.volume * f_eq;
                         } else {
                             rho_w -= kn * particle.volume * f_face[p][face.id];
@@ -211,7 +215,8 @@ void CDUGKS::reconstruct() {
                         if (kn >= 0.0) {
                             int wall_rho_list_id = wall_rho_map[face.id];
                             auto rho_w = wall_rho_global[wall_rho_list_id] / wall_rho0_global[wall_rho_list_id];
-                            f_face[p][face.id] = f_maxwell(rho_w, mark.velocity, particle.position);
+                            f_face[p][face.id] = f_maxwell(rho_w, mark.patch.get_vector("velocity"),
+                                                           particle.position);
                         }
                     }
                 }

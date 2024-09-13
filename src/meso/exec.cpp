@@ -22,7 +22,9 @@ void MESO::help() {
 int MESO::handle_mesh(const std::string &mesh_file, double mesh_scale) {
     auto mesh = MESO::fvmMesh::load_gambit(mesh_file);
     mesh.build_geom(mesh_scale);
+#ifdef _METIS_H_
     mesh.partition();
+#endif
     mesh.info();
     mesh.output(mesh_file);
 
