@@ -29,6 +29,22 @@ void Patch::set_value(MESO::StringList &string_list) {
         }
     } else if (type_s == PatchType::zeroGradient_str) {
         type[name] = PatchType::zeroGradient;
+    } else if (type_s == PatchType::fromFile_str) {
+        type[name] = PatchType::fromFile;
+        auto vts = string_list[2];
+        auto file = string_list[3];
+        if (vts == "objectType") {
+            ints_list[name] = Utils::read_np_file<ObjectType>(file);
+        } else if (vts == "scalar") {
+            scalars_list[name] = Utils::read_np_file<Scalar>(file);
+        } else if (vts == "vector") {
+            vectors_list[name] = Utils::read_np_file<Vector>(file);
+        } else {
+            std::stringstream err;
+            err << "Patch::set_value caught unsupported type: " << name << " - " << type_s;
+            logger.warn << err.str() << std::endl;
+            throw std::invalid_argument(err.str());
+        }
     }
 }
 
@@ -41,10 +57,22 @@ MESO::ObjectType Patch::get_int(const MESO::String &key) {
     return ints[key];
 }
 
+MESO::ObjectType Patch::get_file_int(const MESO::String &key, MESO::ObjectId id) {
+    return ints_list[key][id];
+}
+
 MESO::Scalar Patch::get_scalar(const MESO::String &key) {
     return scalars[key];
 }
 
+MESO::Scalar Patch::get_file_scalar(const MESO::String &key, MESO::ObjectId id) {
+    return scalars_list[key][id];
+}
+
 MESO::Vector Patch::get_vector(const MESO::String &key) {
     return vectors[key];
+}
+
+MESO::Vector Patch::get_file_vector(const MESO::String &key, MESO::ObjectId id) {
+    return vectors_list[key][id];
 }

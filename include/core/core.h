@@ -40,6 +40,12 @@ namespace MESO::Utils {
     int mkdir(const String &dir_name);
 
     bool is_converged(const std::vector<double> &residual_list, double limit);
+
+    template<class T>
+    void output_list(const String &file_path, std::vector<T> &data);
+
+    template<class T>
+    std::vector<T> read_np_file(const String &file_path);
 }
 
 namespace MESO::FileReader {

@@ -56,6 +56,8 @@ namespace MESO {
 
         Field(fvmMesh::Mesh &mesh, int flag);
 
+        Field(fvmMesh::Mesh *mesh_ptr, int flag);
+
         Field(const Field<FieldType> &other);
 
         [[nodiscard]] fvmMesh::Mesh * get_mesh() const { return mesh_ptr; };
@@ -157,7 +159,7 @@ namespace MESO::fvmMesh {
         void output(const std::string &file_name,
                     std::initializer_list<std::string> names,
                     std::initializer_list<Field<Scalar> *> values,
-                    int step=-1,double solution_time=-1.0);
+                    int step=-1, double solution_time=-1.0);
 
         Field<Scalar> zero_scalar_field(int flag=cell_field_flag);
         Field<Vector> zero_vector_field(int flag=cell_field_flag);

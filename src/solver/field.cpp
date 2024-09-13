@@ -24,7 +24,47 @@ Field<Scalar>::Field(fvmMesh::Mesh &mesh, int flag) : mesh_ptr(&mesh), flag(flag
 }
 
 template<>
+Field<Scalar>::Field(fvmMesh::Mesh *mesh_ptr, int flag) : mesh_ptr(mesh_ptr), flag(flag) {
+    auto &mesh = *mesh_ptr;
+    switch (flag) {
+        case cell_field_flag:
+            len = mesh.NCELL;
+            break;
+        case face_field_flag:
+            len = mesh.NFACE;
+            break;
+        case node_field_flag:
+            len = mesh.NNODE;
+            break;
+        default:
+            logger.error << "Field<Scalar> caught wrong flag: " << flag << std::endl;
+            throw std::invalid_argument("Field<Scalar> caught wrong flag");
+    }
+    values.resize(len, 0.0);
+}
+
+template<>
 Field<Vector>::Field(fvmMesh::Mesh &mesh, int flag) : mesh_ptr(&mesh), flag(flag) {
+    switch (flag) {
+        case cell_field_flag:
+            len = mesh.NCELL;
+            break;
+        case face_field_flag:
+            len = mesh.NFACE;
+            break;
+        case node_field_flag:
+            len = mesh.NNODE;
+            break;
+        default:
+            logger.error << "Field<Scalar> caught wrong flag: " << flag << std::endl;
+            throw std::invalid_argument("Field<Vector> caught wrong flag");
+    }
+    values.resize(len, Vector(0.0, 0.0, 0.0));
+}
+
+template<>
+Field<Vector>::Field(fvmMesh::Mesh *mesh_ptr, int flag) : mesh_ptr(mesh_ptr), flag(flag) {
+    auto &mesh = *mesh_ptr;
     switch (flag) {
         case cell_field_flag:
             len = mesh.NCELL;

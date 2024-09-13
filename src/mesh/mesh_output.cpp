@@ -8,13 +8,15 @@ using namespace MESO::fvmMesh;
 
 
 void Mesh::output(const std::string &file_name) {
+    if (MPI::rank != MPI::main_rank) return;
+    Utils::mkdir("./parsedMesh");
     const int dim = dimension();
     const int DATA_PRECISION = 15;
     const int LINE_DATA_NUM = 30;
     std::fstream fp;
     std::stringstream ss;
-    ss << file_name << ".msh.plt";
-    fp.open(ss.str(), std::ios::out | std::ios::trunc);
+    ss << file_name << ".plt";
+    fp.open("./parsedMesh/" + ss.str(), std::ios::out | std::ios::trunc);
     if (!fp.is_open()) {
         logger.warn << "Cannot open file: " << ss.str() << std::endl;
         fp.close();
@@ -97,6 +99,36 @@ void Mesh::output(const std::string &file_name) {
 
     // close
     fp.close();
+
+    /// Write cell/face/node files
+    {
+        VectorList node_pos;
+        for (auto &it: nodes) {
+            node_pos.push_back(it.position);
+        }
+        Utils::output_list("./parsedMesh/nodePosition", node_pos);
+    }
+    {
+        VectorList cell_pos;
+        ScalarList cell_volume;
+        for (auto &it: cells) {
+            cell_pos.push_back(it.position);
+            cell_volume.push_back(it.volume);
+        }
+        Utils::output_list("./parsedMesh/cellPosition", cell_pos);
+        Utils::output_list("./parsedMesh/cellVolume", cell_volume);
+    }
+    {
+        VectorList face_pos;
+        ScalarList face_area;
+        for (auto &it: faces) {
+            face_pos.push_back(it.position);
+            face_area.push_back(it.area);
+        }
+        Utils::output_list("./parsedMesh/facePosition", face_pos);
+        Utils::output_list("./parsedMesh/faceArea", face_area);
+    }
+
     logger.note << "Write mesh to file: ";
     logger.info << ss.str() << std::endl;
 }

@@ -16,6 +16,8 @@ void MESO::help() {
                  "     --max-step <value:int, default: >          \n"
                  "     --save-interval <value:int, default: 1000>     \n"
                  "     --solver <solver:str>           \n" << std::endl;
+    logger.info << "\n\n./meso-mpi [Options]\n"
+                   "    --mesh <mesh-file>";
 }
 
 
@@ -27,13 +29,8 @@ int MESO::handle_mesh(const std::string &mesh_file, double mesh_scale) {
 #endif
     mesh.info();
     mesh.output(mesh_file);
-
-    auto cell_pos = mesh.zero_vector_field();
-    cell_pos.MeshCellValueToField([](fvmMesh::Cell &cell) { return cell.position; });
-    cell_pos.output(mesh_file + "-cell-position");
     return 0;
 }
-
 
 /// Solver handler
 using namespace MESO;

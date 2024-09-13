@@ -58,8 +58,20 @@ void CDUGKS::initial() {
     auto m1_local = mesh.zero_vector_field();
     for (auto &cell: mesh.cells) {
         auto &group = config.get_cell_group(cell, mesh);
-        auto rho_patch = group.patch.get_scalar("density");
-        auto u_patch = group.patch.get_vector("velocity");
+        auto rho_patch_type = group.patch.get_type("density");
+        Scalar rho_patch;
+        if (rho_patch_type == PatchType::fromFile) {
+            rho_patch = group.patch.get_file_scalar("density", cell.id);
+        } else {
+            rho_patch = group.patch.get_scalar("density");
+        }
+        auto u_patch_type = group.patch.get_type("velocity");
+        Vector u_patch;
+        if (u_patch_type == PatchType::fromFile) {
+            u_patch = group.patch.get_file_vector("velocity", cell.id);
+        } else {
+            u_patch = group.patch.get_vector("velocity");
+        }
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];

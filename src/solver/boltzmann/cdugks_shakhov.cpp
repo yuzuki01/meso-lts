@@ -107,14 +107,36 @@ void CDUGKS_SHAKHOV::initial() {
         /// Init by cell group
         for (auto &cell: mesh.cells) {
             auto &group = config.get_cell_group(cell, mesh);
-            auto T_patch = group.patch.get_scalar("temperature");
+
+            auto rho_patch_type = group.patch.get_type("density");
+            Scalar rho_patch;
+            if (rho_patch_type == PatchType::fromFile) {
+                rho_patch = group.patch.get_file_scalar("density", cell.id);
+            } else {
+                rho_patch = group.patch.get_scalar("density");
+            }
+            auto u_patch_type = group.patch.get_type("velocity");
+            Vector u_patch;
+            if (u_patch_type == PatchType::fromFile) {
+                u_patch = group.patch.get_file_vector("velocity", cell.id);
+            } else {
+                u_patch = group.patch.get_vector("velocity");
+            }
+            auto T_patch_type = group.patch.get_type("temperature");
+            Scalar T_patch;
+            if (T_patch_type == PatchType::fromFile) {
+                T_patch = group.patch.get_file_scalar("temperature", cell.id);
+            } else {
+                T_patch = group.patch.get_scalar("temperature");
+            }
+
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
                 auto &particle = dvs_mesh.cells[dvs_id];
-                auto c = particle.position - group.patch.get_vector("velocity");
+                auto c = particle.position - u_patch;
                 auto cc = c * c;
                 auto kk = particle.position * particle.position;
-                auto g = g_maxwell(group.patch.get_scalar("density"), T_patch, cc);
+                auto g = g_maxwell(rho_patch, T_patch, cc);
                 auto h = h_maxwell(T_patch, g);
                 g_cell[p][cell.id] = g;
                 h_cell[p][cell.id] = h;

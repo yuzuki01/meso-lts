@@ -17,13 +17,18 @@ namespace MESO {
     /// list
     typedef std::vector<ObjectId> ObjectIdList;
     typedef std::vector<ObjectIdList> GroupList;
+    typedef std::vector<ObjectType> ObjectTypeList;
     typedef std::vector<Scalar> ScalarList;
     typedef std::vector<Vector> VectorList;
     /// map
+    typedef std::unordered_map<String, String> StringMap;
     typedef std::unordered_map<ObjectId, ObjectId> ObjectIdMap;
     typedef std::unordered_map<String, ObjectType> ObjectTypeMap;
     typedef std::unordered_map<String, Scalar> ScalarMap;
     typedef std::unordered_map<String, Vector> VectorMap;
+    typedef std::unordered_map<String, ObjectTypeList> ObjectTypeListMap;
+    typedef std::unordered_map<String, ScalarList> ScalarListMap;
+    typedef std::unordered_map<String, VectorList> VectorListMap;
 }
 
 #endif //CORE_TYPE_DEF_H

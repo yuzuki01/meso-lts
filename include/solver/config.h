@@ -29,6 +29,8 @@ namespace MESO::Solver {
         const String fixedValue_str = "fixedValue";
         const ObjectType calculated = 2;
         const String calculated_str = "calculated";
+        const ObjectType fromFile = 3;
+        const String fromFile_str = "fromFile";
     }
 
     class Patch {
@@ -37,6 +39,9 @@ namespace MESO::Solver {
         ObjectTypeMap ints;
         ScalarMap scalars;
         VectorMap vectors;
+        ObjectTypeListMap ints_list;
+        ScalarListMap scalars_list;
+        VectorListMap vectors_list;
     public:
         void set_value(StringList &string_list);
 
@@ -47,6 +52,12 @@ namespace MESO::Solver {
         Scalar get_scalar(const String &key);
 
         Vector get_vector(const String &key);
+
+        ObjectType get_file_int(const String &key, ObjectId id);
+
+        Scalar get_file_scalar(const String &key, ObjectId id);
+
+        Vector get_file_vector(const String &key, ObjectId id);
     };
 
     struct Mark {

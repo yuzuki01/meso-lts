@@ -11,7 +11,7 @@ Ma          0.17723033393597562
 CFL         0.8
 
 gradient-switch     True
-output-np           False
+output-np           True
 
 gas-constant        208.24434389140274
 gas-k               0
