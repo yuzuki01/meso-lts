@@ -105,3 +105,27 @@ VectorList Utils::read_np_file<Vector>(const MESO::String &file_path) {
     }
     return result;
 }
+
+StringList Utils::exec_script(const MESO::String &script) {
+    std::array<char, 1024> buffer{};
+    StringList result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(
+            popen(("python3 " + script).c_str(), "r"), pclose);
+
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        std::string line(buffer.data());
+        if (!line.empty() && line.back() == '\n') {
+            line.erase(line.length() - 1);
+        }
+        if (!line.empty() && line.back() == '\r') {
+            line.erase(line.length() - 1);
+        }
+        result.push_back(line);
+    }
+
+    return result;
+}

@@ -1,23 +1,23 @@
 #ifndef MESO_CORE_H
 #define MESO_CORE_H
 
-#include <ctime>
+#include <algorithm>
+#include <array>
 #include <cmath>
 #include <csignal>
 #include <cstring>
+#include <ctime>
+#include <exception>
+#include <fstream>
+#include <functional>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
-#include <fstream>
-#include <exception>
-#include <array>
 #include <vector>
 #include <unordered_map>
-#include <algorithm>
 #include <utility>
 #include <random>
-#include <functional>
-#include <omp.h>
+#include <memory>
 #include <mpi.h>
 
 /// UDF
@@ -46,6 +46,9 @@ namespace MESO::Utils {
 
     template<class T>
     std::vector<T> read_np_file(const String &file_path);
+
+    /// receive python3 script prints
+    StringList exec_script(const String &script);
 }
 
 namespace MESO::FileReader {
