@@ -52,6 +52,7 @@ bool Utils::is_converged(const List<Scalar> &residual_list, Scalar limit) {
 
 template<>
 void Utils::output_list(const String &file_path, List<Scalar> &data) {
+    if (MPI::rank != MPI::main_rank) return;
     const int DATA_PRECISION=18;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
@@ -62,6 +63,7 @@ void Utils::output_list(const String &file_path, List<Scalar> &data) {
 
 template<>
 void Utils::output_list(const String &file_path, List<Vector> &data) {
+    if (MPI::rank != MPI::main_rank) return;
     const int DATA_PRECISION=18;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
@@ -72,6 +74,7 @@ void Utils::output_list(const String &file_path, List<Vector> &data) {
 
 template<>
 void Utils::output_list(const String &file_path, List<List<ObjectId>> &data) {
+    if (MPI::rank != MPI::main_rank) return;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
     for (auto &list : data) {
@@ -86,6 +89,7 @@ void Utils::output_list(const String &file_path, List<List<ObjectId>> &data) {
 
 template<>
 void Utils::output_list(const String &file_path, List<Set<ObjectId>> &data) {
+    if (MPI::rank != MPI::main_rank) return;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
     for (auto &set : data) {
