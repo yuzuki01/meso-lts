@@ -3,29 +3,29 @@
 
 using namespace MESO;
 
-Vector edge_vector(int start, int end, const NodeList &node_list);
+Vector edge_vector(int start, int end, const List<fvmMesh::Node> &node_list);
 
 double vector_angle_2d(const Vector &_vec1, const Vector &_vec2);
 
 namespace Area {
-    double edge(const NodeList &node_list);
+    double edge(const List<fvmMesh::Node> &node_list);
 
-    double tria(const NodeList &node_list);
+    double tria(const List<fvmMesh::Node> &node_list);
 
-    double quad(const NodeList &node_list);
+    double quad(const List<fvmMesh::Node> &node_list);
 }
 
 namespace Volume {
     using Area::tria;
     using Area::quad;
 
-    double brick(const NodeList &node_list);
+    double brick(const List<fvmMesh::Node> &node_list);
 
-    double wedge(const NodeList &node_list);
+    double wedge(const List<fvmMesh::Node> &node_list);
 
-    double tetra(const NodeList &node_list);
+    double tetra(const List<fvmMesh::Node> &node_list);
 
-    double pyram(const NodeList &node_list);
+    double pyram(const List<fvmMesh::Node> &node_list);
 }
 
 int Geom::face_num(ObjectType geom_type) {
@@ -65,7 +65,7 @@ int Geom::node_num(MESO::ObjectType geom_type) {
     }
 }
 
-Vector Geom::calculate_position(const MESO::NodeList &node_list) {
+Vector Geom::calculate_position(const MESO::List<fvmMesh::Node> &node_list) {
     Vector pos(0.0, 0.0, 0.0);
     const int count = int(node_list.size());
     for (auto &it: node_list) {
@@ -74,7 +74,7 @@ Vector Geom::calculate_position(const MESO::NodeList &node_list) {
     return pos * (1.0 / count);
 }
 
-Scalar Geom::calculate_area(ObjectType geom_type, const NodeList &node_list) {
+Scalar Geom::calculate_area(ObjectType geom_type, const List<fvmMesh::Node> &node_list) {
     switch (geom_type) {
         case Edge:
             return Area::edge(node_list);
@@ -87,7 +87,7 @@ Scalar Geom::calculate_area(ObjectType geom_type, const NodeList &node_list) {
     }
 }
 
-Scalar Geom::calculate_volume(MESO::ObjectType geom_type, const MESO::NodeList &node_list) {
+Scalar Geom::calculate_volume(MESO::ObjectType geom_type, const MESO::List<fvmMesh::Node> &node_list) {
     switch (geom_type) {
         case Tria:
             return Volume::tria(node_list);
@@ -107,7 +107,7 @@ Scalar Geom::calculate_volume(MESO::ObjectType geom_type, const MESO::NodeList &
 }
 
 Vector Geom::calculate_normal_vector(ObjectType face_geom_type, MESO::Vector &cell_position,
-                                     MESO::Vector &face_position, const MESO::NodeList &node_list) {
+                                     MESO::Vector &face_position, const MESO::List<fvmMesh::Node> &node_list) {
     Vector vcf = face_position - cell_position,
             vfn = edge_vector(0, 1, node_list).normalize();
     if (face_geom_type == Edge) {
@@ -130,7 +130,7 @@ Vector Geom::calculate_normal_vector(ObjectType face_geom_type, MESO::Vector &ce
     return (nv * vcf >= 0.0) ? nv : -nv;
 }
 
-KeyString Geom::generate_key(const MESO::ObjectIdList &node_list) {
+KeyString Geom::generate_key(const MESO::List<ObjectId> &node_list) {
     const int len = int(node_list.size());
     /// find where is min
     int pos = 0;
@@ -162,7 +162,7 @@ KeyString Geom::generate_key(const MESO::ObjectIdList &node_list) {
 }
 
 
-void fvmMesh::Cell::compute_least_square(const CellList &neighbor_cells, int dimension) {
+void fvmMesh::Cell::compute_least_square(const List<Cell> &neighbor_cells, int dimension) {
     least_square.neighbor_num = int(neighbor_cells.size());
     least_square.dr.resize(least_square.neighbor_num);
     least_square.weight.resize(least_square.neighbor_num);
@@ -211,7 +211,7 @@ void fvmMesh::Cell::compute_least_square(const CellList &neighbor_cells, int dim
 }
 
 /// Local
-Vector edge_vector(int start, int end, const NodeList &node_list) {
+Vector edge_vector(int start, int end, const List<fvmMesh::Node> &node_list) {
     return node_list[end].position - node_list[start].position;
 }
 
@@ -220,37 +220,37 @@ double vector_angle_2d(const Vector &_vec1, const Vector &_vec2) {
     return acos((_vec1 * _vec2) / (m1 * m2));
 }
 
-double Area::edge(const NodeList &node_list) {
+double Area::edge(const List<fvmMesh::Node> &node_list) {
     return edge_vector(0, 1, node_list).magnitude();
 }
 
-double Area::tria(const NodeList &node_list) {
+double Area::tria(const List<fvmMesh::Node> &node_list) {
     Vector p1 = edge_vector(0, 1, node_list),
             p2 = edge_vector(0, 2, node_list);
     return 0.5 * (p1 ^ p2).magnitude();
 }
 
-double Area::quad(const NodeList &node_list) {
+double Area::quad(const List<fvmMesh::Node> &node_list) {
     return tria({node_list[0], node_list[1], node_list[2]})
            + tria({node_list[0], node_list[3], node_list[2]});
 }
 
-double Volume::brick(const MESO::NodeList &node_list) {
+double Volume::brick(const MESO::List<fvmMesh::Node> &node_list) {
     return wedge({node_list[0], node_list[1], node_list[5], node_list[2], node_list[3], node_list[7]})
            + wedge({node_list[0], node_list[4], node_list[5], node_list[2], node_list[6], node_list[7]});
 }
 
-double Volume::wedge(const MESO::NodeList &node_list) {
+double Volume::wedge(const MESO::List<fvmMesh::Node> &node_list) {
     return pyram({node_list[0], node_list[2], node_list[5], node_list[3], node_list[1]})
            + tetra({node_list[1], node_list[3], node_list[4], node_list[5]});
 }
 
-double Volume::pyram(const MESO::NodeList &node_list) {
+double Volume::pyram(const MESO::List<fvmMesh::Node> &node_list) {
     return tetra({node_list[0], node_list[1], node_list[2], node_list[4]})
            + tetra({node_list[1], node_list[2], node_list[3], node_list[4]});
 }
 
-double Volume::tetra(const MESO::NodeList &node_list) {
+double Volume::tetra(const MESO::List<fvmMesh::Node> &node_list) {
     Vector p1 = edge_vector(0, 1, node_list),
             p2 = edge_vector(0, 2, node_list),
             p3 = edge_vector(0, 3, node_list);

@@ -57,8 +57,8 @@ void CDUGKS_SHAKHOV::initial() {
     solution_time = 0.0;
     gamma = (K + 5.0) / (K + 3.0);
     Cv = (K + 3.0) * R * 0.5;
-    double RT = R * T0;
-    double c_sound = sqrt(gamma * RT);
+    Scalar RT = R * T0;
+    Scalar c_sound = sqrt(gamma * RT);
     mfp = Kn * L0;
     Re = Ma * c_sound * Rho0 * L0 / miu0;
     dt = CFL * mesh.min_cell_size / dvs_mesh.max_cell_magnitude;
@@ -178,35 +178,35 @@ void CDUGKS_SHAKHOV::initial() {
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
-inline MESO::Scalar CDUGKS_SHAKHOV::tau_f(double rho, double t) const {
+inline MESO::Scalar CDUGKS_SHAKHOV::tau_f(Scalar rho, Scalar t) const {
     return miu0 * pow(t / T0, vhs_index) / (rho * R * t);
 }
 
-inline MESO::Scalar CDUGKS_SHAKHOV::g_maxwell(double rho, double t, double cc) const {
+inline MESO::Scalar CDUGKS_SHAKHOV::g_maxwell(Scalar rho, Scalar t, Scalar cc) const {
     if (D == 2) {
-        double over_RT2 = 0.5 / (R * t);
+        Scalar over_RT2 = 0.5 / (R * t);
         return rho * over_RT2 / M_PI * exp(-cc * over_RT2);
     }
-    double RT = R * t;
+    Scalar RT = R * t;
     return rho / pow(2.0 * M_PI * RT, 1.5) * exp(-cc * 0.5 / RT);
 }
 
-inline MESO::Scalar CDUGKS_SHAKHOV::h_maxwell(double t, double gm) const {
+inline MESO::Scalar CDUGKS_SHAKHOV::h_maxwell(Scalar t, Scalar gm) const {
     return (K + 3.0 - D) * (R * t) * gm;
 }
 
-inline MESO::Scalar CDUGKS_SHAKHOV::g_shakhov(double rho, double t, double cc, double cq, double gm) const {
+inline MESO::Scalar CDUGKS_SHAKHOV::g_shakhov(Scalar rho, Scalar t, Scalar cc, Scalar cq, Scalar gm) const {
     /// g_shakhov = g_maxwell + g_pr
-    double RT = R * t;
-    double p = rho * RT;
+    Scalar RT = R * t;
+    Scalar p = rho * RT;
     return (1.0 - Pr) * (cq / (5.0 * p * RT)) * (cc / RT - D - 2.0) * gm + gm;
 }
 
-inline MESO::Scalar CDUGKS_SHAKHOV::h_shakhov(double rho, double t, double cc, double cq, double gm) const {
+inline MESO::Scalar CDUGKS_SHAKHOV::h_shakhov(Scalar rho, Scalar t, Scalar cc, Scalar cq, Scalar gm) const {
     /// h_shakhov = h_maxwell + h_pr
-    double RT = R * t;
-    double p = rho * RT;
-    double h_m = h_maxwell(t, gm);
+    Scalar RT = R * t;
+    Scalar p = rho * RT;
+    Scalar h_m = h_maxwell(t, gm);
     return (1.0 - Pr) * (cq / (5.0 * p)) * ((cc / RT - D) * (K + 3.0 - D) - 2.0 * K) * gm + h_m;
 }
 
@@ -223,7 +223,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
             Vector &nv = face.normal_vector[0];
             auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
             Vector dr_ij = face.position - cell.position;
-            double phi_g = 1.0, phi_h = 1.0;
+            Scalar phi_g = 1.0, phi_h = 1.0;
             /// venkata limiter
             if (limiter_switch) {
                 phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[cell.id], face, cell, venkata_k);
@@ -303,8 +303,8 @@ void CDUGKS_SHAKHOV::reconstruct() {
         }
     }
     {
-        ObjectIdMap wall_id_map;
-        ScalarList wall_rho_local, wall_rho0_local;
+        Map<ObjectId> wall_id_map;
+        List<Scalar> wall_rho_local, wall_rho0_local;
 
         /// boundary
         for (auto &face: mesh.faces) {
@@ -408,7 +408,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     break;
                 case BoundaryType::slip_wall:
                 case BoundaryType::wall: {
-                    double rho_w, rho_w0;
+                    Scalar rho_w, rho_w0;
                     rho_w = rho_w0 = 0.0;
                     Vector u_w = mark.patch.get_vector("velocity");
                     auto T_patch_type = mark.patch.get_type("temperature");
@@ -438,7 +438,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     break;
                 case BoundaryType::symmetry: {
                     auto direction = mark.patch.get_int("direction");
-                    ScalarList g_all(dvs_mesh.NCELL), h_all(dvs_mesh.NCELL);
+                    List<Scalar> g_all(dvs_mesh.NCELL), h_all(dvs_mesh.NCELL);
                     MPI::GatherFieldList(g_face, g_all, face.id);
                     MPI::GatherFieldList(h_face, h_all, face.id);
                     for (int p = 0; p < mpi_task.size; ++p) {
@@ -457,8 +457,8 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     break;
             }
         }
-        ScalarList wall_rho_global;
-        ScalarList wall_rho0_global;
+        List<Scalar> wall_rho_global;
+        List<Scalar> wall_rho0_global;
         MPI::AllReduce(wall_rho_local, wall_rho_global);
         MPI::AllReduce(wall_rho0_local, wall_rho0_global);
 
@@ -494,7 +494,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     auto alpha_u = mark.patch.get_scalar("slip-wall-alpha-u");
                     auto alpha_T = mark.patch.get_scalar("slip-wall-alpha-T");
 
-                    ScalarList g_all(dvs_mesh.NCELL), h_all(dvs_mesh.NCELL);
+                    List<Scalar> g_all(dvs_mesh.NCELL), h_all(dvs_mesh.NCELL);
                     MPI::GatherFieldList(g_face, g_all, face.id);
                     MPI::GatherFieldList(h_face, h_all, face.id);
                     auto &nv = face.normal_vector[1];
@@ -534,7 +534,7 @@ void CDUGKS_SHAKHOV::fvm_update() {
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
-            double flux_g_tmp = 0.0, flux_h_tmp = 0.0;
+            Scalar flux_g_tmp = 0.0, flux_h_tmp = 0.0;
             for (auto face_id: cell.face_id) {
                 auto &face = mesh.faces[face_id];
                 auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
@@ -638,7 +638,7 @@ void CDUGKS_SHAKHOV::do_step() {
             auto T_res = residual(T_cell_res, T_cell);
             auto q_res = residual(q_cell_res, q_cell);
             logger.note << "step: " << step << std::endl;
-            ScalarList residual_list;
+            List<Scalar> residual_list;
             if (mesh.dimension() == 2) {
                 residual_list = {rho_res, T_res, vel_res.x, vel_res.y, q_res.x, q_res.y};
                 Utils::print_names_and_values({"Res[Rho]", "Res[T]", "Res[u]", "Res[v]", "Res[qx]", "Res[qy]"},

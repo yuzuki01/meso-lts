@@ -42,7 +42,7 @@ void CDUGKS::initial() {
     step = 0;
     converge_state = 0;
     solution_time = 0.0;
-    double c_sound = sqrt(RT);
+    Scalar c_sound = sqrt(RT);
     tau = (L0 * Ma) / (Re * c_sound);
     dt = CFL * ((mesh.min_cell_size / 2.0) / dvs_mesh.max_cell_magnitude);
     half_dt = 0.5 * dt;
@@ -75,7 +75,7 @@ void CDUGKS::initial() {
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
-            double f = f_maxwell(rho_patch,u_patch, particle.position);
+            Scalar f = f_maxwell(rho_patch,u_patch, particle.position);
             f_cell[p][cell.id] = f;
             m0_local[cell.id] += particle.volume * f;
             m1_local[cell.id] += particle.volume * f * particle.position;
@@ -102,10 +102,10 @@ void CDUGKS::initial() {
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
-MESO::Scalar CDUGKS::f_maxwell(double rho, const Vector &u, const Vector &particle_velocity) const {
-    double over_RT = 1.0 / RT;
-    double ku_RT = (u * particle_velocity) * over_RT;
-    double uu_RT = (u * u) * over_RT;
+MESO::Scalar CDUGKS::f_maxwell(Scalar rho, const Vector &u, const Vector &particle_velocity) const {
+    Scalar over_RT = 1.0 / RT;
+    Scalar ku_RT = (u * particle_velocity) * over_RT;
+    Scalar uu_RT = (u * u) * over_RT;
     return rho * (1.0 + ku_RT + (ku_RT * ku_RT - uu_RT) * 0.5);
 }
 
@@ -132,7 +132,7 @@ void CDUGKS::reconstruct() {
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
                 auto &particle = dvs_mesh.cells[dvs_id];
-                double f = f_face[p][face.id];
+                Scalar f = f_face[p][face.id];
                 m0_local[face.id] += particle.volume * f;
                 m1_local[face.id] += particle.volume * f * particle.position;
             }
@@ -141,7 +141,7 @@ void CDUGKS::reconstruct() {
         auto m1 = mesh.zero_vector_field(face_field_flag);
         MPI::AllReduce(m0_local, m0);
         MPI::AllReduce(m1_local, m1);
-        double c_eq = half_dt / (2.0 * tau + half_dt);
+        Scalar c_eq = half_dt / (2.0 * tau + half_dt);
         /// get original f on face
         for (auto &face: mesh.faces) {
             auto rho = m0[face.id];
@@ -156,8 +156,8 @@ void CDUGKS::reconstruct() {
         }
     }
     {
-        ObjectIdMap wall_rho_map;
-        ScalarList wall_rho_local, wall_rho0_local;
+        Map<ObjectId> wall_rho_map;
+        List<Scalar> wall_rho_local, wall_rho0_local;
 
         /// boundary
         for (auto &face: mesh.faces) {
@@ -187,14 +187,14 @@ void CDUGKS::reconstruct() {
                     }
                     break;
                 case BoundaryType::wall: {
-                    double rho_w, rho_w0;
+                    Scalar rho_w, rho_w0;
                     rho_w = rho_w0 = 0.0;
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
-                        double kn = particle.position * nv;
+                        Scalar kn = particle.position * nv;
                         if (kn >= 0.0) {
-                            double f_eq = f_maxwell(1.0, mark.patch.get_vector("velocity"),
+                            Scalar f_eq = f_maxwell(1.0, mark.patch.get_vector("velocity"),
                                                     particle.position);
                             rho_w0 += kn * particle.volume * f_eq;
                         } else {
@@ -210,8 +210,8 @@ void CDUGKS::reconstruct() {
                     break;
             }
         }
-        ScalarList wall_rho_global;
-        ScalarList wall_rho0_global;
+        List<Scalar> wall_rho_global;
+        List<Scalar> wall_rho0_global;
         MPI::AllReduce(wall_rho_local, wall_rho_global);
         MPI::AllReduce(wall_rho0_local, wall_rho0_global);
 
@@ -223,7 +223,7 @@ void CDUGKS::reconstruct() {
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
-                        double kn = particle.position * nv;
+                        Scalar kn = particle.position * nv;
                         if (kn >= 0.0) {
                             int wall_rho_list_id = wall_rho_map[face.id];
                             auto rho_w = wall_rho_global[wall_rho_list_id] / wall_rho0_global[wall_rho_list_id];
@@ -250,7 +250,7 @@ void CDUGKS::fvm_update() {
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
-            double flux = 0.0;
+            Scalar flux = 0.0;
             for (auto face_id: cell.face_id) {
                 auto &face = mesh.faces[face_id];
                 auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
@@ -304,10 +304,10 @@ void CDUGKS::do_step() {
     solution_time += dt;
     if (MPI::rank == MPI::main_rank) {
         if (step % residual_interval == 0) {
-            double m0_res = residual(rho_cell_res, rho_cell);
+            Scalar m0_res = residual(rho_cell_res, rho_cell);
             Vector m1_res = residual(vel_cell_res, vel_cell);
             logger.note << "step: " << step << std::endl;
-            ScalarList residual_list;
+            List<Scalar> residual_list;
             if (mesh.dimension() == 2) {
                 residual_list = {m0_res, m1_res.x, m1_res.y};
                 Utils::print_names_and_values({"Res[Rho]", "Res[U]", "Res[V]"},

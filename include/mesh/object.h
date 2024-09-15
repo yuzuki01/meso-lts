@@ -15,9 +15,6 @@ namespace MESO::fvmMesh {
 }
 
 namespace MESO {
-    typedef std::vector<fvmMesh::Node> NodeList;
-    typedef std::vector<fvmMesh::Face> FaceList;
-    typedef std::vector<fvmMesh::Cell> CellList;
 
     struct fvmMesh::LeastSquare {
         /**
@@ -25,8 +22,8 @@ namespace MESO {
          * grad = Inv(A) . b
          **/
         int neighbor_num{};
-        ScalarList weight;
-        VectorList dr;
+        List<Scalar> weight;
+        List<Vector> dr;
         Vector Cx, Cy, Cz;
     };
 
@@ -82,7 +79,7 @@ namespace MESO::fvmMesh {
         ObjectId id;
         ObjectId group_id = 0;      /// 0 for interior node
         Position position;
-        ObjectIdList neighbors;     /// neighbor cells contained the node
+        List<ObjectId> neighbors;     /// neighbor cells contained the node
 
         Node(ObjectId id, const Position &position) : id(id), position(position) {};
     };
@@ -94,12 +91,12 @@ namespace MESO::fvmMesh {
         ObjectId group_id = 0;
         Position position;
         Scalar area{};
-        ObjectIdList node_id;
-        ObjectIdSet cell_id{-1, -1};    /// neighbor cell
-        ObjectIdSet cell_face_id{-1, -1};
-        VectorSet normal_vector;
+        List<ObjectId> node_id;
+        Set<ObjectId> cell_id{-1, -1};    /// neighbor cell
+        Set<ObjectId> cell_face_id{-1, -1};
+        Set<Vector> normal_vector;
 
-        Face(ObjectId id, ObjectType geom_type, ObjectIdList node_list);
+        Face(ObjectId id, ObjectType geom_type, List<ObjectId> node_list);
     };
 
     class Cell {
@@ -111,31 +108,31 @@ namespace MESO::fvmMesh {
         ObjectId partition_cell_id{};
         Position position;
         Scalar volume{};
-        ObjectIdList node_id;
-        ObjectIdList face_id;
-        ObjectIdList neighbors;     /// neighbor cells shared the face
+        List<ObjectId> node_id;
+        List<ObjectId> face_id;
+        List<ObjectId> neighbors;     /// neighbor cells shared the face
         LeastSquare least_square;
         Symmetry symmetry;
 
         explicit Cell(ObjectId id) : id(id) {};     // dvs init
 
-        Cell(ObjectId id, ObjectType geom_type, ObjectIdList &node_list);
+        Cell(ObjectId id, ObjectType geom_type, List<ObjectId> &node_list);
 
-        void compute_least_square(const CellList &neighbor_cells, int dimension);  // defined in geom.cpp
+        void compute_least_square(const List<Cell> &neighbor_cells, int dimension);  // defined in geom.cpp
     };
 
     class Mesh {
     public:
         int NNODE{}, NFACE{}, NCELL{}, NZONE{}, NMARK{}, NDFCD{}, NDFVL{};
         double total_volume{};
-        NodeList nodes;
-        FaceList faces;
-        CellList cells;
-        StringList cell_names;
-        GroupList cell_groups;
-        StringList face_names = {"fluid-interior"};
-        GroupList face_groups;
-        GroupList cell_partition_groups, face_partition_groups;
+        List<Node> nodes;
+        List<Face> faces;
+        List<Cell> cells;
+        List<String> cell_names;
+        List<List<ObjectId>> cell_groups;
+        List<String> face_names = {"fluid-interior"};
+        List<List<ObjectId>> face_groups;
+        List<List<ObjectId>> cell_partition_groups, face_partition_groups;
 
         double min_cell_size{};
         double max_cell_magnitude{};

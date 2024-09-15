@@ -35,7 +35,7 @@ namespace MESO::DefaultValue {
 namespace MESO::Utils {
     StringList split(const std::string &_str);
 
-    void print_names_and_values(const StringList &names, const ScalarList &values);
+    void print_names_and_values(const StringList &names, const List<Scalar> &values);
 
     int mkdir(const String &dir_name);
 

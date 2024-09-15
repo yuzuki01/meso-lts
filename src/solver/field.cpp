@@ -203,12 +203,12 @@ void Field<Vector>::output(const std::string &file_name) {
 }
 
 /// MPI
-void MESO::MPI::AllReduce(MESO::ScalarList &local, MESO::ScalarList &global) {
+void MESO::MPI::AllReduce(MESO::List<Scalar> &local, MESO::List<Scalar> &global) {
     if (local.size() != global.size()) global.resize(local.size());
     MPI_Allreduce(local.data(), global.data(), int(global.size()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 }
 
-void MESO::MPI::AllReduce(MESO::VectorList &local, MESO::VectorList &global) {
+void MESO::MPI::AllReduce(MESO::List<Vector> &local, MESO::List<Vector> &global) {
     if (local.size() != global.size()) global.resize(local.size());
     MPI_Allreduce(local.data(), global.data(), int(global.size()), UDF::MPI_Vector, UDF::MPI_VectorSum, MPI_COMM_WORLD);
 }
@@ -223,22 +223,24 @@ void MESO::MPI::AllReduce(Field<MESO::Vector> &local, Field<MESO::Vector> &globa
 }
 
 /// Gather
-void MESO::MPI::GatherFieldList(std::vector<Field<Scalar>> &local, MESO::ScalarList &global, MESO::ObjectId column_id) {
+void
+MESO::MPI::GatherFieldList(std::vector<Field<Scalar>> &local, MESO::List<Scalar> &global, MESO::ObjectId column_id) {
     int local_size = static_cast<int>(local.size());
-    ObjectIdList recv_counts(MPI::processor_num);
+    List<ObjectId> recv_counts(MPI::processor_num);
     MPI_Gather(&local_size, 1, MPI_INT, recv_counts.data(), 1, MPI_INT, 0, MPI_COMM_WORLD);
-    ObjectIdList displacements(MPI::processor_num, 0);
+    List<ObjectId> displacements(MPI::processor_num, 0);
     if (MPI::rank == 0) {
         for (int i = 0; i < MPI::processor_num; ++i) {
             displacements[i] = displacements[i - 1] + recv_counts[i - 1];
         }
     }
-    MESO::ScalarList gathered_data(displacements[MPI::processor_num - 1] + recv_counts[MPI::processor_num - 1]);
-    MESO::ScalarList local_list(local_size);
+    MESO::List<Scalar> gathered_data(displacements[MPI::processor_num - 1] + recv_counts[MPI::processor_num - 1]);
+    MESO::List<Scalar> local_list(local_size);
     for (int i = 0; i < local_size; ++i) {
         local_list[i] = local[i][column_id];
     }
-    MPI_Gatherv(local_list.data(), local_size, MPI_DOUBLE, gathered_data.data(), recv_counts.data(), displacements.data(),
+    MPI_Gatherv(local_list.data(), local_size, MPI_DOUBLE, gathered_data.data(), recv_counts.data(),
+                displacements.data(),
                 MPI_DOUBLE, 0, MPI_COMM_WORLD);
     for (int i = 0; i < static_cast<int>(gathered_data.size()); ++i) {
         global[i] = gathered_data[i];

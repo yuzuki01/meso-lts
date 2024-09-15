@@ -59,7 +59,7 @@ MESO::fvmMesh::Mesh Gambit::parse_mesh_strings() {
                 int geom_type = std::stoi(data[1]);
                 int node_count = std::stoi(data[2]);
                 int data_len = int(data.size());
-                ObjectIdList node_list;
+                List<ObjectId> node_list;
                 for (int j = 3; j < data_len; ++j) {
                     int node_id = std::stoi(data[j]) - 1;
                     node_list.push_back(node_id);

@@ -8,7 +8,7 @@
 
 namespace MESO::Solver {
 
-    extern std::unordered_map<std::string, int> mark_type_map;
+    extern Dict<int> mark_type_map;
 
     enum BoundaryType {
         fluid_interior,
@@ -35,13 +35,13 @@ namespace MESO::Solver {
 
     class Patch {
     private:
-        ObjectTypeMap type;
-        ObjectTypeMap ints;
-        ScalarMap scalars;
-        VectorMap vectors;
-        ObjectTypeListMap ints_list;
-        ScalarListMap scalars_list;
-        VectorListMap vectors_list;
+        Dict<ObjectType> type;
+        Dict<ObjectType> ints;
+        Dict<Scalar> scalars;
+        Dict<Vector> vectors;
+        Dict<List<ObjectType>> ints_list;
+        Dict<List<Scalar>> scalars_list;
+        Dict<List<Vector>> vectors_list;
     public:
         void set_value(StringList &string_list);
 
@@ -61,46 +61,33 @@ namespace MESO::Solver {
     };
 
     struct Mark {
-        std::string name;
+        String name;
         ObjectId id;
         ObjectType type;
-        std::string type_name;
+        String type_name;
         Patch patch;
-        /*
-        double density;             // inlet density
-        double temperature=0.0;         // wall temperature, flow temperature
-        double pressure;            // total pressure
-        Vector velocity;            // inlet velocity, wall velocity
-        double slip_wall_alpha=0.0;
-        int direction=0;
-         */
     };
 
     struct Group {
-        std::string name;
+        String name;
         ObjectId id;
         Patch patch;
-        /*
-        double density;
-        double temperature;
-        Vector velocity;
-         */
     };
 
-    typedef std::string ConfigKey;
+    typedef String ConfigKey;
 
     class Config {
     public:
-        std::unordered_map<std::string, std::string> settings;
-        std::unordered_map<std::string, Group> groups;
-        std::unordered_map<std::string, Mark> marks;
+        Dict<String> settings;
+        Dict<Group> groups;
+        Dict<Mark> marks;
 
         Config() = default;
 
-        explicit Config(const std::string &file_path);
+        explicit Config(const String &file_path);
 
         /**
-         * T = [int, double, bool, std::string]
+         * T = [int, double, bool, String]
          * 用法:
          *  auto is_limiter_open = config.get<bool>("limiter-switch", true);
          **/

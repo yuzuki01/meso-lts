@@ -11,12 +11,19 @@ namespace MESO::Geom {
     const ObjectType Pyram = 7;
 
     int face_num(ObjectType geom_type);
+
     int node_num(ObjectType geom_type);
-    Vector calculate_position(const NodeList &node_list);
-    Scalar calculate_area(ObjectType geom_type, const NodeList &node_list);
-    Scalar calculate_volume(ObjectType geom_type, const NodeList &node_list);
-    Vector calculate_normal_vector(ObjectType face_geom_type, Vector &cell_position, Vector &face_position, const NodeList &node_list);
-    KeyString generate_key(const ObjectIdList &node_list);
+
+    Vector calculate_position(const List<fvmMesh::Node> &node_list);
+
+    Scalar calculate_area(ObjectType geom_type, const List<fvmMesh::Node> &node_list);
+
+    Scalar calculate_volume(ObjectType geom_type, const List<fvmMesh::Node> &node_list);
+
+    Vector calculate_normal_vector(ObjectType face_geom_type, Vector &cell_position, Vector &face_position,
+                                   const List<fvmMesh::Node> &node_list);
+
+    KeyString generate_key(const List<ObjectId> &node_list);
 }
 
 #endif //MESH_GEOM_H

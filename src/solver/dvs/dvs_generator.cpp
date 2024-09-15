@@ -31,7 +31,7 @@ fvmMesh::Mesh DVS::generate_dvs(const std::string &file_path, GaussHermiteParams
     fvmMesh::Mesh mesh;
     const double x_scale = sqrt(2.0 * params.RT);
     const double w_scale = 1.0 / sqrt(M_PI);
-    ScalarList x_list(n), w_list(n);
+    List<Scalar> x_list(n), w_list(n);
     for (int i = 0; i < n; ++i) {
         data = MESO::Utils::split(lines[i + 1]);    // skip first line
         x_list[i] = x_scale * std::stod(data[0]);
@@ -101,7 +101,7 @@ fvmMesh::Mesh DVS::generate_dvs(const std::string &file_path, NewtonCotesParams 
     int total_point = n * mount + 1;
     auto &p_weight = nc_weight[n];
     double dh = 2.0 * scale / mount;
-    ScalarList coordinate(total_point), weight(total_point);
+    List<Scalar> coordinate(total_point), weight(total_point);
     fvmMesh::Mesh mesh;
     for (int i = 0; i < total_point; i++) {
         coordinate[i] = scale * double(2 * i + 1 - total_point) / double(total_point - 1);

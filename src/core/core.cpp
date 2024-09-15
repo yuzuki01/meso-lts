@@ -21,7 +21,7 @@ StringList Utils::split(const String &_str) {
     return data;
 }
 
-void Utils::print_names_and_values(const StringList &names, const ScalarList &values) {
+void Utils::print_names_and_values(const StringList &names, const List<Scalar> &values) {
     if (names.size() != values.size()) {
         throw std::invalid_argument("MESO::Utils::print_names_and_values() got unmatched size.");
     }
@@ -35,14 +35,14 @@ void Utils::print_names_and_values(const StringList &names, const ScalarList &va
     logger.info << std::endl;
 }
 
-int Utils::mkdir(const MESO::String &dir_name) {
+int Utils::mkdir(const String &dir_name) {
     if (MPI::rank != MPI::main_rank) return 0;
     std::stringstream ss;
     ss << "mkdir -p " << dir_name;
     return system(ss.str().c_str());
 }
 
-bool Utils::is_converged(const std::vector<double> &residual_list, double limit) {
+bool Utils::is_converged(const List<Scalar> &residual_list, Scalar limit) {
     bool result = true;
     for (auto &it : residual_list) {
         result = result and (it <= limit);
@@ -51,7 +51,7 @@ bool Utils::is_converged(const std::vector<double> &residual_list, double limit)
 }
 
 template<>
-void Utils::output_list(const MESO::String &file_path, std::vector<Scalar> &data) {
+void Utils::output_list(const String &file_path, List<Scalar> &data) {
     const int DATA_PRECISION=18;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
@@ -61,7 +61,7 @@ void Utils::output_list(const MESO::String &file_path, std::vector<Scalar> &data
 }
 
 template<>
-void Utils::output_list(const MESO::String &file_path, std::vector<Vector> &data) {
+void Utils::output_list(const String &file_path, List<Vector> &data) {
     const int DATA_PRECISION=18;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
@@ -71,8 +71,31 @@ void Utils::output_list(const MESO::String &file_path, std::vector<Vector> &data
 }
 
 template<>
-ObjectTypeList Utils::read_np_file<ObjectType>(const MESO::String &file_path) {
-    ObjectTypeList result;
+void Utils::output_list(const String &file_path, List<List<ObjectId>> &data) {
+    std::fstream fp;
+    fp.open(file_path, std::ios::out | std::ios::trunc);
+    for (auto &list : data) {
+        fp << "(";
+        for (auto &it: list) {
+            fp << " " << it;
+        }
+        fp << " )" << std::endl;
+    }
+}
+
+
+template<>
+void Utils::output_list(const String &file_path, List<Set<ObjectId>> &data) {
+    std::fstream fp;
+    fp.open(file_path, std::ios::out | std::ios::trunc);
+    for (auto &set : data) {
+        fp << "( " << set[0] << " " << set[1] << " )" << std::endl;
+    }
+}
+
+template<>
+List<ObjectType> Utils::read_np_file<ObjectType>(const String &file_path) {
+    List<ObjectType> result;
     MESO::FileReader::BasicReader reader(file_path);
     auto lines = reader.read_lines();
     for (auto &line: lines) {
@@ -83,8 +106,8 @@ ObjectTypeList Utils::read_np_file<ObjectType>(const MESO::String &file_path) {
 }
 
 template<>
-ScalarList Utils::read_np_file<Scalar>(const MESO::String &file_path) {
-    ScalarList result;
+List<Scalar> Utils::read_np_file<Scalar>(const String &file_path) {
+    List<Scalar> result;
     MESO::FileReader::BasicReader reader(file_path);
     auto lines = reader.read_lines();
     for (auto &line: lines) {
@@ -95,8 +118,8 @@ ScalarList Utils::read_np_file<Scalar>(const MESO::String &file_path) {
 }
 
 template<>
-VectorList Utils::read_np_file<Vector>(const MESO::String &file_path) {
-    VectorList result;
+List<Vector> Utils::read_np_file<Vector>(const String &file_path) {
+    List<Vector> result;
     MESO::FileReader::BasicReader reader(file_path);
     auto lines = reader.read_lines();
     for (auto &line: lines) {
@@ -106,7 +129,7 @@ VectorList Utils::read_np_file<Vector>(const MESO::String &file_path) {
     return result;
 }
 
-StringList Utils::exec_script(const MESO::String &script) {
+StringList Utils::exec_script(const String &script) {
     std::array<char, 1024> buffer{};
     StringList result;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(

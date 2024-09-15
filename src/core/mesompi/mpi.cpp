@@ -81,7 +81,7 @@ void MESO::MPI::Bcast(MESO::Vector &global) {
     MPI_Bcast(&global, 1, UDF::MPI_Vector, 0, MPI_COMM_WORLD);
 }
 
-void MESO::MPI::Bcast(ObjectIdList &global) {
+void MESO::MPI::Bcast(List<ObjectId> &global) {
     MPI_Bcast(global.data(), int(global.size()), MPI_INT, 0, MPI_COMM_WORLD);
 }
 

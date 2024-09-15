@@ -4,10 +4,10 @@
 using namespace MESO::fvmMesh;
 
 
-Face::Face(MESO::ObjectId id, MESO::ObjectType geom_type, MESO::ObjectIdList node_list)
+Face::Face(MESO::ObjectId id, MESO::ObjectType geom_type, MESO::List<ObjectId> node_list)
         : id(id), geom_type(geom_type), node_id(std::move(node_list)) {}
 
-Cell::Cell(MESO::ObjectId id, MESO::ObjectType geom_type, MESO::ObjectIdList &node_list)
+Cell::Cell(MESO::ObjectId id, MESO::ObjectType geom_type, MESO::List<ObjectId> &node_list)
         : id(id), geom_type(geom_type), node_id(std::move(node_list)) {
     face_id.resize(Geom::face_num(geom_type), -1);
 }
@@ -16,10 +16,8 @@ Cell::Cell(MESO::ObjectId id, MESO::ObjectType geom_type, MESO::ObjectIdList &no
  * generate face
  **/
 using namespace MESO::Geom;
-typedef std::unordered_map<MESO::String, MESO::ObjectId> FaceMap;
-typedef std::unordered_map<MESO::ObjectType, MESO::ObjectIdList> FaceGeomMap;
-typedef std::unordered_map<MESO::ObjectType, MESO::GroupList> FaceNodeIdMap;
-FaceGeomMap fg_map = {
+
+MESO::Map<MESO::List<MESO::ObjectId>> fg_map = {
         {Quad,  {Edge, Edge, Edge, Edge}},
         {Tria,  {Edge, Edge, Edge}},
         {Brick, {Quad, Quad, Quad, Quad, Quad, Quad}},
@@ -27,7 +25,8 @@ FaceGeomMap fg_map = {
         {Tetra, {Tria, Tria, Tria, Tria}},
         {Pyram, {Quad, Tria, Tria, Tria, Tria}}
 };
-FaceNodeIdMap fni_map = {
+
+MESO::Map<MESO::List<MESO::List<MESO::ObjectId>>> fni_map = {
         {Quad,  {{0, 1},       {1, 2},       {2, 3},       {3, 0}}},
         {Tria,  {{0, 1},       {1, 2},       {2, 0}}},
         {Brick, {{0, 1, 5, 4}, {1, 3, 7, 5}, {3, 2, 6, 7}, {2, 0, 4, 6}, {1, 0, 2, 3}, {4, 5, 7, 6,}}},
@@ -37,17 +36,17 @@ FaceNodeIdMap fni_map = {
 };
 
 void Mesh::generate_face() {
-    FaceMap fm_edge, fm_quad, fm_tria;
+    Dict<ObjectId> fm_edge, fm_quad, fm_tria;
     for (auto &cell: cells) {
         for (int fi = 0; fi < face_num(cell.geom_type); ++fi) {
             /// range faces on cell
             ObjectType geom_type = fg_map[cell.geom_type][fi];
-            ObjectIdList node_list;
+            List<ObjectId> node_list;
             for (auto it: fni_map[cell.geom_type][fi]) {
                 node_list.push_back(cell.node_id[it]);
             }
             String face_key = generate_key(node_list);
-            FaceMap *fmp;
+            Dict<ObjectId> *fmp;
             switch (geom_type) {
                 case Edge:
                     fmp = &fm_edge;
@@ -61,7 +60,7 @@ void Mesh::generate_face() {
                 default:
                     throw std::invalid_argument("<generate_face> unsupported face.");
             }
-            FaceMap &fm = *fmp;
+            Dict<ObjectId> &fm = *fmp;
             /// check face
             auto it = fm.find(face_key);
             if (it == fm.end()) {
@@ -109,7 +108,7 @@ void Mesh::build_geom(double scale_ratio) {
         cell.partition_id = MPI::rank;
         cell.partition_cell_id = cell.id;
         cell_partition_groups[MPI::rank].push_back(cell.id);
-        NodeList node_list;
+        List<Node> node_list;
         for (auto &it: cell.node_id) {
             node_list.push_back(nodes[it]);
         }
@@ -133,7 +132,7 @@ void Mesh::build_geom(double scale_ratio) {
     cell_partition_groups.shrink_to_fit();
     /// face
     for (auto &face: faces) {
-        NodeList node_list;
+        List<Node> node_list;
         for (auto &it: face.node_id) {
             auto &node = nodes[it];
             node_list.push_back(node);
@@ -147,7 +146,7 @@ void Mesh::build_geom(double scale_ratio) {
     }
     /// neighbor
     for (auto &cell: cells) {
-        CellList neighbors;
+        List<Cell> neighbors;
         for (int face_id: cell.face_id) {
             auto &face = faces[face_id];
             for (int cell_id: face.cell_id) {

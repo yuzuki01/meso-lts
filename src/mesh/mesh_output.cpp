@@ -102,31 +102,37 @@ void Mesh::output(const std::string &file_name) {
 
     /// Write cell/face/node files
     {
-        VectorList node_pos;
+        List<Vector> node_pos;
         for (auto &it: nodes) {
             node_pos.push_back(it.position);
         }
         Utils::output_list("./parsedMesh/nodePosition", node_pos);
     }
     {
-        VectorList cell_pos;
-        ScalarList cell_volume;
+        List<Vector> cell_pos;
+        List<Scalar> cell_volume;
+        List<List<ObjectId>> cell_neighbor;
         for (auto &it: cells) {
             cell_pos.push_back(it.position);
             cell_volume.push_back(it.volume);
+            cell_neighbor.push_back(it.neighbors);
         }
         Utils::output_list("./parsedMesh/cellPosition", cell_pos);
         Utils::output_list("./parsedMesh/cellVolume", cell_volume);
+        Utils::output_list("./parsedMesh/cellNeighbor", cell_neighbor);
     }
     {
-        VectorList face_pos;
-        ScalarList face_area;
+        List<Vector> face_pos;
+        List<Scalar> face_area;
+        List<Set<ObjectId>> face_neighbor;
         for (auto &it: faces) {
             face_pos.push_back(it.position);
             face_area.push_back(it.area);
+            face_neighbor.push_back(it.cell_id);
         }
         Utils::output_list("./parsedMesh/facePosition", face_pos);
         Utils::output_list("./parsedMesh/faceArea", face_area);
+        Utils::output_list("./parsedMesh/faceNeighbor", face_neighbor);
     }
 
     logger.note << "Write mesh to file: ";
@@ -241,7 +247,7 @@ void write_mesh_geom(std::fstream &fp, MESO::fvmMesh::Mesh *mesh_ptr) {
     fp << std::endl << "## geom" << std::endl;
     for (auto &cell: mesh_ptr->cells) {
         const int node_num = MESO::Geom::node_num(cell.geom_type);
-        MESO::ObjectIdList node(node_num);
+        MESO::List<MESO::ObjectId> node(node_num);
         for (int i = 0; i < node_num; ++i) {
             node[i] = cell.node_id[i] + 1;
         }

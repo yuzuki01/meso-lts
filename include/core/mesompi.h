@@ -32,20 +32,20 @@ namespace MESO::MPI {
 
     /// gather field (for partitioned mesh)
     // coded in solver/field.cpp
-    void GatherFieldList(std::vector<Field<Scalar>> &local, ScalarList &global, ObjectId column_id);
+    void GatherFieldList(std::vector<Field<Scalar>> &local, List<Scalar> &global, ObjectId column_id);
 
     /// broadcast
     void Bcast(bool &global);
     void Bcast(Scalar &global);
     void Bcast(MESO::Vector &global);
-    void Bcast(ObjectIdList &global);
+    void Bcast(List<ObjectId> &global);
 
     /// reduce
     void AllReduce(Scalar local, Scalar &global);
     void AllReduce(const MESO::Vector &local, MESO::Vector &global);
     // coded in solver/field.cpp
-    void AllReduce(ScalarList &local, ScalarList &global);
-    void AllReduce(VectorList &local, VectorList &global);
+    void AllReduce(List<Scalar> &local, List<Scalar> &global);
+    void AllReduce(List<Vector> &local, List<Vector> &global);
     void AllReduce(Field<Scalar> &local, Field<Scalar> &global);
     void AllReduce(Field<Vector> &local, Field<Vector> &global);
 

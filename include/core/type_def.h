@@ -12,23 +12,17 @@ namespace MESO {
     typedef MESO::Math::Vector Vector;
     typedef MESO::Math::Vector Position;
     /// set
-    typedef std::array<ObjectId, 2> ObjectIdSet;
-    typedef std::array<Vector, 2> VectorSet;
+    template<class T>
+    using Set = std::array<T, 2>;
     /// list
-    typedef std::vector<ObjectId> ObjectIdList;
-    typedef std::vector<ObjectIdList> GroupList;
-    typedef std::vector<ObjectType> ObjectTypeList;
-    typedef std::vector<Scalar> ScalarList;
-    typedef std::vector<Vector> VectorList;
-    /// map
-    typedef std::unordered_map<String, String> StringMap;
-    typedef std::unordered_map<ObjectId, ObjectId> ObjectIdMap;
-    typedef std::unordered_map<String, ObjectType> ObjectTypeMap;
-    typedef std::unordered_map<String, Scalar> ScalarMap;
-    typedef std::unordered_map<String, Vector> VectorMap;
-    typedef std::unordered_map<String, ObjectTypeList> ObjectTypeListMap;
-    typedef std::unordered_map<String, ScalarList> ScalarListMap;
-    typedef std::unordered_map<String, VectorList> VectorListMap;
+    template<class T>
+    using List = std::vector<T>;
+    /// Map
+    template<class T>
+    using Map = std::unordered_map<ObjectId, T>;
+    /// Dict
+    template<class T>
+    using Dict = std::unordered_map<String, T>;
 }
 
 #endif //CORE_TYPE_DEF_H
