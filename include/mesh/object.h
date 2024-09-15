@@ -67,8 +67,6 @@ namespace MESO {
 
         void set_zero();
 
-        Field<Vector> gradient(bool _switch=true);
-
         void output(const std::string &file_name);
     };
 }
@@ -163,6 +161,8 @@ namespace MESO::fvmMesh {
 
         void info();
     };
+
+    Field<Vector> grad(Field<Scalar> &field);
 }
 
 template<class FieldType>

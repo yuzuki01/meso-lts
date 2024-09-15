@@ -115,7 +115,7 @@ void CDUGKS::reconstruct() {
         ObjectId dvs_id = p + mpi_task.start;
         auto &particle = dvs_mesh.cells[dvs_id];
         /// cell gradient
-        Field <Vector> grad_f = f_cell[p].gradient(gradient_switch);
+        Field <Vector> grad_f = fvmMesh::grad(f_cell[p]);
         /// interp to face
         for (auto &face: mesh.faces) {
             Vector &nv = face.normal_vector[0];

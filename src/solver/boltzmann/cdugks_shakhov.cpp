@@ -215,27 +215,36 @@ void CDUGKS_SHAKHOV::reconstruct() {
     for (int p = 0; p < mpi_task.size; ++p) {
         ObjectId dvs_id = p + mpi_task.start;
         auto &particle = dvs_mesh.cells[dvs_id];
-        /// cell gradient
-        Field <Vector> grad_g = g_cell[p].gradient(gradient_switch);
-        Field <Vector> grad_h = h_cell[p].gradient(gradient_switch);
-        /// interp to face
-        for (auto &face: mesh.faces) {
-            Vector &nv = face.normal_vector[0];
-            auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
-            Vector dr_ij = face.position - cell.position;
-            Scalar phi_g = 1.0, phi_h = 1.0;
-            /// venkata limiter
-            if (limiter_switch) {
-                phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[cell.id], face, cell, venkata_k);
-                phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[cell.id], face, cell, venkata_k);
+        if (gradient_switch) {
+            /// cell gradient
+            Field <Vector> grad_g = fvmMesh::grad(g_cell[p]);
+            Field <Vector> grad_h = fvmMesh::grad(h_cell[p]);
+            /// interp to face
+            for (auto &face: mesh.faces) {
+                Vector &nv = face.normal_vector[0];
+                auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
+                Vector dr_ij = face.position - cell.position;
+
+                /// venkata-limiter
+                Scalar phi_g=1.0, phi_h=1.0;
+                if (limiter_switch) {
+                    phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[cell.id], face, cell, venkata_k);
+                    phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[cell.id], face, cell, venkata_k);
+                }
+
+                g_face[p][face.id] = g_cell[p][cell.id]
+                                     + (dr_ij - particle.position * half_dt) * (phi_g * grad_g[cell.id]);
+                h_face[p][face.id] = h_cell[p][cell.id]
+                                     + (dr_ij - particle.position * half_dt) * (phi_h * grad_h[cell.id]);
             }
-            g_face[p][face.id] = g_cell[p][cell.id]
-                                 + (dr_ij - particle.position * half_dt) * (phi_g * grad_g[cell.id]);
-            h_face[p][face.id] = h_cell[p][cell.id]
-                                 + (dr_ij - particle.position * half_dt) * (phi_h * grad_h[cell.id]);
-            /// negative distribution function
-            g_face[p][face.id] = (g_face[p][face.id] < 0.0) ? 0.0 : g_face[p][face.id];
-            h_face[p][face.id] = (h_face[p][face.id] < 0.0) ? 0.0 : h_face[p][face.id];
+        } else {
+            /// zeroGradient to face
+            for (auto &face: mesh.faces) {
+                Vector &nv = face.normal_vector[0];
+                auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
+                g_face[p][face.id] = g_cell[p][cell.id];
+                h_face[p][face.id] = h_cell[p][cell.id];
+            }
         }
     }
     {

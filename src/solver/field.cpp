@@ -137,32 +137,6 @@ void Field<Vector>::set_zero() {
 }
 
 template<>
-Field<Vector> Field<Scalar>::gradient(bool _switch) {
-    Field<Vector> result(*mesh_ptr, flag);
-    if (not _switch) return result;
-    switch (flag) {
-        case cell_field_flag:
-            for (auto &cell: mesh_ptr->cells) {
-                if (cell.partition_id != MPI::rank) break;
-                Vector Sfr(0.0, 0.0, 0.0);
-                for (int j = 0; j < cell.least_square.neighbor_num; ++j) {
-                    int &neighbor_id = cell.neighbors[j];
-                    Sfr += (values[neighbor_id] - values[cell.id]) * cell.least_square.weight[j] *
-                           cell.least_square.dr[j];
-                }
-                result[cell.id] = {cell.least_square.Cx * Sfr, cell.least_square.Cy * Sfr, cell.least_square.Cz * Sfr};
-            }
-            break;
-        case face_field_flag:
-        case node_field_flag:
-            throw std::invalid_argument("Field<Scalar>.gradient() for flag<face> is not supported.");
-        default:
-            break;
-    }
-    return result;
-}
-
-template<>
 void Field<Scalar>::output(const std::string &file_name) {
     if (MPI::rank != MPI::main_rank) return;
     std::fstream fp;
