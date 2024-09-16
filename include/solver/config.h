@@ -31,12 +31,15 @@ namespace MESO::Solver {
         const String calculated_str = "calculated";
         const ObjectType fromFile = 3;
         const String fromFile_str = "fromFile";
+        const ObjectType switchType = 4;
+        const String switchType_str = "switch";
     }
 
     class Patch {
     private:
         Dict<ObjectType> type;
         Dict<ObjectType> ints;
+        Dict<bool> switches;
         Dict<Scalar> scalars;
         Dict<Vector> vectors;
         Dict<List<ObjectType>> ints_list;
@@ -46,6 +49,8 @@ namespace MESO::Solver {
         void set_value(StringList &string_list);
 
         ObjectType get_type(const String &key);
+
+        bool get_switch(const String &key);
 
         ObjectType get_int(const String &key);
 

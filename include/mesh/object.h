@@ -162,7 +162,11 @@ namespace MESO::fvmMesh {
         void info();
     };
 
+    /// fvmMesh numerical methods
+    Vector grad(Field<Scalar> &field, ObjectId element_id);
     Field<Vector> grad(Field<Scalar> &field);
+    Scalar interp_IDW(Field<MESO::Scalar> &field, ObjectId element_id);
+    Vector interp_IDW(Field<MESO::Vector> &field, ObjectId element_id);
 }
 
 template<class FieldType>

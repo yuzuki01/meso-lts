@@ -45,12 +45,19 @@ void Patch::set_value(MESO::StringList &string_list) {
             logger.warn << err.str() << std::endl;
             throw std::invalid_argument(err.str());
         }
+    } else if (type_s == PatchType::switchType_str) {
+        type[name] = PatchType::switchType;
+        switches[name] = (string_list[2] == "True");
     }
 }
 
 
 MESO::ObjectType Patch::get_type(const MESO::String &key) {
     return type[key];
+}
+
+bool Patch::get_switch(const MESO::String &key) {
+    return switches[key];
 }
 
 MESO::ObjectType Patch::get_int(const MESO::String &key) {

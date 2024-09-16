@@ -49,6 +49,8 @@ public:
 
     void output();
 
+    void cell_value_interp(ObjectId cell_id);
+
     template<class FieldDataType>
     void read_np_data(const std::string &file, Field<FieldDataType> &field);
 };

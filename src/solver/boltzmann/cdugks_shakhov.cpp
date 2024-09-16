@@ -624,12 +624,24 @@ void CDUGKS_SHAKHOV::fvm_update() {
         if (std::isnan(rho)) {
             logger.warn << "[WARN] cell<" << cell.id + 1 << ">@" << cell.position.str()
                         << " caught rho=nan." << std::endl;
-            run_state = false;
+            auto &group = config.get_cell_group(cell, mesh);
+            auto mask = group.patch.get_switch("mask");
+            if (mask) {
+                cell_value_interp(cell.id);
+            } else {
+                run_state = false;
+            }
         }
         if (T < 0.0 or std::isnan(T)) {
             logger.warn << "[WARN] cell<" << cell.id + 1 << ">@" << cell.position.str()
                         << " caught T < 0 or T=nan." << std::endl;
-            run_state = false;
+            auto &group = config.get_cell_group(cell, mesh);
+            auto mask = group.patch.get_switch("mask");
+            if (mask) {
+                cell_value_interp(cell.id);
+            } else {
+                run_state = false;
+            }
         }
     }
     MPI::AllReduce(m3_local, q_cell);
@@ -672,6 +684,30 @@ void CDUGKS_SHAKHOV::do_step() {
     }
     MPI::Bcast(run_state);
     MPI_Barrier(MPI_COMM_WORLD);
+}
+
+void CDUGKS_SHAKHOV::cell_value_interp(MESO::ObjectId cell_id) {
+    auto rho =fvmMesh::interp_IDW(rho_cell, cell_id);
+    auto u = fvmMesh::interp_IDW(vel_cell, cell_id);
+    auto T = fvmMesh::interp_IDW(T_cell, cell_id);
+    auto q = fvmMesh::interp_IDW(q_cell, cell_id);
+    rho_cell[cell_id] = rho;
+    vel_cell[cell_id] = u;
+    T_cell[cell_id] = T;
+    q_cell[cell_id] = q;
+    for (int p = 0; p < mpi_task.size; ++p) {
+        ObjectId dvs_id = p + mpi_task.start;
+        auto &particle = dvs_mesh.cells[dvs_id];
+        auto c = particle.position - u;
+        auto cc = c * c;
+        auto cq = c * q;
+        auto gm = g_maxwell(rho, T, cc);
+        g_cell[p][cell_id] = g_shakhov(rho, T, cc, cq, gm);
+        h_cell[p][cell_id] = h_shakhov(rho, T, cc, cq, gm);
+    }
+    logger.warn << "[Warn] Mask working on cell<" << cell_id + 1 << "> " << mesh.cells[cell_id].position.str() << std::endl;
+    Utils::print_names_and_values({"Rho", "u", "v", "w", "T", "qx", "qy", "qz"},
+                                  {rho, u.x, u.y, u.z, T, q.x, q.y, q.z});
 }
 
 void CDUGKS_SHAKHOV::output() {
