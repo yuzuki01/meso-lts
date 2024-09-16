@@ -15,7 +15,7 @@ std::unordered_map<std::string, int> MESO::Solver::mark_type_map = {
 };
 
 
-Config::Config(const std::string &file_path) {
+Config::Config(const std::string &file_path) : file_path(file_path) {
     {
         auto mark_ptr = new Mark;
         mark_ptr->id = 1;
@@ -23,6 +23,11 @@ Config::Config(const std::string &file_path) {
         mark_ptr->type = mark_type_map[mark_ptr->type_name];
         marks[mark_ptr->name] = *mark_ptr;
     }
+    update_config();
+    logger.info << "Loaded case file: " << file_path << std::endl;
+}
+
+void Config::update_config() {
     MESO::FileReader::BasicReader reader(file_path);
     StringList lines = reader.read_lines();
     StringList data;
@@ -92,7 +97,6 @@ Config::Config(const std::string &file_path) {
             continue;
         }
     }
-    logger.info << "Loaded case file: " << file_path << std::endl;
 }
 
 template<>

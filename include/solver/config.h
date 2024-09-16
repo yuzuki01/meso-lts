@@ -77,6 +77,8 @@ namespace MESO::Solver {
     typedef String ConfigKey;
 
     class Config {
+    private:
+        const String file_path;
     public:
         Dict<String> settings;
         Dict<Group> groups;
@@ -85,6 +87,8 @@ namespace MESO::Solver {
         Config() = default;
 
         explicit Config(const String &file_path);
+
+        void update_config();
 
         /**
          * T = [int, double, bool, String]

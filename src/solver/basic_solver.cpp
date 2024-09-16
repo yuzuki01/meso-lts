@@ -1,8 +1,8 @@
 #include "solver/solver.h"
 
-using namespace MESO;
+using namespace MESO::Solver;
 
-Solver::BasicSolver::BasicSolver(ArgParser &parser) :
+BasicSolver::BasicSolver(ArgParser &parser) :
         parser(parser), config(parser.parse_param<std::string>("case", "<case-file>", true)) {
     case_name = config.get<std::string>("case-name", "unnamed", false);
     output_np = config.get<bool>("output-np", false, false);
@@ -14,7 +14,7 @@ Solver::BasicSolver::BasicSolver(ArgParser &parser) :
 }
 
 
-Solver::BasicSolver::BasicSolver(MESO::ArgParser &parser, MESO::Solver::Config &config):
+BasicSolver::BasicSolver(MESO::ArgParser &parser, MESO::Solver::Config &config):
     parser(parser), config(config) {
     case_name = config.get<std::string>("case-name", "unnamed", false);
     output_np = config.get<bool>("output-np", false, false);
@@ -23,4 +23,12 @@ Solver::BasicSolver::BasicSolver(MESO::ArgParser &parser, MESO::Solver::Config &
     }
     residual_limit = config.get<double>("residual-limit", 1e-6, false);
     mesh_scale = config.get<double>("mesh-scale", 1.0, false);
+}
+
+int BasicSolver::max_step() {
+    return config.get<int>("max-step", 100000, false);
+}
+
+int BasicSolver::write_interval() {
+    return config.get<int>("write-interval", 1000, false);
 }

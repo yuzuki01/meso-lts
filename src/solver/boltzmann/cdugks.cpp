@@ -360,4 +360,6 @@ void CDUGKS::output() {
         rho_cell.output(case_name + "/np-data/Rho");
         vel_cell.output(case_name + "/np-data/vel");
     }
+    /// update Config when output
+    config.update_config();
 }

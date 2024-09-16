@@ -72,13 +72,13 @@ print(data.shape)
 - 不可压缩方腔 (Incompressible cavity flow)
 
 ```sh
-mpirun -n 9 ./meso-mpi --max-step 1000000 --case case-re400.txt
+mpirun -n 9 ./meso-mpi --case case-re400.txt
 ```
 
 - 稀薄方腔 (Rarefied cavity flow)
 
 ```sh
-mpirun -n 10 ./meso-mpi --max-step 1000000 --case case-kn1.txt
+mpirun -n 10 ./meso-mpi --case case-kn1.txt
 ```
 
 ### Configure File
@@ -143,7 +143,7 @@ type        wall
 注意：该结果未经对比验证，仅计算了 `20000` 步
 
 ```sh
-mpirun -n 12 ./meso-mpi --case case-re400-3d.txt --max-step 20000
+mpirun -n 12 ./meso-mpi --case case-re400-3d.txt
 ```
 
 ![result-3d](./files/cavity-3d.png)

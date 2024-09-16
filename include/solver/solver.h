@@ -35,6 +35,10 @@ namespace MESO::Solver {
         BasicSolver(ArgParser &parser, Config &config);
 
         bool get_run_state() const { return run_state; };
+
+        int max_step();
+
+        int write_interval();
     };
 
     /// Residual
@@ -57,9 +61,6 @@ namespace MESO::Solver {
     int handle_solver(MESO::ArgParser &parser, MESO::Solver::Config &config);
 
     extern int solver_state;
-
-    template <class SolverClass>
-    void solver_interrupt(int signum);
 }
 
 

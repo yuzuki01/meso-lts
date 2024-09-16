@@ -706,6 +706,8 @@ void CDUGKS_SHAKHOV::output() {
         vel_cell.output(case_name + "/np-data/vel");
         q_cell.output(case_name + "/np-data/q");
     }
+    /// update Config when output
+    config.update_config();
 }
 
 /// Read Field Data

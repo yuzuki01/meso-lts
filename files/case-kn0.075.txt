@@ -5,6 +5,9 @@ mesh-file       cavity.neu
 dvs-file        nc.dvs
 dvs-type        Newton-Cotes
 
+write-interval  1000
+max-step        100000
+
 Kn          0.075
 Pr          0.6666666666666667
 Ma          0.17723033393597562

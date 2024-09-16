@@ -12,31 +12,37 @@ dvs-type    <your-dvs-type>
 
 ### 必备参数
 
-`case-name` 会在可执行文件所在目录下创建同名文件夹用于储存结果
+* `case-name` 会在可执行文件所在目录下创建同名文件夹用于储存结果
 
-`mesh-file` 可以填写绝对路径或相对路径
+* `mesh-file` 可以填写绝对路径或相对路径
 
-`dvs-file`  非结构速度空间网格路径或生成结构网格的配置文件路径
+* `dvs-file`  非结构速度空间网格路径或生成结构网格的配置文件路径
 
 ### 可选参数
 
-`mesh-scale` 用于放缩网格尺寸，默认 `1.0`，不进行放缩
+控制选项:
 
-`dvs-type`  决定速度空间网格类型，生成网格的脚本位于 `files/scritps`
+* `mesh-scale` 用于放缩网格尺寸，默认 `1.0`，不进行放缩
 
- - `Gauss-Hermite`
- - `Newton-Cotes`
- - `<dvs-type>`：默认值，或其他类型，都调用 `fvmMesh::load_gambit()` 函数
+* `dvs-type`  决定速度空间网格类型，生成网格的脚本位于 `files/scritps`
+
+  - `Gauss-Hermite`
+  - `Newton-Cotes`
+  - `<dvs-type>`：默认值，或其他类型，都调用 `fvmMesh::load_gambit()` 函数
 
 继承于基类 `MESO::Solver::BasicSolver` 的参数：
 
-`case-name`：算例名称，默认 `unnamed`
+* `max-step` 最大迭代步，默认 `100000`
 
-`output-np`：是否打开 `numpy` 格式字符输出，默认`False`
+* `write-interval` 输出间隔时间步，默认 `1000`
 
-`read-np-data`：是否读取 `numpy` 格式输出作为初场，默认 `False`
+* `case-name`：算例名称，默认 `unnamed`
 
-`residual-limit`：残差限，默认 `1e-6`，在所有监测量的残差连续 `10` 次监测都小于残差限后，即使未达到最大迭代步数求解器也会停止并保存。
+* `output-np`：是否打开 `numpy` 格式字符输出，默认`False`
+
+* `read-np-data`：是否读取 `numpy` 格式输出作为初场，默认 `False`
+
+* `residual-limit`：残差限，默认 `1e-6`，在所有监测量的残差连续 `10` 次监测都小于残差限后，即使未达到最大迭代步数求解器也会停止并保存。
 
 ---
 
@@ -50,15 +56,15 @@ dvs-type    <your-dvs-type>
 
 求解器设置：
 
-`limiter-switch`：是否打开限制器，默认`False`
+* `limiter-switch`：是否打开限制器，默认`False`
 
- - `venkata-limiter-k`：限制器参数，默认`1.0`，设置为`0`时限制效果最强
+  - `venkata-limiter-k`：限制器参数，默认`1.0`，设置为`0`时限制效果最强
 
-`gradient-switch`：是否打开梯度计算，默认`True`
+* `gradient-switch`：是否打开梯度计算，默认`True`
 
 对于 `cdugks@shakhov` ，已经定义有：
 
-`dvs-file`：离散速度空间网格文件，填写 `Newton-Cotes` 则采用牛顿科特斯网格，自动生成。
+* `dvs-file`：离散速度空间网格文件，填写 `Newton-Cotes` 则采用牛顿科特斯网格，自动生成。
 
 ## group
 
@@ -67,9 +73,9 @@ dvs-type    <your-dvs-type>
 ```
 [group]
 name        <group-name>
-density     <value>
-temperature <value>
-veloxity-x  <value>
+density     fixedValue    scalar    1.0
+temperature fixedValue    scalar    1.0
+veloxity    fixedValue    vector    1.0  0.0  0.0
 ...
 ```
 

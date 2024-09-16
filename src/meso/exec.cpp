@@ -39,15 +39,7 @@ int Solver::solver_state = 0;
 #ifdef SOLVER_CDUGKS_H
 
 template<>
-void Solver::solver_interrupt<Solver::CDUGKS>(int signum) {
-    solver_state = signum;
-#pragma omp master
-    logger.warn << "Interrupt signal (" << signum << ") received." << std::endl;
-}
-
-template<>
 int Solver::handle_solver<Solver::CDUGKS>(MESO::ArgParser &parser, MESO::Solver::Config &config) {
-    int save_interval = parser.parse_param<int>("save-interval", DefaultValue::save_interval, false);
     MESO::Solver::CDUGKS solver(parser, config);
     solver.initial();
     solver.output();
@@ -55,19 +47,18 @@ int Solver::handle_solver<Solver::CDUGKS>(MESO::ArgParser &parser, MESO::Solver:
         MPI_Barrier(MPI_COMM_WORLD);
         return 0;
     }
-    std::signal(SIGINT, Solver::solver_interrupt<Solver::CDUGKS>);    // 注册 SIGINT 信号处理
-    const int max_step = parser.parse_param("max-step", DefaultValue::max_step, false);
-    for (int i = 0; (i < max_step) || (max_step < 0); ++i) {
+    
+    for (int i = 0; (i < solver.max_step()) || (solver.max_step() < 0); ++i) {
         solver.do_step();
         if (not solver.get_run_state()) break;
-        if (solver.step % save_interval == 0) solver.output();
+        if (solver.step % solver.write_interval() == 0) solver.output();
         if (solver_state != 0) {
             solver.output();
             MPI_Barrier(MPI_COMM_WORLD);
             return solver_state;
         }
     }
-    logger.note << "Reached the maximum number of iterations: " << max_step << std::endl;
+    logger.note << "Reached stop step: " << solver.max_step() << std::endl;
     solver.output();
     MPI_Barrier(MPI_COMM_WORLD);
     return 0;
@@ -78,15 +69,7 @@ int Solver::handle_solver<Solver::CDUGKS>(MESO::ArgParser &parser, MESO::Solver:
 #ifdef SOLVER_CDUGKS_SHAKHOV_H
 
 template<>
-void Solver::solver_interrupt<Solver::CDUGKS_SHAKHOV>(int signum) {
-    solver_state = signum;
-#pragma omp master
-    logger.warn << "Interrupt signal (" << signum << ") received." << std::endl;
-}
-
-template<>
 int Solver::handle_solver<Solver::CDUGKS_SHAKHOV>(MESO::ArgParser &parser, MESO::Solver::Config &config) {
-    int save_interval = parser.parse_param<int>("save-interval", DefaultValue::save_interval, false);
     MESO::Solver::CDUGKS_SHAKHOV solver(parser, config);
     solver.initial();
     solver.output();
@@ -94,23 +77,21 @@ int Solver::handle_solver<Solver::CDUGKS_SHAKHOV>(MESO::ArgParser &parser, MESO:
         MPI_Barrier(MPI_COMM_WORLD);
         return 0;
     }
-    std::signal(SIGINT, Solver::solver_interrupt<Solver::CDUGKS_SHAKHOV>);    // 注册 SIGINT 信号处理
-    const int max_step = parser.parse_param("max-step", DefaultValue::max_step, false);
-    for (int i = 0; (i < max_step) || (max_step < 0); ++i) {
+
+    for (int i = 0; (i < solver.max_step()) || (solver.max_step() < 0); ++i) {
         solver.do_step();
         if (not solver.get_run_state()) break;
-        if (solver.step % save_interval == 0) solver.output();
+        if (solver.step % solver.write_interval() == 0) solver.output();
         if (solver_state != 0) {
             solver.output();
             MPI_Barrier(MPI_COMM_WORLD);
             return solver_state;
         }
     }
-    logger.note << "Reached the maximum number of iterations: " << max_step << std::endl;
+    logger.note << "Reached stop step: " << solver.max_step() << std::endl;
     solver.output();
     MPI_Barrier(MPI_COMM_WORLD);
     return 0;
 }
 
 #endif
-
