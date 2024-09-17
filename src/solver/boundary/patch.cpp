@@ -2,7 +2,7 @@
 
 using namespace MESO::Solver;
 
-void Patch::set_value(MESO::StringList &string_list) {
+void Patch::set_value(StringList &string_list) {
     /**
      * Patch format:
      * <name>   <patch-type>    <data-type>     <data-value>
@@ -52,34 +52,34 @@ void Patch::set_value(MESO::StringList &string_list) {
 }
 
 
-MESO::ObjectType Patch::get_type(const MESO::String &key) {
+MESO::ObjectType Patch::get_type(const String &key) {
     return type[key];
 }
 
-bool Patch::get_switch(const MESO::String &key) {
+bool Patch::get_switch(const String &key) {
     return switches[key];
 }
 
-MESO::ObjectType Patch::get_int(const MESO::String &key) {
+MESO::ObjectType Patch::get_int(const String &key) {
     return ints[key];
 }
 
-MESO::ObjectType Patch::get_file_int(const MESO::String &key, MESO::ObjectId id) {
+MESO::ObjectType Patch::get_file_int(const String &key, ObjectId id) {
     return ints_list[key][id];
 }
 
-MESO::Scalar Patch::get_scalar(const MESO::String &key) {
+MESO::Scalar Patch::get_scalar(const String &key) {
     return scalars[key];
 }
 
-MESO::Scalar Patch::get_file_scalar(const MESO::String &key, MESO::ObjectId id) {
+MESO::Scalar Patch::get_file_scalar(const String &key, ObjectId id) {
     return scalars_list[key][id];
 }
 
-MESO::Vector Patch::get_vector(const MESO::String &key) {
+MESO::Vector Patch::get_vector(const String &key) {
     return vectors[key];
 }
 
-MESO::Vector Patch::get_file_vector(const MESO::String &key, MESO::ObjectId id) {
+MESO::Vector Patch::get_file_vector(const String &key, ObjectId id) {
     return vectors_list[key][id];
 }

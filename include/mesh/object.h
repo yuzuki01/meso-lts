@@ -11,6 +11,7 @@ namespace MESO::fvmMesh {
     class Mesh;
 
     struct LeastSquare;
+
     struct Symmetry;
 }
 
@@ -34,11 +35,14 @@ namespace MESO {
 
 namespace MESO {
 
-    enum {cell_field_flag, face_field_flag, node_field_flag};
+    enum {
+        cell_field_flag, face_field_flag, node_field_flag
+    };
+
     template<class FieldType>
     class Field {
     protected:
-        fvmMesh::Mesh* mesh_ptr = nullptr;
+        fvmMesh::Mesh *mesh_ptr = nullptr;
     public:
         int len{};
         ObjectType flag{};
@@ -57,7 +61,7 @@ namespace MESO {
 
         Field(const Field<FieldType> &other);
 
-        [[nodiscard]] fvmMesh::Mesh * get_mesh() const { return mesh_ptr; };
+        [[nodiscard]] fvmMesh::Mesh *get_mesh() const { return mesh_ptr; };
 
         Field<Scalar> heft(int id);
 
@@ -143,10 +147,12 @@ namespace MESO::fvmMesh {
 
         void update_mesh_params();
 
-        void build_geom(double scale_ratio=1.0);
+        void build_geom(double scale_ratio = 1.0);
 
 #ifdef _METIS_H_
+
         void partition();
+
 #endif
 
         void output(const std::string &file_name);
@@ -154,23 +160,27 @@ namespace MESO::fvmMesh {
         void output(const std::string &file_name,
                     std::initializer_list<std::string> names,
                     std::initializer_list<Field<Scalar> *> values,
-                    int step=-1, double solution_time=-1.0);
+                    int step = -1, double solution_time = -1.0);
 
-        Field<Scalar> zero_scalar_field(int flag=cell_field_flag);
-        Field<Vector> zero_vector_field(int flag=cell_field_flag);
+        Field<Scalar> zero_scalar_field(int flag = cell_field_flag);
+
+        Field<Vector> zero_vector_field(int flag = cell_field_flag);
 
         void info();
     };
 
     /// fvmMesh numerical methods
     Vector grad(Field<Scalar> &field, ObjectId element_id);
+
     Field<Vector> grad(Field<Scalar> &field);
+
     Scalar interp_IDW(Field<MESO::Scalar> &field, ObjectId element_id);
+
     Vector interp_IDW(Field<MESO::Vector> &field, ObjectId element_id);
 }
 
 template<class FieldType>
-void MESO::Field<FieldType>::MeshCellValueToField(const std::function<FieldType(fvmMesh::Cell &)> &func) {
+void MESO::Field<FieldType>::MeshCellValueToField(const std::function<FieldType(fvmMesh::Cell & )> &func) {
     for (int i = 0; i < len; ++i) {
         values[i] = func(mesh_ptr->cells[i]);
     }

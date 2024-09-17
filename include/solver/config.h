@@ -39,7 +39,10 @@ namespace MESO::Solver {
     private:
         Dict<ObjectType> type;
         Dict<ObjectType> ints;
-        Dict<bool> switches;
+        Dict<bool> switches = {
+                /// default value
+                {"mask", false}
+        };
         Dict<Scalar> scalars;
         Dict<Vector> vectors;
         Dict<List<ObjectType>> ints_list;
