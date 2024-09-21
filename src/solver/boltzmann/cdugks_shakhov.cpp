@@ -10,8 +10,9 @@ template<>
 void CDUGKS_SHAKHOV::read_np_data<MESO::Vector>(const std::string &file, Field <Vector> &field);
 
 /// solver coding
-CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicSolver(parser, config) {
-    /// params
+void CDUGKS_SHAKHOV::update_config() {
+    config.update_config();
+
     Kn = config.get("Kn", 1.0);
     Pr = config.get("Pr", 0.67);
     Ma = config.get("Ma", 0.1);
@@ -24,12 +25,20 @@ CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicS
     miu0 = config.get("ref-viscosity", 1.60e-05);
     vhs_index = config.get("vhs-index", 0.81);
     gradient_switch = config.get("gradient-switch", true);
-    if (not gradient_switch) {
-        logger.warn << "[Warn] gradient-switch was CLOSED." << std::endl;
-    }
     limiter_switch = config.get("limiter-switch", false);
-    venkata_k = config.get("venkata-limiter-k", 1.0);
+    if (not gradient_switch and step == 0) {
+        logger.warn << "[Warn] gradient-switch was CLOSED." << std::endl;
+        if (not limiter_switch) {
+            logger.warn << "[Warn] limiter-switch was CLOSED." << std::endl;
+        }
+        else {
+            venkata_k = config.get("venkata-limiter-k", 1.0);
+        }
+    }
+}
 
+CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicSolver(parser, config) {
+    update_config();
     mesh = MESO::fvmMesh::load_gambit(config.get<String>("mesh-file", "<mesh-file>"),
                                       mesh_scale);
     mesh.info();
@@ -224,18 +233,16 @@ void CDUGKS_SHAKHOV::reconstruct() {
                 Vector &nv = face.normal_vector[0];
                 auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
                 Vector dr_ij = face.position - cell.position;
-
                 /// venkata-limiter
                 Scalar phi_g=1.0, phi_h=1.0;
                 if (limiter_switch) {
-                    phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[cell.id], face, cell, venkata_k);
-                    phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[cell.id], face, cell, venkata_k);
+                    phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[cell.id], cell, venkata_k);
+                    phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[cell.id], cell, venkata_k);
                 }
-
                 g_face[p][face.id] = g_cell[p][cell.id]
-                                     + (dr_ij - particle.position * half_dt) * (phi_g * grad_g[cell.id]);
+                                     + phi_g * ((dr_ij - particle.position * half_dt) * grad_g[cell.id]);
                 h_face[p][face.id] = h_cell[p][cell.id]
-                                     + (dr_ij - particle.position * half_dt) * (phi_h * grad_h[cell.id]);
+                                     + phi_h * ((dr_ij - particle.position * half_dt) * grad_h[cell.id]);
             }
         } else {
             /// zeroGradient to face
@@ -684,6 +691,9 @@ void CDUGKS_SHAKHOV::do_step() {
     }
     MPI::Bcast(run_state);
     MPI_Barrier(MPI_COMM_WORLD);
+    /// update Config when step over
+    update_config();
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void CDUGKS_SHAKHOV::cell_value_interp(MESO::ObjectId cell_id) {
@@ -742,8 +752,6 @@ void CDUGKS_SHAKHOV::output() {
         vel_cell.output(case_name + "/np-data/vel");
         q_cell.output(case_name + "/np-data/q");
     }
-    /// update Config when output
-    config.update_config();
 }
 
 /// Read Field Data

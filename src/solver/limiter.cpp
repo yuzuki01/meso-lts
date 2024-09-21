@@ -4,30 +4,28 @@
 using namespace MESO;
 
 
-Scalar Solver::venkata_limiter(Field<MESO::Scalar> &f_field, MESO::Scalar df,
-                               fvmMesh::Face &face, fvmMesh::Cell &cell,
-                               MESO::Scalar venkata_k) {
-    /// find f_min and f_max
-    auto f = f_field[cell.id],
-            f_min = f_field[cell.id],
-            f_max = f_field[cell.id];
-    for (auto neighbor_id: cell.neighbors) {
-        auto f_i = f_field[neighbor_id];
-        if (f_i < f_min) f_min = f_i;
-        if (f_i > f_max) f_max = f_i;
-    }
+Scalar Solver::venkata_limiter(MESO::Field<Scalar> &f_field, MESO::Scalar dw,
+                               fvmMesh::Cell &cell, MESO::Scalar venkata_k) {
+    if (dw == 0.0) return 1.0;
     auto &mesh = *f_field.get_mesh();
-    auto kh = venkata_k * pow(cell.volume, 1.0 / mesh.dimension());
+    auto kh = venkata_k * pow(cell.volume, 1.0 / static_cast<Scalar>(mesh.dimension()));
     auto omega = kh * kh * kh;
-    if (df == 0.0) return 1.0;
+    auto w = f_field[cell.id];
+    auto w_max = w;
+    auto w_min = w;
+    for (auto &neighbor: cell.neighbors) {
+        auto w_n = f_field[neighbor];
+        if (w_n > w_max) w_max = w_n;
+        if (w_n < w_max) w_min = w_n;
+    }
     Scalar a, aa, ab, bb;
-    if (df > 0.0) {
-        a = f_max - f;
+    if (dw > 0.0) {
+        a = w_max - w;
     } else {
-        a = f_min - f;
+        a = w_min - w;
     }
     aa = a * a;
-    ab = a * df;
-    bb = df * df;
+    ab = a * dw;
+    bb = dw * dw;
     return (aa + 2.0 * ab + omega) / (aa + 2.0 * bb + ab + omega);
 }

@@ -7,11 +7,11 @@ public:
     fvmMesh::Mesh dvs_mesh;
     MPI::MPI_TaskObject mpi_task;
 
-    bool gradient_switch, limiter_switch;
-    double Ma, Re{}, Kn, Pr, CFL;
-    int D, K;
-    double R, Rho0, T0, L0, mfp{};
-    double gamma{}, Cv{}, vhs_index, venkata_k;
+    bool gradient_switch{}, limiter_switch{};
+    double Ma{}, Re{}, Kn{}, Pr{}, CFL{};
+    int D, K{};
+    double R{}, Rho0{}, T0{}, L0{}, mfp{};
+    double gamma{}, Cv{}, vhs_index{}, venkata_k{};
     double miu0{}, dt{}, half_dt{};
     int step{};
     double solution_time{};
@@ -28,6 +28,8 @@ public:
     DistributionFunction flux_g, flux_h;
 
     CDUGKS_SHAKHOV(ArgParser &parser, Config &config);
+
+    void update_config();
 
     void initial();
 

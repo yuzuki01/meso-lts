@@ -34,6 +34,8 @@ namespace MESO::Solver {
 
         BasicSolver(ArgParser &parser, Config &config);
 
+        void update_config();
+
         bool get_run_state() const { return run_state; };
 
         int max_step();
@@ -45,19 +47,23 @@ namespace MESO::Solver {
     const int residual_interval = 100;
 
     Scalar residual(Field<Scalar> &_old, Field<Scalar> &_new);
+
     Vector residual(Field<Vector> &_old, Field<Vector> &_new);
 
     typedef std::vector<Field<Scalar>> DistributionFunction;
 
     /// limiter
-    Scalar venkata_limiter(Field<Scalar> &f_field, Scalar df, fvmMesh::Face &face, fvmMesh::Cell &cell, Scalar venkata_k);
+    Scalar venkata_limiter(
+            MESO::Field<Scalar> &f_field, MESO::Scalar dw, fvmMesh::Cell &cell, MESO::Scalar venkata_k
+    );
 
 /// add Solver here
+
 #include "solver/boltzmann/cdugks.h"
 #include "solver/boltzmann/cdugks_shakhov.h"
 
 /// handle Solver
-    template <class SolverClass>
+    template<class SolverClass>
     int handle_solver(MESO::ArgParser &parser, MESO::Solver::Config &config);
 
     extern int solver_state;

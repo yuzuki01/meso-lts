@@ -332,6 +332,9 @@ void CDUGKS::do_step() {
     }
     MPI::Bcast(run_state);
     MPI_Barrier(MPI_COMM_WORLD);
+    /// update Config when step over
+    config.update_config();
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void CDUGKS::output() {
@@ -361,6 +364,4 @@ void CDUGKS::output() {
         rho_cell.output(case_name + "/np-data/Rho");
         vel_cell.output(case_name + "/np-data/vel");
     }
-    /// update Config when output
-    config.update_config();
 }
