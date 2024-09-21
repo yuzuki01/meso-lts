@@ -35,6 +35,15 @@ void CDUGKS_SHAKHOV::update_config() {
             venkata_k = config.get("venkata-limiter-k", 1.0);
         }
     }
+    /// calculate params
+    gamma = (K + 5.0) / (K + 3.0);
+    Cv = (K + 3.0) * R * 0.5;
+    Scalar RT = R * T0;
+    Scalar c_sound = sqrt(gamma * RT);
+    mfp = Kn * L0;
+    Re = Ma * c_sound * Rho0 * L0 / miu0;
+    dt = CFL * mesh.min_cell_size / dvs_mesh.max_cell_magnitude;
+    half_dt = dt * 0.5;
 }
 
 CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicSolver(parser, config) {
