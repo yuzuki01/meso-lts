@@ -4,8 +4,11 @@ DATE=$(date +"%Y%m%d")
 
 ZIPFILE="meso-$DATE.zip"
 
-FILES_TO_ZIP="./src ./files ./include ./lib ./build.sh ./CMakeFiles.txt ./README.md"
-
-zip -r "$ZIPFILE" $FILES_TO_ZIP
+mkdir -p tmp/meso-mpi
+cp -r ./src ./files ./include ./lib ./build.sh ./CMakeLists.txt ./README.md tmp/meso-mpi/
+cd tmp || exit
+zip -r "../$ZIPFILE" meso-mpi
+cd ..
+rm -rf tmp
 
 echo "Zip files to: $ZIPFILE"
