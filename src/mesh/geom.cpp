@@ -171,7 +171,7 @@ void fvmMesh::Cell::compute_least_square(const List<Cell> &neighbor_cells, int d
     for (int i = 0; i < least_square.neighbor_num; i++) {
         auto &near_cell = neighbor_cells[i];
         Vector dr = near_cell.position - position;
-        double wi = 1.0 / (dr * dr);
+        double wi = 1.0;    // / (dr * dr);
         least_square.dr[i] = dr;
         least_square.weight[i] = wi;
         // sum
