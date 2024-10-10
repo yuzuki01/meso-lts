@@ -36,6 +36,36 @@ int MESO::handle_mesh(const std::string &mesh_file, double mesh_scale) {
 using namespace MESO;
 int Solver::solver_state = 0;
 
+#ifdef SOLVER_DUGKS_H
+
+template<>
+int Solver::handle_solver<Solver::DUGKS>(MESO::ArgParser &parser, MESO::Solver::Config &config) {
+    MESO::Solver::DUGKS solver(parser, config);
+    solver.initial();
+    solver.output();
+    if (parser.parse_switch("not-run")) {
+        MPI_Barrier(MPI_COMM_WORLD);
+        return 0;
+    }
+
+    for (int i = 0; (i < solver.max_step()) || (solver.max_step() < 0); ++i) {
+        solver.do_step();
+        if (not solver.get_run_state()) break;
+        if (solver.step % solver.write_interval() == 0) solver.output();
+        if (solver_state != 0) {
+            solver.output();
+            MPI_Barrier(MPI_COMM_WORLD);
+            return solver_state;
+        }
+    }
+    logger.note << "Reached stop step: " << solver.max_step() << std::endl;
+    solver.output();
+    MPI_Barrier(MPI_COMM_WORLD);
+    return 0;
+}
+
+#endif
+
 #ifdef SOLVER_CDUGKS_H
 
 template<>

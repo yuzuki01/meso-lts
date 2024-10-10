@@ -41,7 +41,9 @@ int main(int argc, char **argv) {
         int solver_status;
         MESO::Solver::Config config(parse_string);
         if (solver == "<solver>") solver = config.get<std::string>("solver", "<solver>", false);
-        if (solver == "cdugks@incompressible")
+        if (solver == "dugks@incompressible")
+            solver_status = MESO::Solver::handle_solver<MESO::Solver::DUGKS>(parser, config);
+        else if (solver == "cdugks@incompressible")
             solver_status = MESO::Solver::handle_solver<MESO::Solver::CDUGKS>(parser, config);
         else if (solver == "cdugks@shakhov")
             solver_status = MESO::Solver::handle_solver<MESO::Solver::CDUGKS_SHAKHOV>(parser, config);

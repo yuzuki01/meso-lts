@@ -58,7 +58,7 @@ namespace MESO::Solver {
     );
 
 /// add Solver here
-
+#include "solver/boltzmann/dugks.h"
 #include "solver/boltzmann/cdugks.h"
 #include "solver/boltzmann/cdugks_shakhov.h"
 
