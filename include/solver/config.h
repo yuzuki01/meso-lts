@@ -96,7 +96,7 @@ namespace MESO::Solver {
 
         explicit Config(const String &file_path);
 
-        void update_config();
+        void update_config(bool update_patch=true);
 
         /**
          * T = [int, double, bool, String]

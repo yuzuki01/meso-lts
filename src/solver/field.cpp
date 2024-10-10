@@ -251,3 +251,27 @@ Vector Solver::residual(Field<Vector> &_old, Field<Vector> &_new) {
     _old = _new;
     return result;
 }
+
+
+/// numpy API
+template<>
+void MESO::read_np_data<MESO::Scalar>(const std::string &file, Field<MESO::Scalar> &field) {
+    MESO::FileReader::BasicReader reader(file);
+    auto lines = reader.read_lines();
+    auto line_num = static_cast<int>(lines.size());
+    for (int i = 0; i < line_num; ++i) {
+        auto data = lines[i];
+        field[i] = stod(data);
+    }
+}
+
+template<>
+void MESO::read_np_data<MESO::Vector>(const std::string &file, Field<MESO::Vector> &field) {
+    MESO::FileReader::BasicReader reader(file);
+    auto lines = reader.read_lines();
+    auto line_num = static_cast<int>(lines.size());
+    for (int i = 0; i < line_num; ++i) {
+        auto data = MESO::Utils::split(lines[i]);
+        field[i] = {stod(data[0]), stod(data[1]), stod(data[2])};
+    }
+}

@@ -73,6 +73,10 @@ namespace MESO {
 
         void output(const std::string &file_name);
     };
+
+    /// numpy API
+    template<class T>
+    void read_np_data(const std::string &file, Field<T> &field);
 }
 
 namespace MESO::fvmMesh {

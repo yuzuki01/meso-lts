@@ -54,43 +54,55 @@ void DUGKS::initial() {
     /// flux
     flux_f.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
 
-    auto m0_local = mesh.zero_scalar_field();
-    auto m1_local = mesh.zero_vector_field();
-    for (auto &cell: mesh.cells) {
-        auto &group = config.get_cell_group(cell, mesh);
-        auto rho_patch_type = group.patch.get_type("density");
-        Scalar rho_patch;
-        if (rho_patch_type == PatchType::fromFile) {
-            rho_patch = group.patch.get_file_scalar("density", cell.id);
-        } else {
-            rho_patch = group.patch.get_scalar("density");
+    if (config.get("read-np-data", false, false)) {
+        read_np_data<Scalar>(case_name + "/np-data/Rho.np.dat", rho_cell);
+        read_np_data<Vector>(case_name + "/np-data/vel.np.dat", vel_cell);
+        for (auto &cell: mesh.cells) {
+            for (int p = 0; p < mpi_task.size; ++p) {
+                ObjectId dvs_id = p + mpi_task.start;
+                auto &particle = dvs_mesh.cells[dvs_id];
+                f_cell[p][cell.id] = f_maxwell(rho_cell[cell.id], vel_cell[cell.id], particle.position);
+            }
         }
-        auto u_patch_type = group.patch.get_type("velocity");
-        Vector u_patch;
-        if (u_patch_type == PatchType::fromFile) {
-            u_patch = group.patch.get_file_vector("velocity", cell.id);
-        } else {
-            u_patch = group.patch.get_vector("velocity");
+    } else {
+        auto m0_local = mesh.zero_scalar_field();
+        auto m1_local = mesh.zero_vector_field();
+        for (auto &cell: mesh.cells) {
+            auto &group = config.get_cell_group(cell, mesh);
+            auto rho_patch_type = group.patch.get_type("density");
+            Scalar rho_patch;
+            if (rho_patch_type == PatchType::fromFile) {
+                rho_patch = group.patch.get_file_scalar("density", cell.id);
+            } else {
+                rho_patch = group.patch.get_scalar("density");
+            }
+            auto u_patch_type = group.patch.get_type("velocity");
+            Vector u_patch;
+            if (u_patch_type == PatchType::fromFile) {
+                u_patch = group.patch.get_file_vector("velocity", cell.id);
+            } else {
+                u_patch = group.patch.get_vector("velocity");
+            }
+            for (int p = 0; p < mpi_task.size; ++p) {
+                ObjectId dvs_id = p + mpi_task.start;
+                auto &particle = dvs_mesh.cells[dvs_id];
+                Scalar f = f_maxwell(rho_patch, u_patch, particle.position);
+                f_cell[p][cell.id] = f;
+                m0_local[cell.id] += particle.volume * f;
+                m1_local[cell.id] += particle.volume * f * particle.position;
+            }
         }
-        for (int p = 0; p < mpi_task.size; ++p) {
-            ObjectId dvs_id = p + mpi_task.start;
-            auto &particle = dvs_mesh.cells[dvs_id];
-            Scalar f = f_maxwell(rho_patch,u_patch, particle.position);
-            f_cell[p][cell.id] = f;
-            m0_local[cell.id] += particle.volume * f;
-            m1_local[cell.id] += particle.volume * f * particle.position;
+        auto m0 = mesh.zero_scalar_field();
+        auto m1 = mesh.zero_vector_field();
+        MPI::AllReduce(m0_local, m0);
+        MPI::AllReduce(m1_local, m1);
+        for (auto &cell: mesh.cells) {
+            auto rho = m0[cell.id];
+            auto rhoU = m1[cell.id];
+            auto u = rhoU / rho;
+            rho_cell[cell.id] = rho;
+            vel_cell[cell.id] = u;
         }
-    }
-    auto m0 = mesh.zero_scalar_field();
-    auto m1 = mesh.zero_vector_field();
-    MPI::AllReduce(m0_local, m0);
-    MPI::AllReduce(m1_local, m1);
-    for (auto &cell: mesh.cells) {
-        auto rho = m0[cell.id];
-        auto rhoU = m1[cell.id];
-        auto u = rhoU / rho;
-        rho_cell[cell.id] = rho;
-        vel_cell[cell.id] = u;
     }
 
     /// residual
@@ -157,8 +169,8 @@ void DUGKS::reconstruct() {
         }
     }
     {
-        Map<ObjectId> wall_rho_map;
-        List<Scalar> wall_rho_local, wall_rho0_local;
+        Map <ObjectId> wall_rho_map;
+        List <Scalar> wall_rho_local, wall_rho0_local;
 
         /// boundary
         for (auto &face: mesh.faces) {
@@ -211,8 +223,8 @@ void DUGKS::reconstruct() {
                     break;
             }
         }
-        List<Scalar> wall_rho_global;
-        List<Scalar> wall_rho0_global;
+        List <Scalar> wall_rho_global;
+        List <Scalar> wall_rho0_global;
         MPI::AllReduce(wall_rho_local, wall_rho_global);
         MPI::AllReduce(wall_rho0_local, wall_rho0_global);
 
@@ -244,12 +256,12 @@ void DUGKS::reconstruct() {
 
 void DUGKS::fvm_update() {
     /// Flux
-    for (auto &cell : mesh.cells) {
+    for (auto &cell: mesh.cells) {
         for (int p = 0; p < mpi_task.size; ++p) {
             ObjectId dvs_id = p + mpi_task.start;
             auto &particle = dvs_mesh.cells[dvs_id];
             Scalar flux = 0.0;
-            for (auto face_id : cell.face_id) {
+            for (auto face_id: cell.face_id) {
                 auto &face = mesh.faces[face_id];
                 auto &nv = (face.cell_id[0] == cell.id) ? face.normal_vector[0] : face.normal_vector[1];
                 flux += (particle.position * nv) * face.area * f_face[p][face_id];
@@ -316,7 +328,7 @@ void DUGKS::do_step() {
             Scalar m0_res = residual(rho_cell_res, rho_cell);
             Vector m1_res = residual(vel_cell_res, vel_cell);
             logger.note << "step: " << step << std::endl;
-            List<Scalar> residual_list;
+            List <Scalar> residual_list;
             if (mesh.dimension() == 2) {
                 residual_list = {m0_res, m1_res.x, m1_res.y};
                 Utils::print_names_and_values({"Res[Rho]", "Res[U]", "Res[V]"},
@@ -341,7 +353,7 @@ void DUGKS::do_step() {
     MPI::Bcast(run_state);
     MPI_Barrier(MPI_COMM_WORLD);
     /// update Config when step over
-    config.update_config();
+    config.update_config(false);
     MPI_Barrier(MPI_COMM_WORLD);
 }
 

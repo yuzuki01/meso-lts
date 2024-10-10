@@ -3,15 +3,9 @@
 
 using namespace MESO::Solver;
 
-template<>
-void CDUGKS_SHAKHOV::read_np_data<MESO::Scalar>(const std::string &file, Field <Scalar> &field);
-
-template<>
-void CDUGKS_SHAKHOV::read_np_data<MESO::Vector>(const std::string &file, Field <Vector> &field);
-
 /// solver coding
 void CDUGKS_SHAKHOV::update_config() {
-    config.update_config();
+    config.update_config(false);
 
     Kn = config.get("Kn", 1.0);
     Pr = config.get("Pr", 0.67);
@@ -95,11 +89,6 @@ void CDUGKS_SHAKHOV::initial() {
     flux_g.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
     flux_h.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
 
-    auto m0_local = mesh.zero_scalar_field();
-    auto m1_local = mesh.zero_vector_field();
-    auto m2_local = mesh.zero_scalar_field();
-    auto m3_local = mesh.zero_vector_field();
-
     if (config.get("read-np-data", false, false)) {
         /// Init by np-data
         read_np_data<Scalar>(case_name + "/np-data/Rho.np.dat", rho_cell);
@@ -122,6 +111,10 @@ void CDUGKS_SHAKHOV::initial() {
             }
         }
     } else {
+        auto m0_local = mesh.zero_scalar_field();
+        auto m1_local = mesh.zero_vector_field();
+        auto m2_local = mesh.zero_scalar_field();
+        auto m3_local = mesh.zero_vector_field();
         /// Init by cell group
         for (auto &cell: mesh.cells) {
             auto &group = config.get_cell_group(cell, mesh);
@@ -760,28 +753,5 @@ void CDUGKS_SHAKHOV::output() {
         T_cell.output(case_name + "/np-data/T");
         vel_cell.output(case_name + "/np-data/vel");
         q_cell.output(case_name + "/np-data/q");
-    }
-}
-
-/// Read Field Data
-template<>
-void CDUGKS_SHAKHOV::read_np_data(const std::string &file, Field <Scalar> &field) {
-    MESO::FileReader::BasicReader reader(file);
-    auto lines = reader.read_lines();
-    auto line_num = static_cast<int>(lines.size());
-    for (int i = 0; i < line_num; ++i) {
-        auto data = lines[i];
-        field[i] = stod(data);
-    }
-}
-
-template<>
-void CDUGKS_SHAKHOV::read_np_data(const std::string &file, Field <Vector> &field) {
-    MESO::FileReader::BasicReader reader(file);
-    auto lines = reader.read_lines();
-    auto line_num = static_cast<int>(lines.size());
-    for (int i = 0; i < line_num; ++i) {
-        auto data = MESO::Utils::split(lines[i]);
-        field[i] = {stod(data[0]), stod(data[1]), stod(data[2])};
     }
 }

@@ -23,11 +23,11 @@ Config::Config(const std::string &file_path) : file_path(file_path) {
         mark_ptr->type = mark_type_map[mark_ptr->type_name];
         marks[mark_ptr->name] = *mark_ptr;
     }
-    update_config();
+    update_config(true);
     logger.info << "Loaded case file: " << file_path << std::endl;
 }
 
-void Config::update_config() {
+void Config::update_config(bool update_patch) {
     MESO::FileReader::BasicReader reader(file_path);
     StringList lines = reader.read_lines();
     StringList data;
@@ -65,6 +65,10 @@ void Config::update_config() {
                     --i;
                     break;
                 }
+                if (not update_patch) {
+                    ++i;
+                    continue;
+                }
                 if (data[0] == "name") mark.name = data[1];
                 else if (data[0] == "type") {
                     mark.type_name = data[1];
@@ -87,6 +91,10 @@ void Config::update_config() {
                 if (data[0] == "[mark]" or data[0] == "[group]") {
                     --i;
                     break;
+                }
+                if (not update_patch) {
+                    ++i;
+                    continue;
                 }
                 if (data[0] == "name") {
                     group.name = data[1];

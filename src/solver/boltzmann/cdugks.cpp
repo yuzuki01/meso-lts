@@ -54,43 +54,55 @@ void CDUGKS::initial() {
     /// flux
     flux_f.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
 
-    auto m0_local = mesh.zero_scalar_field();
-    auto m1_local = mesh.zero_vector_field();
-    for (auto &cell: mesh.cells) {
-        auto &group = config.get_cell_group(cell, mesh);
-        auto rho_patch_type = group.patch.get_type("density");
-        Scalar rho_patch;
-        if (rho_patch_type == PatchType::fromFile) {
-            rho_patch = group.patch.get_file_scalar("density", cell.id);
-        } else {
-            rho_patch = group.patch.get_scalar("density");
+    if (config.get("read-np-data", false, false)) {
+        read_np_data<Scalar>(case_name + "/np-data/Rho.np.dat", rho_cell);
+        read_np_data<Vector>(case_name + "/np-data/vel.np.dat", vel_cell);
+        for (auto &cell: mesh.cells) {
+            for (int p = 0; p < mpi_task.size; ++p) {
+                ObjectId dvs_id = p + mpi_task.start;
+                auto &particle = dvs_mesh.cells[dvs_id];
+                f_cell[p][cell.id] = f_maxwell(rho_cell[cell.id], vel_cell[cell.id], particle.position);
+            }
         }
-        auto u_patch_type = group.patch.get_type("velocity");
-        Vector u_patch;
-        if (u_patch_type == PatchType::fromFile) {
-            u_patch = group.patch.get_file_vector("velocity", cell.id);
-        } else {
-            u_patch = group.patch.get_vector("velocity");
+    } else {
+        auto m0_local = mesh.zero_scalar_field();
+        auto m1_local = mesh.zero_vector_field();
+        for (auto &cell: mesh.cells) {
+            auto &group = config.get_cell_group(cell, mesh);
+            auto rho_patch_type = group.patch.get_type("density");
+            Scalar rho_patch;
+            if (rho_patch_type == PatchType::fromFile) {
+                rho_patch = group.patch.get_file_scalar("density", cell.id);
+            } else {
+                rho_patch = group.patch.get_scalar("density");
+            }
+            auto u_patch_type = group.patch.get_type("velocity");
+            Vector u_patch;
+            if (u_patch_type == PatchType::fromFile) {
+                u_patch = group.patch.get_file_vector("velocity", cell.id);
+            } else {
+                u_patch = group.patch.get_vector("velocity");
+            }
+            for (int p = 0; p < mpi_task.size; ++p) {
+                ObjectId dvs_id = p + mpi_task.start;
+                auto &particle = dvs_mesh.cells[dvs_id];
+                Scalar f = f_maxwell(rho_patch, u_patch, particle.position);
+                f_cell[p][cell.id] = f;
+                m0_local[cell.id] += particle.volume * f;
+                m1_local[cell.id] += particle.volume * f * particle.position;
+            }
         }
-        for (int p = 0; p < mpi_task.size; ++p) {
-            ObjectId dvs_id = p + mpi_task.start;
-            auto &particle = dvs_mesh.cells[dvs_id];
-            Scalar f = f_maxwell(rho_patch,u_patch, particle.position);
-            f_cell[p][cell.id] = f;
-            m0_local[cell.id] += particle.volume * f;
-            m1_local[cell.id] += particle.volume * f * particle.position;
+        auto m0 = mesh.zero_scalar_field();
+        auto m1 = mesh.zero_vector_field();
+        MPI::AllReduce(m0_local, m0);
+        MPI::AllReduce(m1_local, m1);
+        for (auto &cell: mesh.cells) {
+            auto rho = m0[cell.id];
+            auto rhoU = m1[cell.id];
+            auto u = rhoU / rho;
+            rho_cell[cell.id] = rho;
+            vel_cell[cell.id] = u;
         }
-    }
-    auto m0 = mesh.zero_scalar_field();
-    auto m1 = mesh.zero_vector_field();
-    MPI::AllReduce(m0_local, m0);
-    MPI::AllReduce(m1_local, m1);
-    for (auto &cell: mesh.cells) {
-        auto rho = m0[cell.id];
-        auto rhoU = m1[cell.id];
-        auto u = rhoU / rho;
-        rho_cell[cell.id] = rho;
-        vel_cell[cell.id] = u;
     }
 
     /// residual
@@ -333,7 +345,7 @@ void CDUGKS::do_step() {
     MPI::Bcast(run_state);
     MPI_Barrier(MPI_COMM_WORLD);
     /// update Config when step over
-    config.update_config();
+    config.update_config(false);
     MPI_Barrier(MPI_COMM_WORLD);
 }
 
