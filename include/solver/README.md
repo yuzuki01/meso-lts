@@ -27,6 +27,7 @@ dvs-type    <your-dvs-type>
 * `dvs-type`  决定速度空间网格类型，生成网格的脚本位于 `files/scritps`
 
   - `Gauss-Hermite`
+  - `Half-range Gauss-Hermite`
   - `Newton-Cotes`
   - `<dvs-type>`：默认值，或其他类型，都调用 `fvmMesh::load_gambit()` 函数
 
