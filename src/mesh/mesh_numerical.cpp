@@ -12,8 +12,7 @@ Vector fvmMesh::grad(Field<MESO::Scalar> &field, MESO::ObjectId element_id) {
             Vector Sfr(0.0, 0.0, 0.0);
             for (int j = 0; j < cell.least_square.neighbor_num; ++j) {
                 int &neighbor_id = cell.neighbors[j];
-                Sfr += (values[neighbor_id] - values[cell.id]) * cell.least_square.weight[j] *
-                       cell.least_square.dr[j];
+                Sfr += (values[neighbor_id] - values[cell.id]) * cell.least_square.dr[j];
             }
             return {cell.least_square.Cx * Sfr, cell.least_square.Cy * Sfr, cell.least_square.Cz * Sfr};
         }
@@ -33,8 +32,7 @@ Field<Vector> fvmMesh::grad(Field<Scalar> &field) {
                 Vector Sfr(0.0, 0.0, 0.0);
                 for (int j = 0; j < cell.least_square.neighbor_num; ++j) {
                     int &neighbor_id = cell.neighbors[j];
-                    Sfr += (values[neighbor_id] - values[cell.id]) * cell.least_square.weight[j] *
-                           cell.least_square.dr[j];
+                    Sfr += (values[neighbor_id] - values[cell.id]) * cell.least_square.dr[j];
                 }
                 result[cell.id] = {cell.least_square.Cx * Sfr, cell.least_square.Cy * Sfr, cell.least_square.Cz * Sfr};
             }
@@ -59,7 +57,8 @@ Scalar fvmMesh::interp_IDW(Field<MESO::Scalar> &field, MESO::ObjectId element_id
             Scalar sum_wf = 0.0, sum_w = 0.0;
             for (int i = 0; i < cell.least_square.neighbor_num; ++i) {
                 auto neighbor = cell.neighbors[i];
-                auto wi = cell.least_square.weight[i];
+                auto &dr = cell.least_square.dr[i];
+                auto wi = 1.0 / (dr * dr);
                 sum_w += wi;
                 sum_wf += wi * values[neighbor];
             }
@@ -81,7 +80,8 @@ Vector fvmMesh::interp_IDW(Field<MESO::Vector> &field, MESO::ObjectId element_id
             Scalar sum_w = 0.0;
             for (int i = 0; i < cell.least_square.neighbor_num; ++i) {
                 auto neighbor = cell.neighbors[i];
-                auto wi = cell.least_square.weight[i];
+                auto &dr = cell.least_square.dr[i];
+                auto wi = 1.0 / (dr * dr);
                 sum_w += wi;
                 sum_wf += wi * values[neighbor];
             }
