@@ -69,6 +69,84 @@ fvmMesh::Mesh DVS::generate_dvs(const std::string &file_path, GaussHermiteParams
     return mesh;
 }
 
+template <>
+fvmMesh::Mesh DVS::generate_dvs(const std::string &file_path, HalfRangeGHParams &params) {
+    auto lines = read_dvs_lines(file_path);
+    const int n = static_cast<int>(lines.size()) - 1;
+    auto data = MESO::Utils::split(lines[0]);
+    if (data[0] != "half-range-Gauss-Hermite") {
+        logger.error << "generate_dvs<HalfRangeGH> get wrong type: " << data[0] << std::endl;
+        throw std::invalid_argument("generate_dvs type error.");
+    }
+    /**
+     * File format:
+     *  1| half-range-Gauss-Hermite
+     *  2| <x_0> <w_0>
+     *  3| <x_1> <w_1>
+     *  4| ...
+     **/
+    fvmMesh::Mesh mesh;
+    const double x_scale = sqrt(2.0 * params.RT);
+    List<Scalar> x_list(n), w_list(n);
+    for (int i = 0; i < n; ++i) {
+        data = MESO::Utils::split(lines[i + 1]);    // skip first line
+        x_list[i] = x_scale * std::stod(data[0]);
+        w_list[i] = std::stod(data[1]);
+    }
+
+    double max_mag = 0.0;
+    auto get_symmetry = [](int _i, int _n){
+        return _n - _i - 1;
+    };
+    if (params.dimension == 2) {
+        auto get_id = [](int _i, int _j, int _n){
+            return _i + _j * _n;
+        };
+        for (int j = 0; j < n; ++j) {
+            int jj = get_symmetry(j, n);
+            for (int i = 0; i < n; ++i) {
+                int ii = get_symmetry(i, n);
+                fvmMesh::Cell cell(get_id(i, j, n));
+                cell.position = Vector{x_list[i], x_list[j], 0.0};
+                cell.volume = w_list[i] * w_list[j];
+                auto &symmetry = cell.symmetry;
+                symmetry.id[0] = get_id(ii, j, n);
+                symmetry.id[1] = get_id(i, jj, n);
+                symmetry.id[2] = get_id(i, j, n);
+                mesh.cells.push_back(cell);
+                double cell_mag = cell.position.magnitude();
+                if (max_mag < cell_mag) max_mag = cell_mag;
+            }
+        }
+    } else {
+        auto get_id = [](int _i, int _j, int _k, int _n){
+            return _i + (_j + _k * _n) * _n;
+        };
+        for (int k = 0; k < n; ++k) {
+            int kk = get_symmetry(k, n);
+            for (int j = 0; j < n; ++j) {
+                int jj = get_symmetry(j, n);
+                for (int i = 0; i < n; ++i) {
+                    int ii = get_symmetry(i, n);
+                    fvmMesh::Cell cell(i + (j + k * n) * n);
+                    cell.position = Vector{x_list[i], x_list[j], x_list[k]};
+                    cell.volume = x_list[i] * x_list[j] * x_list[k];
+                    auto &symmetry = cell.symmetry;
+                    symmetry.id[0] = get_id(ii, j, k, n);
+                    symmetry.id[1] = get_id(i, jj, k, n);
+                    symmetry.id[2] = get_id(i, j, kk, n);
+                    mesh.cells.push_back(cell);
+                    double cell_mag = cell.position.magnitude();
+                    if (max_mag < cell_mag) max_mag = cell_mag;
+                }
+            }
+        }
+    }
+    mesh.update_mesh_params();
+    mesh.max_cell_magnitude = max_mag;
+    return mesh;
+}
+
 typedef std::unordered_map<int, std::vector<double>> ValueListMap;
 
 ValueListMap nc_weight = {

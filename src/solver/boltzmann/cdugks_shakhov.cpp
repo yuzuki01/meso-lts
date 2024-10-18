@@ -53,7 +53,11 @@ CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicS
     if (dvs_type == "Newton-Cotes") {
         auto dvs_params = DVS::NewtonCotesParams(mesh.dimension());
         dvs_mesh = DVS::generate_dvs(dvs_file, dvs_params);
-    } else if (dvs_type == "Sparse") {
+    } else if (dvs_type == "half-range-Gauss-Hermite") {
+        auto dvs_params = DVS::HalfRangeGHParams(mesh.dimension(), R * T0);
+        dvs_mesh = DVS::generate_dvs(dvs_file, dvs_params);
+    }
+    else if (dvs_type == "Sparse") {
         dvs_mesh = DVS::read_mesh_file(dvs_file);
     } else {
         dvs_mesh = fvmMesh::load_gambit(dvs_file);

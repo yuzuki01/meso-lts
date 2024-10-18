@@ -10,6 +10,13 @@ namespace MESO::DVS {
         GaussHermiteParams(int dimension, double RT) : dimension(dimension), RT(RT) {};
     };
 
+    struct HalfRangeGHParams {
+        int dimension;
+        double RT;
+
+        HalfRangeGHParams(int dimension, double RT) : dimension(dimension), RT(RT) {};
+    };
+
     struct NewtonCotesParams {
         int dimension;
 
@@ -17,15 +24,19 @@ namespace MESO::DVS {
     };
 
     template<typename T>
-    fvmMesh::Mesh generate_dvs(const std::string &file_path, T &params);
+    fvmMesh::Mesh generate_dvs(const String &file_path, T &params);
 
     /// Gauss-Hermite
     template<>
-    fvmMesh::Mesh generate_dvs(const std::string &file_path, GaussHermiteParams &params);
+    fvmMesh::Mesh generate_dvs(const String &file_path, GaussHermiteParams &params);
+
+    /// half-range Gauss-Hermite
+    template<>
+    fvmMesh::Mesh generate_dvs(const String &file_path, HalfRangeGHParams &params);
 
     /// Newton-Cotes
     template<>
-    fvmMesh::Mesh generate_dvs(const std::string &file_path, NewtonCotesParams &params);
+    fvmMesh::Mesh generate_dvs(const String &file_path, NewtonCotesParams &params);
 
     /// Sparse
     fvmMesh::Mesh read_mesh_file(const String &file_path);
