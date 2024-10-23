@@ -95,10 +95,10 @@ dvs-type        <dvs-type>
 
 Re          400.0
 Ma          0.1414213562373095
-CFL         0.8
 
 gradient-switch     True
 
+timeStep            2.5e-3
 gas-constant        0.5
 ref-density         1.0
 ref-length          1.0
