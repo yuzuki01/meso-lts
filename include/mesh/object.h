@@ -166,6 +166,11 @@ namespace MESO::fvmMesh {
                     std::initializer_list<Field<Scalar> *> values,
                     int step = -1, double solution_time = -1.0);
 
+        void output_grid(const String &file_name);
+
+        void output_data(const String &file_name, const List<Field<Scalar>> &value_list,
+                         const List<String> &value_names, double solution_time) const;
+
         Field<Scalar> zero_scalar_field(int flag = cell_field_flag);
 
         Field<Vector> zero_vector_field(int flag = cell_field_flag);

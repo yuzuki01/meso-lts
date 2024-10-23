@@ -11,7 +11,7 @@ CDUGKS::CDUGKS(MESO::ArgParser &parser, Config &config) : BasicSolver(parser, co
     L0 = config.get("ref-length", 1.0);
     Ma = config.get("Ma", 0.1);
     Re = config.get("Re", 400.0);
-    CFL = config.get("CFL", 0.8);
+    dt = config.get("timeStep", 2.5e-3);
     gradient_switch = config.get<bool>("gradient-switch", true);
     if (not gradient_switch) {
         logger.warn << "[Warn] gradient-switch was CLOSED." << std::endl;
@@ -44,7 +44,6 @@ void CDUGKS::initial() {
     solution_time = 0.0;
     Scalar c_sound = sqrt(RT);
     tau = (L0 * Ma) / (Re * c_sound);
-    dt = CFL * ((mesh.min_cell_size / 2.0) / dvs_mesh.max_cell_magnitude);
     half_dt = 0.5 * dt;
 
     rho_cell = mesh.zero_scalar_field();
@@ -55,8 +54,8 @@ void CDUGKS::initial() {
     flux_f.resize(mpi_task.size, Field<Scalar>(mesh, cell_field_flag));
 
     if (config.get("read-np-data", false, false)) {
-        read_np_data<Scalar>(case_name + "/np-data/Rho.np.dat", rho_cell);
-        read_np_data<Vector>(case_name + "/np-data/vel.np.dat", vel_cell);
+        read_np_data<Scalar>(case_name + "/latest/Rho", rho_cell);
+        read_np_data<Vector>(case_name + "/latest/U", vel_cell);
         for (auto &cell: mesh.cells) {
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
@@ -344,9 +343,6 @@ void CDUGKS::do_step() {
     }
     MPI::Bcast(run_state);
     MPI_Barrier(MPI_COMM_WORLD);
-    /// update Config when step over
-    config.update_config(false);
-    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void CDUGKS::output() {
@@ -354,26 +350,48 @@ void CDUGKS::output() {
         logger.warn << "Solver::output() cannot mkdir: " << case_name << std::endl;
         return;
     }
-    StringStream file_name;
-    file_name << "./" << case_name << "/result-" << step;
+    if (step == 0) {
+        mesh.output_grid(case_name + "/grid.plt");
+    }
 
+    String path, path_latest;
+    {
+        StringStream ss1, ss2;
+        ss1 << case_name << "/step-" << step << "/";
+        ss2 << case_name << "/latest/";
+        path = ss1.str();
+        path_latest = ss2.str();
+    }
+    Utils::mkdir(path);
+    Utils::mkdir(path_latest);
+
+    logger.note << "Output: ";
     auto U = vel_cell.heft(0);
     auto V = vel_cell.heft(1);
     auto W = vel_cell.heft(2);
     if (mesh.dimension() == 2) {
-        mesh.output(file_name.str(),
-                    {"Rho", "U", "V"},
-                    {&rho_cell, &U, &V}, step, solution_time);
+        mesh.output_data(path + "/data.plt",
+                         {rho_cell, U, V},
+                         {"Rho", "U", "V"},
+                         solution_time);
     } else {
-        mesh.output(file_name.str(),
-                    {"Rho", "U", "V", "W"},
-                    {&rho_cell, &U, &V, &W}, step, solution_time);
+        mesh.output_data(path + "/data.plt",
+                         {rho_cell, U, V, W},
+                         {"Rho", "U", "V", "W"},
+                         solution_time);
     }
+    logger.note << " tec-files";
 
     if (output_np) {
-        Utils::mkdir(case_name + "/np-data");
         /// output numpy data
-        rho_cell.output(case_name + "/np-data/Rho");
-        vel_cell.output(case_name + "/np-data/vel");
+        rho_cell.output(path + "Rho");
+        vel_cell.output(path + "U");
+
+        logger.note << ", np-data";
     }
+    {
+        rho_cell.output(path_latest + "Rho");
+        vel_cell.output(path_latest + "U");
+    }
+    logger.note << " @ step=" << step << std::endl;
 }

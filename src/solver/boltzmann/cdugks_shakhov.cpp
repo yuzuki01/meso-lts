@@ -7,10 +7,8 @@ using namespace MESO::Solver;
 void CDUGKS_SHAKHOV::update_config() {
     config.update_config(false);
 
-    Kn = config.get("Kn", 1.0);
     Pr = config.get("Pr", 0.67);
-    Ma = config.get("Ma", 0.1);
-    CFL = config.get("CFL", 0.8);
+    dt = config.get("timeStep", 1.0e-5);
     R = config.get("gas-constant", 0.5);
     K = config.get("gas-k", 0);
     Rho0 = config.get("ref-density", 1.0);
@@ -24,19 +22,13 @@ void CDUGKS_SHAKHOV::update_config() {
         logger.warn << "[Warn] gradient-switch was CLOSED." << std::endl;
         if (not limiter_switch) {
             logger.warn << "[Warn] limiter-switch was CLOSED." << std::endl;
-        }
-        else {
+        } else {
             venkata_k = config.get("venkata-limiter-k", 1.0);
         }
     }
     /// calculate params
     gamma = (K + 5.0) / (K + 3.0);
     Cv = (K + 3.0) * R * 0.5;
-    Scalar RT = R * T0;
-    Scalar c_sound = sqrt(gamma * RT);
-    mfp = Kn * L0;
-    Re = Ma * c_sound * Rho0 * L0 / miu0;
-    dt = CFL * mesh.min_cell_size / dvs_mesh.max_cell_magnitude;
     half_dt = dt * 0.5;
 }
 
@@ -56,8 +48,7 @@ CDUGKS_SHAKHOV::CDUGKS_SHAKHOV(MESO::ArgParser &parser, Config &config) : BasicS
     } else if (dvs_type == "half-range-Gauss-Hermite") {
         auto dvs_params = DVS::HalfRangeGHParams(mesh.dimension(), R * T0);
         dvs_mesh = DVS::generate_dvs(dvs_file, dvs_params);
-    }
-    else if (dvs_type == "Sparse") {
+    } else if (dvs_type == "Sparse") {
         dvs_mesh = DVS::read_mesh_file(dvs_file);
     } else {
         dvs_mesh = fvmMesh::load_gambit(dvs_file);
@@ -73,12 +64,6 @@ void CDUGKS_SHAKHOV::initial() {
     solution_time = 0.0;
     gamma = (K + 5.0) / (K + 3.0);
     Cv = (K + 3.0) * R * 0.5;
-    Scalar RT = R * T0;
-    Scalar c_sound = sqrt(gamma * RT);
-    mfp = Kn * L0;
-    Re = Ma * c_sound * Rho0 * L0 / miu0;
-    dt = CFL * mesh.min_cell_size / dvs_mesh.max_cell_magnitude;
-    half_dt = dt * 0.5;
 
     rho_cell = mesh.zero_scalar_field(cell_field_flag);
     T_cell = mesh.zero_scalar_field(cell_field_flag);
@@ -95,10 +80,10 @@ void CDUGKS_SHAKHOV::initial() {
 
     if (config.get("read-np-data", false, false)) {
         /// Init by np-data
-        read_np_data<Scalar>(case_name + "/np-data/Rho.np.dat", rho_cell);
-        read_np_data<Scalar>(case_name + "/np-data/T.np.dat", T_cell);
-        read_np_data<Vector>(case_name + "/np-data/vel.np.dat", vel_cell);
-        read_np_data<Vector>(case_name + "/np-data/q.np.dat", q_cell);
+        read_np_data<Scalar>(case_name + "/latest/Rho", rho_cell);
+        read_np_data<Scalar>(case_name + "/latest/T", T_cell);
+        read_np_data<Vector>(case_name + "/latest/U", vel_cell);
+        read_np_data<Vector>(case_name + "/latest/q", q_cell);
         for (auto &cell: mesh.cells) {
             for (int p = 0; p < mpi_task.size; ++p) {
                 ObjectId dvs_id = p + mpi_task.start;
@@ -237,10 +222,11 @@ void CDUGKS_SHAKHOV::reconstruct() {
             /// interp to face
             for (auto &face: mesh.faces) {
                 Vector &nv = face.normal_vector[0];
-                auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
+                auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]]
+                                                             : mesh.cells[face.cell_id[1]];
                 Vector dr_ij = face.position - cell.position;
                 /// venkata-limiter
-                Scalar phi_g=1.0, phi_h=1.0;
+                Scalar phi_g = 1.0, phi_h = 1.0;
                 if (limiter_switch) {
                     phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[cell.id], cell, venkata_k);
                     phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[cell.id], cell, venkata_k);
@@ -254,7 +240,8 @@ void CDUGKS_SHAKHOV::reconstruct() {
             /// zeroGradient to face
             for (auto &face: mesh.faces) {
                 Vector &nv = face.normal_vector[0];
-                auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
+                auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]]
+                                                             : mesh.cells[face.cell_id[1]];
                 g_face[p][face.id] = g_cell[p][cell.id];
                 h_face[p][face.id] = h_cell[p][cell.id];
             }
@@ -325,8 +312,8 @@ void CDUGKS_SHAKHOV::reconstruct() {
         }
     }
     {
-        Map<ObjectId> wall_id_map;
-        List<Scalar> wall_rho_local, wall_rho0_local;
+        Map <ObjectId> wall_id_map;
+        List <Scalar> wall_rho_local, wall_rho0_local;
 
         /// boundary
         for (auto &face: mesh.faces) {
@@ -460,7 +447,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     break;
                 case BoundaryType::symmetry: {
                     auto direction = mark.patch.get_int("direction");
-                    List<Scalar> g_all(dvs_mesh.NCELL), h_all(dvs_mesh.NCELL);
+                    List <Scalar> g_all(dvs_mesh.NCELL), h_all(dvs_mesh.NCELL);
                     MPI::GatherFieldList(g_face, g_all, face.id);
                     MPI::GatherFieldList(h_face, h_all, face.id);
                     for (int p = 0; p < mpi_task.size; ++p) {
@@ -479,8 +466,8 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     break;
             }
         }
-        List<Scalar> wall_rho_global;
-        List<Scalar> wall_rho0_global;
+        List <Scalar> wall_rho_global;
+        List <Scalar> wall_rho0_global;
         MPI::AllReduce(wall_rho_local, wall_rho_global);
         MPI::AllReduce(wall_rho0_local, wall_rho0_global);
 
@@ -516,7 +503,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     auto alpha_u = mark.patch.get_scalar("slip-wall-alpha-u");
                     auto alpha_T = mark.patch.get_scalar("slip-wall-alpha-T");
 
-                    List<Scalar> g_all(dvs_mesh.NCELL), h_all(dvs_mesh.NCELL);
+                    List <Scalar> g_all(dvs_mesh.NCELL), h_all(dvs_mesh.NCELL);
                     MPI::GatherFieldList(g_face, g_all, face.id);
                     MPI::GatherFieldList(h_face, h_all, face.id);
                     auto &nv = face.normal_vector[1];
@@ -672,7 +659,7 @@ void CDUGKS_SHAKHOV::do_step() {
             auto T_res = residual(T_cell_res, T_cell);
             auto q_res = residual(q_cell_res, q_cell);
             logger.note << "step: " << step << std::endl;
-            List<Scalar> residual_list;
+            List <Scalar> residual_list;
             if (mesh.dimension() == 2) {
                 residual_list = {rho_res, T_res, vel_res.x, vel_res.y, q_res.x, q_res.y};
                 Utils::print_names_and_values({"Res[Rho]", "Res[T]", "Res[u]", "Res[v]", "Res[qx]", "Res[qy]"},
@@ -703,7 +690,7 @@ void CDUGKS_SHAKHOV::do_step() {
 }
 
 void CDUGKS_SHAKHOV::cell_value_interp(MESO::ObjectId cell_id) {
-    auto rho =fvmMesh::interp_IDW(rho_cell, cell_id);
+    auto rho = fvmMesh::interp_IDW(rho_cell, cell_id);
     auto u = fvmMesh::interp_IDW(vel_cell, cell_id);
     auto T = fvmMesh::interp_IDW(T_cell, cell_id);
     auto q = fvmMesh::interp_IDW(q_cell, cell_id);
@@ -721,7 +708,8 @@ void CDUGKS_SHAKHOV::cell_value_interp(MESO::ObjectId cell_id) {
         g_cell[p][cell_id] = g_shakhov(rho, T, cc, cq, gm);
         h_cell[p][cell_id] = h_shakhov(rho, T, cc, cq, gm);
     }
-    logger.warn << "[Warn] Mask working on cell<" << cell_id + 1 << "> " << mesh.cells[cell_id].position.str() << std::endl;
+    logger.warn << "[Warn] Mask working on cell<" << cell_id + 1 << "> " << mesh.cells[cell_id].position.str()
+                << std::endl;
     Utils::print_names_and_values({"Rho", "u", "v", "w", "T", "qx", "qy", "qz"},
                                   {rho, u.x, u.y, u.z, T, q.x, q.y, q.z});
 }
@@ -731,9 +719,22 @@ void CDUGKS_SHAKHOV::output() {
         logger.warn << "Solver::output() cannot mkdir: " << case_name << std::endl;
         return;
     }
-    StringStream file_name;
-    file_name << "./" << case_name << "/result-" << step;
+    if (step == 0) {
+        mesh.output_grid(case_name + "/grid.plt");
+    }
 
+    String path, path_latest;
+    {
+        StringStream ss1, ss2;
+        ss1 << case_name << "/step-" << step << "/";
+        ss2 << case_name << "/latest/";
+        path = ss1.str();
+        path_latest = ss2.str();
+    }
+    Utils::mkdir(path);
+    Utils::mkdir(path_latest);
+
+    logger.note << "Output: ";
     auto U = vel_cell.heft(0);
     auto V = vel_cell.heft(1);
     auto W = vel_cell.heft(2);
@@ -741,21 +742,32 @@ void CDUGKS_SHAKHOV::output() {
     auto qy = q_cell.heft(1);
     auto qz = q_cell.heft(2);
     if (mesh.dimension() == 2) {
-        mesh.output(file_name.str(),
-                    {"Rho", "T", "U", "V", "qx", "qy"},
-                    {&rho_cell, &T_cell, &U, &V, &qx, &qy}, step, solution_time);
+        mesh.output_data(path + "/data.plt",
+                         {rho_cell, U, V, T_cell, qx, qy},
+                         {"Rho", "U", "V", "T", "qx", "qy"},
+                         solution_time);
     } else {
-        mesh.output(file_name.str(),
-                    {"Rho", "T", "U", "V", "W", "qx", "qy", "qz"},
-                    {&rho_cell, &T_cell, &U, &V, &W, &qx, &qy, &qz}, step, solution_time);
+        mesh.output_data(path + "/data.plt",
+                         {rho_cell, U, V, W, T_cell, qx, qy, qz},
+                         {"Rho", "U", "V", "W", "T", "qx", "qy", "qz"},
+                         solution_time);
     }
+    logger.note << " tec-files";
 
     if (output_np) {
-        Utils::mkdir(case_name + "/np-data");
         /// output numpy data
-        rho_cell.output(case_name + "/np-data/Rho");
-        T_cell.output(case_name + "/np-data/T");
-        vel_cell.output(case_name + "/np-data/vel");
-        q_cell.output(case_name + "/np-data/q");
+        rho_cell.output(path + "Rho");
+        vel_cell.output(path + "U");
+        T_cell.output(path + "T");
+        q_cell.output(path + "q");
+
+        logger.note << ", np-data";
     }
+    {
+        rho_cell.output(path_latest + "Rho");
+        vel_cell.output(path_latest + "U");
+        T_cell.output(path_latest + "T");
+        q_cell.output(path_latest + "q");
+    }
+    logger.note << " @ step=" << step << std::endl;
 }

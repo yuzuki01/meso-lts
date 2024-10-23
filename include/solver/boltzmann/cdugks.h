@@ -8,7 +8,7 @@ public:
     MPI::MPI_TaskObject mpi_task;
 
     bool gradient_switch;
-    double Ma, Re, CFL;
+    double Ma, Re;
     double RT, Rho0, L0;
     double tau{}, dt{}, half_dt{};
     int step{};

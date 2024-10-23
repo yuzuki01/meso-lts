@@ -140,11 +140,9 @@ template<>
 void Field<Scalar>::output(const std::string &file_name) {
     if (MPI::rank != MPI::main_rank) return;
     std::fstream fp;
-    std::stringstream ss;
-    ss << file_name << ".np.dat";
-    fp.open(ss.str(), std::ios::out | std::ios::trunc);
+    fp.open(file_name, std::ios::out | std::ios::trunc);
     if (!fp.is_open()) {
-        logger.warn << "Cannot open file: " << ss.str() << std::endl;
+        logger.warn << "Cannot open file: " << file_name << std::endl;
         fp.close();
         return;
     }
@@ -159,11 +157,9 @@ template<>
 void Field<Vector>::output(const std::string &file_name) {
     if (MPI::rank != MPI::main_rank) return;
     std::fstream fp;
-    std::stringstream ss;
-    ss << file_name << ".np.dat";
-    fp.open(ss.str(), std::ios::out | std::ios::trunc);
+    fp.open(file_name, std::ios::out | std::ios::trunc);
     if (!fp.is_open()) {
-        logger.warn << "Cannot open file: " << ss.str() << std::endl;
+        logger.warn << "Cannot open file: " << file_name << std::endl;
         fp.close();
         return;
     }

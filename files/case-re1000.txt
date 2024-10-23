@@ -8,6 +8,7 @@ dvs-type        half-range-Gauss-Hermite
 write-interval  1000
 max-step        200000
 
+timeStep            2.5e-3
 gradient-switch     True
 limiter-switch      False
 output-np           True

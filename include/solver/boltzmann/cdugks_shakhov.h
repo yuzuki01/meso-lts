@@ -8,9 +8,9 @@ public:
     MPI::MPI_TaskObject mpi_task;
 
     bool gradient_switch{}, limiter_switch{};
-    double Ma{}, Re{}, Kn{}, Pr{}, CFL{};
+    double Pr{};
     int D, K{};
-    double R{}, Rho0{}, T0{}, L0{}, mfp{};
+    double R{}, Rho0{}, T0{}, L0{};
     double gamma{}, Cv{}, vhs_index{}, venkata_k{};
     double miu0{}, dt{}, half_dt{};
     int step{};
