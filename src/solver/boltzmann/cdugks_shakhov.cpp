@@ -228,8 +228,8 @@ void CDUGKS_SHAKHOV::reconstruct() {
                 /// venkata-limiter
                 Scalar phi_g = 1.0, phi_h = 1.0;
                 if (limiter_switch) {
-                    phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[cell.id], cell, venkata_k);
-                    phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[cell.id], cell, venkata_k);
+                    phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[cell.id], cell, venkata_k, 1.0e-10);
+                    phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[cell.id], cell, venkata_k, 1.0e-10);
                 }
                 g_face[p][face.id] = g_cell[p][cell.id]
                                      + phi_g * ((dr_ij - particle.position * half_dt) * grad_g[cell.id]);
