@@ -124,7 +124,7 @@ namespace MESO::fvmMesh {
 
         Cell(ObjectId id, ObjectType geom_type, List<ObjectId> &node_list);
 
-        void compute_least_square(const List<Cell> &neighbor_cells, int dimension);  // defined in geom.cpp
+        void compute_least_square(Mesh &mesh, int dimension);  // defined in geom.cpp
     };
 
     class Mesh {

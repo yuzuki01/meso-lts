@@ -162,15 +162,15 @@ KeyString Geom::generate_key(const MESO::List<ObjectId> &node_list) {
 }
 
 
-void fvmMesh::Cell::compute_least_square(const List<Cell> &neighbor_cells, int dimension) {
-    least_square.neighbor_num = int(neighbor_cells.size());
+void fvmMesh::Cell::compute_least_square(Mesh &mesh, int dimension) {
+    least_square.neighbor_num = int(neighbors.size());
     least_square.dr.resize(least_square.neighbor_num);
     // least_square.weight.resize(least_square.neighbor_num);
     double Sxx, Sxy, Sxz, Syy, Syz, Szz;
     Sxx = Sxy = Sxz = Syy = Syz = Szz = 0.0;
     for (int i = 0; i < least_square.neighbor_num; i++) {
-        auto &near_cell = neighbor_cells[i];
-        Vector dr = near_cell.position - position;
+        auto &neighbor_cell = mesh.cells[neighbors[i]];
+        Vector dr = neighbor_cell.position - position;
         // double wi = 1.0;    // / (dr * dr);
         least_square.dr[i] = dr;
         // least_square.weight[i] = wi;

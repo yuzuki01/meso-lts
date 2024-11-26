@@ -158,14 +158,8 @@ void Mesh::build_geom(double scale_ratio) {
                 cell.neighbors.push_back(cell_id);
             }
         }
-    }
-    for (auto &cell: cells) {
-        List<Cell> neighbor_cells;
-        for (auto neighbor_id: cell.neighbors) {
-            neighbor_cells.push_back(cells[neighbor_id]);
-        }
         /// least square
-        cell.compute_least_square(neighbor_cells, dimension());
+        cell.compute_least_square(*this, dimension());
     }
     /// shrink_to_fit
     nodes.shrink_to_fit();
