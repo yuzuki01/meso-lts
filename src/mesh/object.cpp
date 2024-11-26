@@ -145,18 +145,27 @@ void Mesh::build_geom(double scale_ratio) {
         face.normal_vector[1] = -face.normal_vector[0];
     }
     /// neighbor
+
+    auto contains = [](List<ObjectId> &list, ObjectId val) {
+        return std::find(list.begin(), list.end(), val) != list.end();
+    };
     for (auto &cell: cells) {
-        List<Cell> neighbors;
         for (int face_id: cell.face_id) {
             auto &face = faces[face_id];
             for (int cell_id: face.cell_id) {
-                if (cell_id == cell.id) continue;
+                if (cell_id == cell.id) continue;   // 排除自身
+                if (contains(cell.neighbors, cell_id)) continue;
                 cell.neighbors.push_back(cell_id);
-                neighbors.push_back(cells[cell_id]);
             }
         }
+    }
+    for (auto &cell: cells) {
+        List<Cell> neighbor_cells;
+        for (auto neighbor_id: cell.neighbors) {
+            neighbor_cells.push_back(cells[neighbor_id]);
+        }
         /// least square
-        cell.compute_least_square(neighbors, dimension());
+        cell.compute_least_square(neighbor_cells, dimension());
     }
     /// shrink_to_fit
     nodes.shrink_to_fit();
