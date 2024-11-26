@@ -37,34 +37,10 @@ void Mesh::output(const std::string &file_name) {
     fp << "]=CELLCENTERED), DATAPACKING=BLOCK, ZONETYPE="
        << (dim == 2 ? "FEQUADRILATERAL" : "FEBRICK")
        << std::endl;
-    int count;
     // write node
     write_mesh_node(fp, this);
 
-    count = 0;
-    fp << std::endl << "## Node-y" << std::endl;
-    for (auto &node: nodes) {
-        fp << "\t" << std::setprecision(DATA_PRECISION) << node.position.y;
-        if (count++ >= LINE_DATA_NUM) {
-            fp << std::endl;
-            count = 0;
-        }
-    }
-    fp << std::endl;
-
-    if (dim == 3) {
-        count = 0;
-        fp << std::endl << "## Node-z" << std::endl;
-        for (auto &node: nodes) {
-            fp << "\t" << std::setprecision(DATA_PRECISION) << node.position.z;
-            if (count++ >= LINE_DATA_NUM) {
-                fp << std::endl;
-                count = 0;
-            }
-        }
-        fp << std::endl;
-    }
-
+    int count;
     count = 0;
     fp << std::endl << "## GroupId" << std::endl;
     for (auto &cell: cells) {
@@ -174,43 +150,11 @@ void Mesh::output(const std::string &file_name,
        << (dim == 2 ? "FEQUADRILATERAL" : "FEBRICK");
     if (solution_time >= 0.0) fp << ", SOLUTIONTIME=" << solution_time;
     fp << std::endl;
+
+    write_mesh_node(fp, this);
+
     int count;
-    // write node
     count = 0;
-    fp << std::endl << "## Node-x" << std::endl;
-    for (auto &node: nodes) {
-        fp << "\t" << std::setprecision(DATA_PRECISION) << node.position.x;
-        if (count++ >= LINE_DATA_NUM) {
-            fp << std::endl;
-            count = 0;
-        }
-    }
-    fp << std::endl;
-
-    count = 0;
-    fp << std::endl << "## Node-y" << std::endl;
-    for (auto &node: nodes) {
-        fp << "\t" << std::setprecision(DATA_PRECISION) << node.position.y;
-        if (count++ >= LINE_DATA_NUM) {
-            fp << std::endl;
-            count = 0;
-        }
-    }
-    fp << std::endl;
-
-    if (dim == 3) {
-        count = 0;
-        fp << std::endl << "## Node-z" << std::endl;
-        for (auto &node: nodes) {
-            fp << "\t" << std::setprecision(DATA_PRECISION) << node.position.z;
-            if (count++ >= LINE_DATA_NUM) {
-                fp << std::endl;
-                count = 0;
-            }
-        }
-        fp << std::endl;
-    }
-
     for (int i = 0; i < vc; ++i) {
         auto data_ptr = *(values.begin() + i);
         auto &data = *data_ptr;
