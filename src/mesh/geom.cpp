@@ -171,16 +171,16 @@ void fvmMesh::Cell::compute_least_square(Mesh &mesh, int dimension) {
     for (int i = 0; i < least_square.neighbor_num; i++) {
         auto &neighbor_cell = mesh.cells[neighbors[i]];
         Vector dr = neighbor_cell.position - position;
-        // double wi = 1.0;    // / (dr * dr);
+        double wi = dr * dr;
         least_square.dr[i] = dr;
         // least_square.weight[i] = wi;
         // sum
-        Sxx += dr.x * dr.x;
-        Sxy += dr.x * dr.y;
-        Sxz += dr.x * dr.z;
-        Syy += dr.y * dr.y;
-        Syz += dr.y * dr.z;
-        Szz += dr.z * dr.z;
+        Sxx += (dr.x * dr.x);
+        Sxy += (dr.x * dr.y);
+        Sxz += (dr.x * dr.z);
+        Syy += (dr.y * dr.y);
+        Syz += (dr.y * dr.z);
+        Szz += (dr.z * dr.z);
     }
     least_square.dr.shrink_to_fit();
     // least_square.weight.shrink_to_fit();
