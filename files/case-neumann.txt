@@ -16,16 +16,16 @@ output-np           True
 timeStep            5.0e-4
 gas-constant        0.5
 gas-k               2
-ref-density         1.0
+ref-density         0.5313
 ref-length          1.0
-ref-temperature     1.0
-ref-viscosity       10.0
+ref-temperature     1.5057406
+ref-viscosity       10.002755
 vhs-index           0.5
 
 [group]
 name            RU
 density         fixedValue  scalar  0.5313
-temperature     fixedValue  scalar  1.5057406361754189
+temperature     fixedValue  scalar  1.5057406
 velocity        fixedValue  vector  0.0 0.0 0.0
 
 [group]
