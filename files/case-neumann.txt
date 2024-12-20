@@ -4,8 +4,8 @@ case-name       neumann
 mesh-file       neumann/neumann_phy.neu
 dvs-file        neumann/neumann_dvs.neu
 
-write-interval  50
-max-step        5000
+write-interval  10
+max-step        300
 
 Pr          0.6666666666666667
 
@@ -13,7 +13,7 @@ gradient-switch     True
 limiter-switch      False
 output-np           True
 
-timeStep            3.0e-5
+timeStep            5.0e-4
 gas-constant        0.5
 gas-k               2
 ref-density         1.0
@@ -48,4 +48,4 @@ velocity        fixedValue  vector  0.0 0.7276 0.0
 
 [mark]
 name            Unspecified
-type            farfield-outlet
+type            fluid-interior
