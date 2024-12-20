@@ -16,10 +16,10 @@ output-np           True
 timeStep            5.0e-4
 gas-constant        0.5
 gas-k               2
-ref-density         0.5313
+ref-density         1.0
 ref-length          1.0
-ref-temperature     1.5057406
-ref-viscosity       10.002755
+ref-temperature     1.0
+ref-viscosity       10.0
 vhs-index           0.5
 
 [group]
@@ -49,3 +49,4 @@ velocity        fixedValue  vector  0.0 0.7276 0.0
 [mark]
 name            Unspecified
 type            fluid-interior
+
