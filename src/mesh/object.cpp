@@ -4,10 +4,10 @@
 using namespace MESO::fvmMesh;
 
 
-Face::Face(MESO::ObjectId id, MESO::ObjectType geom_type, MESO::List<ObjectId> node_list)
+Face::Face(MESO::ObjectId id, MESO::ObjectType geom_type, MESO::List<ObjectId> node_list) \
         : id(id), geom_type(geom_type), node_id(std::move(node_list)) {}
 
-Cell::Cell(MESO::ObjectId id, MESO::ObjectType geom_type, MESO::List<ObjectId> &node_list)
+Cell::Cell(MESO::ObjectId id, MESO::ObjectType geom_type, MESO::List<ObjectId> &node_list) \
         : id(id), geom_type(geom_type), node_id(std::move(node_list)) {
     face_id.resize(Geom::face_num(geom_type), -1);
 }
@@ -136,7 +136,6 @@ void Mesh::build_geom(double scale_ratio) {
         for (auto &it: face.node_id) {
             auto &node = nodes[it];
             node_list.push_back(node);
-            node.group_id = face.group_id;
         }
         face.position = Geom::calculate_position(node_list);
         face.area = Geom::calculate_area(face.geom_type, node_list);

@@ -14,7 +14,7 @@
 
 > 网格缩放，支持带量纲直接进行计算
 
-**Boundary** - [README](./include/solver/README.md)
+**Boundary** - [README](src/include/solver/README.md)
 
 > pressure-inlet / pressure-outlet
 
@@ -83,7 +83,7 @@ mpirun -n 10 ./meso-mpi --case case-kn1.txt
 
 ### Configure File
 
-[详细文档](include/solver/README.md)
+[详细文档](src/include/solver/README.md)
 
 ```
 [settings]

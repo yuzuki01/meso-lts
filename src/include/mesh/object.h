@@ -83,7 +83,6 @@ namespace MESO::fvmMesh {
     class Node {
     public:
         ObjectId id;
-        ObjectId group_id = 0;      /// 0 for interior node
         Position position;
         List<ObjectId> neighbors;     /// neighbor cells contained the node
 
