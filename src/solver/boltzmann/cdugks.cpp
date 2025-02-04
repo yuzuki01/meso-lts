@@ -18,7 +18,7 @@ CDUGKS::CDUGKS(MESO::ArgParser &parser, Config &config) : BasicSolver(parser, co
     }
 
     mesh = MESO::fvmMesh::load_gambit(config.get<String>("mesh-file", "<mesh-file>"),
-            mesh_scale);
+                                      mesh_scale);
     mesh.info();
     config.info();
 
@@ -131,9 +131,24 @@ void CDUGKS::reconstruct() {
         /// interp to face
         for (auto &face: mesh.faces) {
             Vector &nv = face.normal_vector[0];
-            auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]] : mesh.cells[face.cell_id[1]];
-            f_face[p][face.id] = f_cell[p][cell.id]
-                                 + (face.position - cell.position - particle.position * half_dt) * grad_f[cell.id];
+            auto &own = mesh.cells[face.cell_id[0]];
+            auto &nei = mesh.cells[face.cell_id[1]];
+            auto nv_xi = nv * particle.position;
+            if (nv_xi >= VSMALL) {
+                // from own
+                f_face[p][face.id] = f_cell[p][own.id]
+                                     + (face.position - own.position - particle.position * half_dt) * grad_f[own.id];
+            } else if (nv_xi < -VSMALL) {
+                // from nei
+                f_face[p][face.id] = f_cell[p][nei.id]
+                                     + (face.position - nei.position - particle.position * half_dt) * grad_f[nei.id];
+            } else {
+                f_face[p][face.id] = 0.5 * (f_cell[p][own.id] + f_cell[p][nei.id]
+                                            + (face.position - own.position - particle.position * half_dt) *
+                                              grad_f[own.id]
+                                            + (face.position - nei.position - particle.position * half_dt) *
+                                              grad_f[nei.id]);
+            }
         }
     }
     {
@@ -168,8 +183,8 @@ void CDUGKS::reconstruct() {
         }
     }
     {
-        Map<ObjectId> wall_rho_map;
-        List<Scalar> wall_rho_local, wall_rho0_local;
+        Map <ObjectId> wall_rho_map;
+        List <Scalar> wall_rho_local, wall_rho0_local;
 
         /// boundary
         for (auto &face: mesh.faces) {
@@ -181,7 +196,7 @@ void CDUGKS::reconstruct() {
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
-                        if (particle.position * nv >= 0.0) {
+                        if (particle.position * nv >= VSMALL) {
                             f_face[p][face.id] = f_maxwell(mark.patch.get_scalar("density"),
                                                            mark.patch.get_vector("velocity"),
                                                            particle.position);
@@ -192,7 +207,7 @@ void CDUGKS::reconstruct() {
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
-                        if (particle.position * nv >= 0.0) {
+                        if (particle.position * nv >= VSMALL) {
                             f_face[p][face.id] = f_maxwell(rho_cell[neighbor.id], vel_cell[neighbor.id],
                                                            particle.position);
                         }
@@ -205,7 +220,7 @@ void CDUGKS::reconstruct() {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         Scalar kn = particle.position * nv;
-                        if (kn >= 0.0) {
+                        if (kn >= VSMALL) {
                             Scalar f_eq = f_maxwell(1.0, mark.patch.get_vector("velocity"),
                                                     particle.position);
                             rho_w0 += kn * particle.volume * f_eq;
@@ -222,8 +237,8 @@ void CDUGKS::reconstruct() {
                     break;
             }
         }
-        List<Scalar> wall_rho_global;
-        List<Scalar> wall_rho0_global;
+        List <Scalar> wall_rho_global;
+        List <Scalar> wall_rho0_global;
         MPI::AllReduce(wall_rho_local, wall_rho_global);
         MPI::AllReduce(wall_rho0_local, wall_rho0_global);
 
@@ -236,11 +251,21 @@ void CDUGKS::reconstruct() {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         Scalar kn = particle.position * nv;
-                        if (kn >= 0.0) {
+                        if (kn >= VSMALL) {
                             int wall_rho_list_id = wall_rho_map[face.id];
                             auto rho_w = wall_rho_global[wall_rho_list_id] / wall_rho0_global[wall_rho_list_id];
                             f_face[p][face.id] = f_maxwell(rho_w, mark.patch.get_vector("velocity"),
                                                            particle.position);
+                        } else {
+                            if (kn < -VSMALL) continue;
+                            int wall_rho_list_id = wall_rho_map[face.id];
+                            auto rho_w = wall_rho_global[wall_rho_list_id] / wall_rho0_global[wall_rho_list_id];
+                            f_face[p][face.id] = 0.5 * (
+                                    f_maxwell(rho_w,
+                                              mark.patch.get_vector("velocity"),
+                                              particle.position)
+                                    + f_face[p][face.id]
+                            );
                         }
                     }
                 }
@@ -319,7 +344,7 @@ void CDUGKS::do_step() {
             Scalar m0_res = residual(rho_cell_res, rho_cell);
             Vector m1_res = residual(vel_cell_res, vel_cell);
             logger.note << "step: " << step << std::endl;
-            List<Scalar> residual_list;
+            List <Scalar> residual_list;
             if (mesh.dimension() == 2) {
                 residual_list = {m0_res, m1_res.x, m1_res.y};
                 Utils::print_names_and_values({"Res[Rho]", "Res[U]", "Res[V]"},

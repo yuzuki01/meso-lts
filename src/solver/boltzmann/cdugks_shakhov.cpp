@@ -222,28 +222,78 @@ void CDUGKS_SHAKHOV::reconstruct() {
             /// interp to face
             for (auto &face: mesh.faces) {
                 Vector &nv = face.normal_vector[0];
-                auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]]
-                                                             : mesh.cells[face.cell_id[1]];
-                Vector dr_ij = face.position - cell.position;
-                /// venkata-limiter
-                Scalar phi_g = 1.0, phi_h = 1.0;
-                if (limiter_switch) {
-                    phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[cell.id], cell, venkata_k, 1.0e-10);
-                    phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[cell.id], cell, venkata_k, 1.0e-10);
+                auto &own = mesh.cells[face.cell_id[0]];
+                auto &nei = mesh.cells[face.cell_id[1]];
+                auto nv_xi = nv * particle.position;
+                if (nv_xi >= VSMALL) {
+                    // from own
+                    Vector dr_ij = face.position - own.position;
+                    /// venkata-limiter
+                    Scalar phi_g = 1.0, phi_h = 1.0;
+                    if (limiter_switch) {
+                        phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[own.id], own, venkata_k, 1.0e-10);
+                        phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[own.id], own, venkata_k, 1.0e-10);
+                    }
+                    g_face[p][face.id] = g_cell[p][own.id]
+                                         + phi_g * ((dr_ij - particle.position * half_dt) * grad_g[own.id]);
+                    h_face[p][face.id] = h_cell[p][own.id]
+                                         + phi_h * ((dr_ij - particle.position * half_dt) * grad_h[own.id]);
+                } else if (nv_xi < -VSMALL) {
+                    // from nei
+                    Vector dr_ij = face.position - nei.position;
+                    /// venkata-limiter
+                    Scalar phi_g = 1.0, phi_h = 1.0;
+                    if (limiter_switch) {
+                        phi_g = venkata_limiter(g_cell[p], dr_ij * grad_g[nei.id], nei, venkata_k, VSMALL);
+                        phi_h = venkata_limiter(h_cell[p], dr_ij * grad_h[nei.id], nei, venkata_k, VSMALL);
+                    }
+                    g_face[p][face.id] = g_cell[p][nei.id]
+                                         + phi_g * ((dr_ij - particle.position * half_dt) * grad_g[nei.id]);
+                    h_face[p][face.id] = h_cell[p][nei.id]
+                                         + phi_h * ((dr_ij - particle.position * half_dt) * grad_h[nei.id]);
+                } else {
+                    // between
+                    Vector dr_own = face.position - own.position;
+                    Vector dr_nei = face.position - nei.position;
+                    /// venkata-limiter
+                    Scalar phi_g_own = 1.0, phi_h_own = 1.0;
+                    Scalar phi_g_nei = 1.0, phi_h_nei = 1.0;
+                    if (limiter_switch) {
+                        phi_g_own = venkata_limiter(g_cell[p], dr_own * grad_g[own.id], own, venkata_k, VSMALL);
+                        phi_h_own = venkata_limiter(h_cell[p], dr_own * grad_h[own.id], own, venkata_k, VSMALL);
+                        phi_g_nei = venkata_limiter(g_cell[p], dr_nei * grad_g[nei.id], nei, venkata_k, VSMALL);
+                        phi_h_nei = venkata_limiter(h_cell[p], dr_nei * grad_h[nei.id], nei, venkata_k, VSMALL);
+                    }
+                    g_face[p][face.id] = 0.5 * (g_cell[p][own.id] + g_cell[p][nei.id]
+                                                + phi_g_own * ((dr_own - particle.position * half_dt) * grad_g[own.id])
+                                                + phi_g_nei * ((dr_nei - particle.position * half_dt) * grad_g[nei.id])
+                    );
+                    h_face[p][face.id] = 0.5 * (h_cell[p][own.id] + h_cell[p][nei.id]
+                                                + phi_h_own * ((dr_own - particle.position * half_dt) * grad_h[own.id])
+                                                + phi_h_nei * ((dr_nei - particle.position * half_dt) * grad_h[nei.id])
+                    );
                 }
-                g_face[p][face.id] = g_cell[p][cell.id]
-                                     + phi_g * ((dr_ij - particle.position * half_dt) * grad_g[cell.id]);
-                h_face[p][face.id] = h_cell[p][cell.id]
-                                     + phi_h * ((dr_ij - particle.position * half_dt) * grad_h[cell.id]);
             }
         } else {
             /// zeroGradient to face
             for (auto &face: mesh.faces) {
+                auto &own = mesh.cells[face.cell_id[0]];
+                auto &nei = mesh.cells[face.cell_id[1]];
                 Vector &nv = face.normal_vector[0];
-                auto &cell = (nv * particle.position >= 0.0) ? mesh.cells[face.cell_id[0]]
-                                                             : mesh.cells[face.cell_id[1]];
-                g_face[p][face.id] = g_cell[p][cell.id];
-                h_face[p][face.id] = h_cell[p][cell.id];
+                auto nv_xi = nv * particle.position;
+                if (nv_xi >= VSMALL) {
+                    // from own
+                    g_face[p][face.id] = g_cell[p][own.id];
+                    h_face[p][face.id] = h_cell[p][own.id];
+                } else if (nv_xi < -VSMALL) {
+                    // from nei
+                    g_face[p][face.id] = g_cell[p][nei.id];
+                    h_face[p][face.id] = h_cell[p][nei.id];
+                } else {
+                    // between
+                    g_face[p][face.id] = 0.5 * (g_cell[p][own.id] + g_cell[p][nei.id]);
+                    h_face[p][face.id] = 0.5 * (h_cell[p][own.id] + h_cell[p][nei.id]);
+                }
             }
         }
     }
@@ -332,7 +382,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
-                        if (particle.position * nv >= 0.0) {
+                        if (particle.position * nv >= VSMALL) {
                             auto c = particle.position - u_in;
                             auto cc = c * c;
                             auto g_m = g_maxwell(rho_in, T_in, cc);
@@ -349,7 +399,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
-                        if (particle.position * nv >= 0.0) {
+                        if (particle.position * nv >= VSMALL) {
                             auto c = particle.position - u_patch;
                             auto cc = c * c;
                             auto g_m = g_maxwell(rho_patch, T_patch, cc);
@@ -367,7 +417,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto rho_patch = p / (R * T_patch);
-                        if (particle.position * nv >= 0.0) {
+                        if (particle.position * nv >= VSMALL) {
                             auto c = particle.position - u_patch;
                             auto cc = c * c;
                             auto g_m = g_maxwell(rho_patch, T_patch, cc);
@@ -390,7 +440,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
-                        if (particle.position * nv >= 0.0) {
+                        if (particle.position * nv >= VSMALL) {
                             auto c = particle.position - u_e;
                             auto cc = c * c;
                             auto g_m = g_maxwell(rho_e, T_e, cc);
@@ -404,7 +454,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
-                        if (particle.position * nv >= 0.0) {
+                        if (particle.position * nv >= VSMALL) {
                             auto c = particle.position - vel_cell[neighbor.id];
                             auto cc = c * c;
                             auto rho = rho_cell[neighbor.id];
@@ -431,7 +481,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
-                        if (kn >= 0.0) {
+                        if (kn >= VSMALL) {
                             auto c = particle.position - u_w;
                             auto cc = c * c;
                             auto g_m = g_maxwell(1.0, T_w, cc);
@@ -454,7 +504,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
-                        if (kn >= 0.0) {
+                        if (kn >= VSMALL) {
                             g_face[p][face.id] = g_all[particle.symmetry.id[direction]];
                             h_face[p][face.id] = h_all[particle.symmetry.id[direction]];
                         }
@@ -485,13 +535,21 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
-                        if (kn >= 0.0) {
+                        if (kn >= VSMALL) {
                             auto c = particle.position - u_patch;
                             auto cc = c * c;
                             auto g_m = g_maxwell(rho_w, T_patch, cc);
                             auto h_m = h_maxwell(T_patch, g_m);
                             g_face[p][face.id] = g_m;
                             h_face[p][face.id] = h_m;
+                        } else {
+                            if (kn < -VSMALL) continue;
+                            auto c = particle.position - u_patch;
+                            auto cc = c * c;
+                            auto g_m = g_maxwell(rho_w, T_patch, cc);
+                            auto h_m = h_maxwell(T_patch, g_m);
+                            g_face[p][face.id] = 0.5 * (g_m + g_face[p][face.id]);
+                            h_face[p][face.id] = 0.5 * (h_m + h_face[p][face.id]);
                         }
                     }
                 }
@@ -513,7 +571,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
                         auto kn = particle.position * nv;
-                        if (kn >= 0.0) {
+                        if (kn >= VSMALL) {
                             auto c = particle.position - u_patch;
                             auto cc = c * c;
                             auto g_m = g_maxwell(rho_w, T_patch, cc);
@@ -522,6 +580,18 @@ void CDUGKS_SHAKHOV::reconstruct() {
                             auto h_r = h_all[particle.symmetry.id[direction]];
                             g_face[p][face.id] = (1.0 - alpha_u) * g_m + alpha_u * g_r;
                             h_face[p][face.id] = (1.0 - alpha_T) * h_m + alpha_T * h_r;
+                        } else {
+                            if (kn < -VSMALL) continue;
+                            auto c = particle.position - u_patch;
+                            auto cc = c * c;
+                            auto g_m = g_maxwell(rho_w, T_patch, cc);
+                            auto h_m = h_maxwell(T_patch, g_m);
+                            auto g_r = g_all[particle.symmetry.id[direction]];
+                            auto h_r = h_all[particle.symmetry.id[direction]];
+                            g_face[p][face.id] = 0.5 * ((1.0 - alpha_u) * g_m + alpha_u * g_r
+                                                        + g_face[p][face.id]);
+                            h_face[p][face.id] = 0.5 * ((1.0 - alpha_T) * h_m + alpha_T * h_r
+                                                        + h_face[p][face.id]);
                         }
                     }
                 }

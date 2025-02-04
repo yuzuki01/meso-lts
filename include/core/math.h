@@ -1,6 +1,8 @@
 #ifndef CORE_MATH_H
 #define CORE_MATH_H
 
+#define VSMALL 1e-30
+
 namespace MESO::Math {
     class Vector;
 }

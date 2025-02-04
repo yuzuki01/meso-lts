@@ -8,14 +8,13 @@ dvs-type        Newton-Cotes
 write-interval  1000
 max-step        100000
 
-Kn          0.075
 Pr          0.6666666666666667
-Ma          0.17723033393597562
 
 gradient-switch     True
+limiter-switch      False
 output-np           True
 
-timeStep            2.5e-3
+timeStep            3.5e-6
 gas-constant        208.24434389140274
 gas-k               0
 ref-density         1.1442351492660286e-06

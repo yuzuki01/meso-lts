@@ -138,16 +138,6 @@ type        wall
 
 ![result](files/result.gif)
 
-### 3D Test
-
-注意：该结果未经对比验证，仅计算了 `20000` 步
-
-```sh
-mpirun -n 12 ./meso-mpi --case case-re400-3d.txt
-```
-
-![result-3d](./files/cavity-3d.png)
-
 ### 1D Solver
 
 Sod 激波管求解器为 1 维 CDUGKS，[代码](https://github.com/yuzuki01/tube)未整合进本项目.
