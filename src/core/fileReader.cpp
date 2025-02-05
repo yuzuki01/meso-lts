@@ -1,15 +1,15 @@
 #include "core/core.h"
 
-
+using namespace MESO;
 using namespace MESO::FileReader;
 
 
-MESO::StringList BasicReader::read_lines() const {
-    std::ifstream fp(file);
+StringList BasicReader::read_lines() const {
+    std::ifstream fp(file_path);
     if (!fp.is_open()) {
-        logger.warn << "Cannot open the file: " << file << std::endl;
+        logger.error << "Cannot open the file: " << file_path << std::endl;
         fp.close();
-        throw std::invalid_argument("file open error");
+        FATAL_ERROR_THROW;
     }
     String line;
     StringList lines;
@@ -23,4 +23,8 @@ MESO::StringList BasicReader::read_lines() const {
     }
     fp.close();
     return lines;
+}
+
+const String &BasicReader::name() const {
+    return file_path;
 }

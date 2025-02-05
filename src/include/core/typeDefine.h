@@ -5,6 +5,7 @@ namespace MESO {
     typedef std::string String;
     typedef std::stringstream StringStream;
     typedef std::vector <String> StringList;
+    typedef int Label;
     typedef int ObjectId;
     typedef int ObjectType;
     typedef double Scalar;

@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
         return code;
     }
 
+    /*
     parse_string = parser.parse_param<MESO::String>("case", "<case-file>", false);
     if (parse_string != "<case-file>") {
         auto solver = parser.parse_param<MESO::String>("solver", "<solver>", false);
@@ -54,6 +55,7 @@ int main(int argc, char **argv) {
         MESO::MPI::Finalize();
         return solver_status;
     }
+     */
 
     /// run with no params
     logger.warn << "type \"./meso-mpi -h\" to get help." << std::endl;

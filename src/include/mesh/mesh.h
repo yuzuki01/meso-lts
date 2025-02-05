@@ -1,18 +1,8 @@
-#ifndef MESO_MESH_H
-#define MESO_MESH_H
+//
+// Created by mayc on 2025/2/4.
+//
 
-#include "core/core.h"
+#ifndef MESO_MPI_MESH_H
+#define MESO_MPI_MESH_H
 
-/// METIS
-#include "mesh/metis.h"
-
-/// UDF
-#include "mesh/object.h"
-#include "mesh/geom.h"
-#include "mesh/reader.h"
-
-namespace MESO::fvmMesh {
-    MESO::fvmMesh::Mesh load_gambit(const std::string &file_path, double mesh_scale=1.0);
-}
-
-#endif //MESO_MESH_H
+#endif //MESO_MPI_MESH_H
