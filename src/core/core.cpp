@@ -7,8 +7,6 @@ namespace MESO {
 
 using namespace MESO;
 
-Logger logger;
-
 StringList Utils::split(const String &_str) {
     std::istringstream iss(_str);
     StringList data;
@@ -36,7 +34,7 @@ void Utils::print_names_and_values(const StringList &names, const List<Scalar> &
 }
 
 int Utils::mkdir(const String &dir_name) {
-    if (MPI::rank != MPI::main_rank) return 0;
+    if (MPI::rank != MPI::mainRank) return 0;
     std::stringstream ss;
     ss << "mkdir -p " << dir_name;
     return system(ss.str().c_str());
@@ -52,7 +50,7 @@ bool Utils::is_converged(const List<Scalar> &residual_list, Scalar limit) {
 
 template<>
 void Utils::output_list(const String &file_path, List<Scalar> &data) {
-    if (MPI::rank != MPI::main_rank) return;
+    if (MPI::rank != MPI::mainRank) return;
     const int DATA_PRECISION=18;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
@@ -63,7 +61,7 @@ void Utils::output_list(const String &file_path, List<Scalar> &data) {
 
 template<>
 void Utils::output_list(const String &file_path, List<Vector> &data) {
-    if (MPI::rank != MPI::main_rank) return;
+    if (MPI::rank != MPI::mainRank) return;
     const int DATA_PRECISION=18;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
@@ -74,7 +72,7 @@ void Utils::output_list(const String &file_path, List<Vector> &data) {
 
 template<>
 void Utils::output_list(const String &file_path, List<List<ObjectId>> &data) {
-    if (MPI::rank != MPI::main_rank) return;
+    if (MPI::rank != MPI::mainRank) return;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
     for (auto &list : data) {
@@ -89,7 +87,7 @@ void Utils::output_list(const String &file_path, List<List<ObjectId>> &data) {
 
 template<>
 void Utils::output_list(const String &file_path, List<Set<ObjectId>> &data) {
-    if (MPI::rank != MPI::main_rank) return;
+    if (MPI::rank != MPI::mainRank) return;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
     for (auto &set : data) {
@@ -100,7 +98,7 @@ void Utils::output_list(const String &file_path, List<Set<ObjectId>> &data) {
 template<>
 List<ObjectType> Utils::read_np_file<ObjectType>(const String &file_path) {
     List<ObjectType> result;
-    MESO::FileReader::BasicReader reader(file_path);
+    MESO::FileIO::BasicReader reader(file_path);
     auto lines = reader.read_lines();
     for (auto &line: lines) {
         auto data = Utils::split(line);
@@ -112,7 +110,7 @@ List<ObjectType> Utils::read_np_file<ObjectType>(const String &file_path) {
 template<>
 List<Scalar> Utils::read_np_file<Scalar>(const String &file_path) {
     List<Scalar> result;
-    MESO::FileReader::BasicReader reader(file_path);
+    MESO::FileIO::BasicReader reader(file_path);
     auto lines = reader.read_lines();
     for (auto &line: lines) {
         auto data = Utils::split(line);
@@ -124,7 +122,7 @@ List<Scalar> Utils::read_np_file<Scalar>(const String &file_path) {
 template<>
 List<Vector> Utils::read_np_file<Vector>(const String &file_path) {
     List<Vector> result;
-    MESO::FileReader::BasicReader reader(file_path);
+    MESO::FileIO::BasicReader reader(file_path);
     auto lines = reader.read_lines();
     for (auto &line: lines) {
         auto data = Utils::split(line);

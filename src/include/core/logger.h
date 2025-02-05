@@ -2,43 +2,49 @@
 #define CORE_LOGGER_H
 
 namespace MESO {
+    class Printer;
     class Logger;
 }
 
 
+class MESO::Printer {
+private:
+    Logger* root_ptr;
+    const int output_level;
+    const String color_prefix;
+    const String color_suffix;
+    bool isOutputAvailable();
+
+public:
+    explicit Printer(const int output_level, Logger* root_ptr, String prefix) :
+            output_level(output_level),
+            root_ptr(root_ptr),
+            color_prefix(std::move(prefix)),
+            color_suffix("\033[0m") {
+    };
+
+    template<class MesoType>
+    Printer& operator<<(const MesoType& value) {
+        if (isOutputAvailable()) {
+            std::cout << color_prefix << value;
+        }
+        return *this;
+    }
+
+    Printer& operator<<(const Vector& value);
+
+    Printer& operator<<(std::ostream& (*manipulator)(std::ostream&)) {
+        if (isOutputAvailable()) {
+            std::cout << color_suffix;
+            manipulator(std::cout);
+        }
+        return *this;
+    }
+};
+
+
 class MESO::Logger {
 private:
-    class Printer {
-    private:
-        Logger* root_ptr;
-        const int output_level;
-        const std::string color_prefix;
-        const std::string color_suffix;
-        bool is_output_available() {
-            return (root_ptr->level <= output_level) and (MPI::rank == MPI::main_rank);
-        };
-
-    public:
-        explicit Printer(const int output_level, Logger* root_ptr, std::string prefix) :
-                output_level(output_level),
-                root_ptr(root_ptr),
-                color_prefix(std::move(prefix)) {};
-
-        template<typename T>
-        Printer& operator<<(const T& value) {
-            if (is_output_available()) {
-                std::cout << color_prefix << value;
-            }
-            return *this;
-        }
-
-        Printer& operator<<(std::ostream& (*manipulator)(std::ostream&)) {
-            if (is_output_available()) {
-                manipulator(std::cout);
-            }
-            return *this;
-        }
-    };
 
 public:
     /// indicate printer
@@ -53,6 +59,8 @@ public:
             debug(-1, this, "\033[1;35m") {};
 };
 
-extern MESO::Logger logger;
+namespace MESO {
+    extern Logger logger;
+}
 
 #endif //CORE_LOGGER_H

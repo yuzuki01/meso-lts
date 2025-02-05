@@ -10,24 +10,23 @@ if (WIN32)
     # if Windows
     message("OS is Windows")
     set(OS_INDICATOR "win")
-    set(SHARED_LIBRARY_SUFFIX ".dll")
 elseif (UNIX AND NOT APPLE)
     # if Linux
     message("OS is Linux")
     set(OS_INDICATOR "linux")
-    set(SHARED_LIBRARY_SUFFIX ".so")
 else ()
     message(FATAL_ERROR "unsupported OS.")
 endif ()
 
-set(LIBRARY_OUTPUT_PATH "build")
-set(EXECUTABLE_OUTPUT_PATH "build")
+set(LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build")
+set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build")
 
 include_directories("src/include")
 
 file(GLOB SRC
-        "src/*/*.cpp"
-        "src/*/*/*.cpp"
+        "src/core/*.cpp"
+        "src/mesh/*.cpp"
+        "src/meso/*.cpp"
 )
 
 # set(CMAKE_SHARED_LIBRARY_PREFIX "")                     # remove prefix

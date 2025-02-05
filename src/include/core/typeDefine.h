@@ -2,6 +2,10 @@
 #define CORE_TYPE_DEF_H
 
 namespace MESO {
+    namespace Math {
+        class Vector;
+    }
+
     typedef std::string String;
     typedef std::stringstream StringStream;
     typedef std::vector <String> StringList;

@@ -1,8 +1,6 @@
-//
-// Created by mayc on 2025/2/5.
-//
-
-#ifndef MESO_MPI_MESHFVMESHREADER_H
-#define MESO_MPI_MESHFVMESHREADER_H
-
-#endif //MESO_MPI_MESHFVMESHREADER_H
+#include "mesh/meshGeomMeshReader.h"
+private:
+    void parseGambitZone(Label &i, const Label &size,
+                         const StringList &lines);
+    void parseGambitMark(Label &i, const Label &size,
+                         const StringList &lines);

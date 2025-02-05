@@ -9,33 +9,33 @@ namespace MESO::Math {
 
 class MESO::Math::Vector {
 public:
-    double x, y, z;
+    Scalar x, y, z;
     Vector() : x(0.0), y(0.0), z(0.0) {};
-    Vector(double _x, double _y, double _z) : x(_x), y(_y), z(_z) {};
-    Vector(const std::initializer_list<double> &init_list);
+    Vector(Scalar _x, Scalar _y, Scalar _z) : x(_x), y(_y), z(_z) {};
+    Vector(const std::initializer_list<Scalar> &init_list);
     Vector& operator=(const Vector &other);
-    double& operator[](int index);
-    double operator[](int index) const;
+    Scalar& operator[](int index);
+    Scalar operator[](int index) const;
 
     Vector& operator+=(const Vector& other);
     Vector& operator-=(const Vector& other);
-    Vector& operator*=(double _s);
-    Vector& operator/=(double _s);
+    Vector& operator*=(Scalar _s);
+    Vector& operator/=(Scalar _s);
 
     Vector operator-() const;
-    Vector operator*(double _s) const;
-    Vector operator/(double _s) const;
+    Vector operator*(Scalar _s) const;
+    Vector operator/(Scalar _s) const;
     Vector operator+(const Vector& other) const;
     Vector operator-(const Vector& other) const;
-    double operator*(const Vector& other) const;
+    Scalar operator*(const Vector& other) const;
     Vector operator^(const Vector& other) const;
 
-    [[nodiscard]] double magnitude() const;
+    [[nodiscard]] Scalar magnitude() const;
     [[nodiscard]] Vector normalize() const;
     [[nodiscard]] std::string str() const;
 };
 
-MESO::Math::Vector operator*(double k, const MESO::Math::Vector &vec);
+MESO::Math::Vector operator*(MESO::Scalar k, const MESO::Math::Vector &vec);
 
 /// openMP
 #pragma omp declare reduction(+: MESO::Math::Vector : omp_out += omp_in)

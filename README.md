@@ -8,9 +8,9 @@
 
 **KarypisLab/METIS** - [here](https://github.com/KarypisLab/METIS)
 
-> 物理网格划分使用 `METIS-5.1.0` ，按照 `MPI::processor_num` 进行划分
+> 物理网格划分使用 `METIS-5.1.0` ，按照 `MPI::processorNum` 进行划分
 
-**Mesh Scale**
+**GeomMesh Scale**
 
 > 网格缩放，支持带量纲直接进行计算
 
