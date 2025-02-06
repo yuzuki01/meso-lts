@@ -11,6 +11,7 @@ class MESO::Math::Vector {
 public:
     Scalar x, y, z;
     Vector() : x(0.0), y(0.0), z(0.0) {};
+    explicit Vector(Scalar _v) : x(_v), y(_v), z(_v) {};
     Vector(Scalar _x, Scalar _y, Scalar _z) : x(_x), y(_y), z(_z) {};
     Vector(const std::initializer_list<Scalar> &init_list);
     Vector& operator=(const Vector &other);

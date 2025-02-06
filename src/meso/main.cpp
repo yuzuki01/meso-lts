@@ -19,6 +19,9 @@ int main(int argc, char **argv) {
     mesh.info();
     mesh.output();
 
+    volVectorField a(mesh);
+    volScalarField b(mesh);
+
     MPI::Finalize();
 
     /// run with no params

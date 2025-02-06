@@ -15,7 +15,7 @@ fvMesh::fvMesh(const FileIO::BasicReader &reader, const Time &time, bool parse)
         parseGambitZone(i, size, lines);
         parseGambitMark(i, size, lines);
         // partition
-        partition(MPI::processorNum);
+        partitionMesh(MPI::processorNum);
     }
 }
 
@@ -193,31 +193,28 @@ void fvMesh::parseGambitMark(Label &i, const Label &size,
  *  ================================================
  **/
 
-void fvMesh::partition(const Label &nPart) {
+void fvMesh::partitionMesh(const Label &nPart) {
     if (nPart == 1) {
-        parts_.reserve(1);
-        parts_.emplace_back(*this, "cellPartition");
-        auto &patch = parts_.back();
+        partition_.reserve(1);
+        partition_.emplace_back(*this, "cellPartition");
+        auto &patch = partition_.back();
         patch.group().reserve(NCELL);
         for (const auto &cell_: cells_) {
             patch.group().push_back(cell_.id());
         }
-        logger.debug << "No need to partition mesh " << name_ << std::endl;
+        logger.debug << "No need to partitionMesh mesh " << name_ << std::endl;
         return;
     }
     // call METIS
     auto numCells = static_cast<idx_t>(NCELL);
     auto numParts = static_cast<idx_t>(nPart);
     typedef std::vector<idx_t> MetisIdList;
-    MetisIdList partition_(numCells);
+    MetisIdList partitionCells(numCells);
 
     if (MPI::rank == MPI::mainRank) {
         List<List<ObjectId>> neighbors(NCELL);
-        for (const auto &face_: faces_) {
-            if (face_.owner() != face_.neighbor()) {
-                neighbors[face_.owner()].push_back(face_.neighbor());
-                neighbors[face_.neighbor()].push_back(face_.owner());
-            }
+        for (int ci = 0; ci < NCELL; ++ci) {
+            neighbors[ci] = cells_[ci].neighbors();
         }
 
         MetisIdList xadj(numCells + 1);
@@ -237,10 +234,10 @@ void fvMesh::partition(const Label &nPart) {
         METIS_SetDefaultOptions(options);
         METIS_PartGraphKway(&numCells, &numParts, xadj.data(), adjncy.data(),
                             nullptr, nullptr, nullptr, &numParts, nullptr,
-                            nullptr, options, &objval, partition_.data());
+                            nullptr, options, &objval, partitionCells.data());
     }
 
-    MPI::Bcast(partition_, MPI::mainRank
+    MPI::Bcast(partitionCells, MPI::mainRank
     );
 
     MPI::Barrier();
@@ -248,13 +245,13 @@ void fvMesh::partition(const Label &nPart) {
     for (int i = 0; i < nPart; ++i) {
         StringStream partName;
         partName << "Part:" << i;
-        parts_.emplace_back(*this, partName.str());
+        partition_.emplace_back(*this, partName.str());
     }
     for (int i = 0; i < NCELL; ++i) {
-        parts_[partition_[i]].group().push_back(i);
+        partition_[partitionCells[i]].group().push_back(i);
     }
     logger.debug << "Mesh " << name_ << " was partitioned into " <<
-                 Label(parts_.size()) << " part(s)" <<
+                 Label(partition_.size()) << " part(s)" <<
                  std::endl;
     // Reset Interior Faces
     auto& interiorPatch = marks_[0];
@@ -265,7 +262,7 @@ void fvMesh::partition(const Label &nPart) {
         const auto& face = faces_[fi];
         const auto& own = cells_[face.owner()];
         const auto& nei = cells_[face.neighbor()];
-        if (partition_[own.id()] == partition_[nei.id()]) {
+        if (partitionCells[own.id()] == partitionCells[nei.id()]) {
             interiorFaces.push_back(fi);
         } else {
             processorPatch.group().push_back(fi);
@@ -295,7 +292,7 @@ void fvMesh::info() const {
     for (int i = 0; i < marks_.size(); ++i) {
         const auto& markPatch = marks_[i];
         logger.info << "\n    " << i << " - " << markPatch.name()
-                    << "\n        num of faces: " << markPatch.group().size();
+                    << "\n        num of faces: " << markPatch.size();
     }
     logger.info << std::endl;
 }
@@ -310,4 +307,8 @@ const Face &fvMesh::face(const ObjectId &id) const {
 
 const List<Face> &fvMesh::faces() const {
     return faces_;
+}
+
+const List<Patch> &fvMesh::partition() const {
+    return partition_;
 }

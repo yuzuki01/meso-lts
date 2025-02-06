@@ -123,6 +123,10 @@ void GeomMesh::parseGambitCell(Label &i, const Label &size,
  **/
 
 
+const String &GeomMesh::name() const {
+    return name_;
+}
+
 const Time &GeomMesh::time() const {
     return time_;
 }

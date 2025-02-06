@@ -9,8 +9,14 @@ Cell::Cell(const Mesh::GeomMesh &owner,
            const List<ObjectId> &nodes)
         : NodeBasedObject(owner, id, geomType, nodes),
           V_(Geometric::getVolume(mesh_, nodes_, GT_)) {
+    // reserve
+    neighbors_.reserve(Geometric::faceNum(GT_));
     // resize
     faces_.resize(Geometric::faceNum(GT_), -1);
+}
+
+const Scalar &Cell::V() const {
+    return V_;
 }
 
 void Cell::setFace(const ObjectId &idFace,
@@ -18,10 +24,16 @@ void Cell::setFace(const ObjectId &idFace,
     faces_[idOnOwner] = idFace;
 }
 
-const Scalar &Cell::V() const {
-    return V_;
-}
-
 const List<ObjectId> &Cell::faces() const {
     return faces_;
+}
+
+void Cell::setNeighbor(const Label &nei) {
+    if (std::find(neighbors_.begin(), neighbors_.end(), nei) == neighbors_.end()) {
+        neighbors_.push_back(nei);
+    }
+}
+
+const List<ObjectId> &Cell::neighbors() const {
+    return neighbors_;
 }

@@ -116,8 +116,10 @@ namespace MESO::Mesh {
     protected:
         Scalar V_;                  // Volume
         List<ObjectId> faces_;      // Faces
+        List<ObjectId> neighbors_;  // Neighbor cells
 
     private:
+
         void operator=(const Cell &);
 
     public:
@@ -131,11 +133,15 @@ namespace MESO::Mesh {
 
         void setFace(const ObjectId &idFace, const ObjectId &idOnOwner);
 
+        void setNeighbor(const Label& nei);
+
         /// Interfaces
 
         [[nodiscard]] const Scalar &V() const;
 
         [[nodiscard]] const List<ObjectId> &faces() const;
+
+        [[nodiscard]] const List<ObjectId> &neighbors() const;
     };
 
     class Patch {
@@ -154,9 +160,15 @@ namespace MESO::Mesh {
 
         /// Interfaces
 
+        [[nodiscard]] Label size() const;
+
         [[nodiscard]] const String &name() const;
 
         [[nodiscard]] const GeomMesh &mesh() const;
+
+        ObjectId& operator[](const Label &index);
+
+        const ObjectId& operator[](const Label &index) const;
 
         List<ObjectId> &group();
 
@@ -194,6 +206,8 @@ namespace MESO::Mesh {
         ~GeomMesh() = default;
 
         /// Interfaces
+        [[nodiscard]] const String &name() const;
+
         [[nodiscard]] const Time &time() const;
 
         [[nodiscard]] const Label &dimension() const;
@@ -218,15 +232,15 @@ namespace MESO::Mesh {
         List<Patch> marks_ = {
                 Patch(*this, "fluid-interior")
         };
-        List<Patch> parts_;     // cell partitions
-        void partition(const Label &nPart);
+        List<Patch> partition_;     // cell partitions
+        void partitionMesh(const Label &nPart);
+
+        void generateFace();
 
     private:
         void operator=(const fvMesh &);
 
 #include "mesh/meshFvMeshReader.h"
-
-        void generateFace();
 
     public:
         explicit fvMesh(const FileIO::BasicReader &reader,
@@ -243,6 +257,8 @@ namespace MESO::Mesh {
         [[nodiscard]] const Face &face(const ObjectId &id) const;
 
         [[nodiscard]] const List<Face> &faces() const;
+
+        [[nodiscard]] const List<Patch> &partition() const;
 
         /// File IO
         void output();

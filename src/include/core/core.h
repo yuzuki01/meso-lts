@@ -34,6 +34,8 @@ namespace MESO {
 
 #define FATAL_ERROR_THROW  throw std::invalid_argument("MESO FATAL ERROR")
 
+#define forAll(X, i) for(int i=0; i < (X).size(); ++i)
+
 /// UDF
 #include "core/typeDefine.h"
 #include "core/math.h"
