@@ -3,10 +3,10 @@
 namespaceMesoMesh
 
 
-Cell::Cell(const MESO::Mesh::GeomMesh &owner,
-           const MESO::ObjectId &id,
+Cell::Cell(const Mesh::GeomMesh &owner,
+           const ObjectId &id,
            const ObjectType &geomType,
-           const List<MESO::ObjectId> &nodes)
+           const List<ObjectId> &nodes)
         : NodeBasedObject(owner, id, geomType, nodes),
           V_(Geometric::getVolume(mesh_, nodes_, GT_)) {
     // resize

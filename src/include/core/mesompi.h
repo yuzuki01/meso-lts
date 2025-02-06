@@ -7,12 +7,6 @@ namespace MESO::Math {
     class Vector;
 }
 
-namespace MESO {
-    /// defined in mesh/object.h
-    template<class FieldType>
-    class BasicField;
-}
-
 namespace MESO::MPI {
 
     const Label mainRank = 0;

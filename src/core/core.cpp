@@ -2,7 +2,14 @@
 
 
 namespace MESO {
-    void init(MESO::ArgParser &parser);
+    bool debug = false;
+
+    const String logo = "    __  ______________ ____    |\n"
+                        "   /  |/  / ____/ ___// __ \\   | @yuzuki01\n"
+                        "  / /|_/ / __/  \\__ \\/ / / /   |\n"
+                        " / /  / / /___ ___/ / /_/ /    | I might\n"
+                        "/_/  /_/_____//____/\\____/     | be a cat😺\uFE0F\n"
+                        "                               |\n";
 }
 
 using namespace MESO;
@@ -28,7 +35,7 @@ void Utils::print_names_and_values(const StringList &names, const List<Scalar> &
     }
     logger.info << std::endl;
     for (auto &it: values) {
-        logger.info<< std::setw(10) << std::left << std::scientific << std::setprecision(2) << it << "\t";
+        logger.info << std::setw(10) << std::left << std::scientific << std::setprecision(2) << it << "\t";
     }
     logger.info << std::endl;
 }
@@ -42,7 +49,7 @@ int Utils::mkdir(const String &dir_name) {
 
 bool Utils::is_converged(const List<Scalar> &residual_list, Scalar limit) {
     bool result = true;
-    for (auto &it : residual_list) {
+    for (auto &it: residual_list) {
         result = result and (it <= limit);
     }
     return result;
@@ -51,10 +58,10 @@ bool Utils::is_converged(const List<Scalar> &residual_list, Scalar limit) {
 template<>
 void Utils::output_list(const String &file_path, List<Scalar> &data) {
     if (MPI::rank != MPI::mainRank) return;
-    const int DATA_PRECISION=18;
+    const int DATA_PRECISION = 18;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
-    for (auto &it : data) {
+    for (auto &it: data) {
         fp << std::setprecision(DATA_PRECISION) << it << std::endl;
     }
 }
@@ -62,10 +69,10 @@ void Utils::output_list(const String &file_path, List<Scalar> &data) {
 template<>
 void Utils::output_list(const String &file_path, List<Vector> &data) {
     if (MPI::rank != MPI::mainRank) return;
-    const int DATA_PRECISION=18;
+    const int DATA_PRECISION = 18;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
-    for (auto &it : data) {
+    for (auto &it: data) {
         fp << std::setprecision(DATA_PRECISION) << it.x << " " << it.y << " " << it.z << std::endl;
     }
 }
@@ -75,7 +82,7 @@ void Utils::output_list(const String &file_path, List<List<ObjectId>> &data) {
     if (MPI::rank != MPI::mainRank) return;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
-    for (auto &list : data) {
+    for (auto &list: data) {
         fp << "(";
         for (auto &it: list) {
             fp << " " << it;
@@ -90,7 +97,7 @@ void Utils::output_list(const String &file_path, List<Set<ObjectId>> &data) {
     if (MPI::rank != MPI::mainRank) return;
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
-    for (auto &set : data) {
+    for (auto &set: data) {
         fp << "( " << set[0] << " " << set[1] << " )" << std::endl;
     }
 }

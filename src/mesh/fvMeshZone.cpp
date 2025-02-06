@@ -5,10 +5,14 @@
 
 namespaceMesoMesh
 
-Patch::Patch(const MESO::Mesh::GeomMesh &owner,
-             MESO::String name)
-           : mesh_(owner), name(std::move(name)) {
+Patch::Patch(const Mesh::GeomMesh &owner,
+             String name)
+           : mesh_(owner), name_(std::move(name)) {
 
+}
+
+const String &Patch::name() const {
+    return name_;
 }
 
 const GeomMesh &Patch::mesh() const {

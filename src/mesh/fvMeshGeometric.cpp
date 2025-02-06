@@ -49,7 +49,7 @@ Label Geometric::nodeNum(const ObjectType &geomType) {
         case Brick:
             return 8;
         default:
-            logger.error << "MESO::Geometric::nodeNum() caught unexpected value" << std::endl;
+            logger.error << "Geometric::nodeNum() caught unexpected value" << std::endl;
             FATAL_ERROR_THROW;
     }
 }
@@ -67,7 +67,7 @@ Label Geometric::faceNum(const ObjectType &geomType) {
         case Brick:
             return 6;
         default:
-            logger.error << "MESO::Geometric::faceNum() caught unexpected value" << std::endl;
+            logger.error << "Geometric::faceNum() caught unexpected value" << std::endl;
             FATAL_ERROR_THROW;
     }
 }
@@ -193,22 +193,22 @@ Scalar Area::quad(const GeomMesh &mesh, const List<ObjectId> &nodes) {
            + tria(mesh, {nodes[0], nodes[3], nodes[2]});
 }
 
-Scalar Volume::brick(const GeomMesh &mesh, const MESO::List<ObjectId> &nodes) {
+Scalar Volume::brick(const GeomMesh &mesh, const List<ObjectId> &nodes) {
     return wedge(mesh, {nodes[0], nodes[1], nodes[5], nodes[2], nodes[3], nodes[7]})
            + wedge(mesh, {nodes[0], nodes[4], nodes[5], nodes[2], nodes[6], nodes[7]});
 }
 
-Scalar Volume::wedge(const GeomMesh &mesh, const MESO::List<ObjectId> &nodes) {
+Scalar Volume::wedge(const GeomMesh &mesh, const List<ObjectId> &nodes) {
     return pyram(mesh, {nodes[0], nodes[2], nodes[5], nodes[3], nodes[1]})
            + tetra(mesh, {nodes[1], nodes[3], nodes[4], nodes[5]});
 }
 
-Scalar Volume::pyram(const GeomMesh &mesh, const MESO::List<ObjectId> &nodes) {
+Scalar Volume::pyram(const GeomMesh &mesh, const List<ObjectId> &nodes) {
     return tetra(mesh, {nodes[0], nodes[1], nodes[2], nodes[4]})
            + tetra(mesh, {nodes[1], nodes[2], nodes[3], nodes[4]});
 }
 
-Scalar Volume::tetra(const GeomMesh &mesh, const MESO::List<ObjectId> &nodes) {
+Scalar Volume::tetra(const GeomMesh &mesh, const List<ObjectId> &nodes) {
     Vector p1 = constructVector(
             mesh.node(nodes[0]),
             mesh.node(nodes[1]));

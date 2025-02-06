@@ -37,7 +37,7 @@ void fvMesh::parseGambitHead(Label &i, const Label &size,
             NCELL = std::stoi(data[1]);
             NZONE = std::stoi(data[2]);
             zones_.reserve(NZONE);
-            NMARK = std::stoi(data[3]);
+            NMARK = std::stoi(data[3]) + 1;
             NDFCD = std::stoi(data[4]);
             NDFVL = std::stoi(data[5]);
         }
@@ -244,7 +244,7 @@ void fvMesh::partition(const Label &nPart) {
     );
 
     MPI::Barrier();
-// METIS to MESO
+    // METIS to MESO
     for (int i = 0; i < nPart; ++i) {
         StringStream partName;
         partName << "Part:" << i;
@@ -256,6 +256,22 @@ void fvMesh::partition(const Label &nPart) {
     logger.debug << "Mesh " << name_ << " was partitioned into " <<
                  Label(parts_.size()) << " part(s)" <<
                  std::endl;
+    // Reset Interior Faces
+    auto& interiorPatch = marks_[0];
+    marks_.emplace_back(*this, "processor");
+    auto& processorPatch = marks_.back();
+    List<ObjectId> interiorFaces;
+    for (const Label fi : interiorPatch.group()) {
+        const auto& face = faces_[fi];
+        const auto& own = cells_[face.owner()];
+        const auto& nei = cells_[face.neighbor()];
+        if (partition_[own.id()] == partition_[nei.id()]) {
+            interiorFaces.push_back(fi);
+        } else {
+            processorPatch.group().push_back(fi);
+        }
+    }
+    interiorPatch.group() = interiorFaces;
 }
 
 
@@ -264,6 +280,25 @@ void fvMesh::partition(const Label &nPart) {
  *  ------------------ Interfaces ------------------
  *  ================================================
  **/
+
+void fvMesh::info() const {
+    logger.info << "\nfvMesh:"
+                   "\n    name: " << name_ <<
+                   "\n    num of nodes: " << NNODE <<
+                   "\n    num of cells: " << NCELL <<
+                   "\n    num of faces: " << NFACE <<
+                   "\n    num of marks: " << NMARK <<
+                   std::endl;
+    // mark info
+    if (marks_.empty()) return;
+    logger.info << "  fvMesh::Marks:";
+    for (int i = 0; i < marks_.size(); ++i) {
+        const auto& markPatch = marks_[i];
+        logger.info << "\n    " << i << " - " << markPatch.name()
+                    << "\n        num of faces: " << markPatch.group().size();
+    }
+    logger.info << std::endl;
+}
 
 const Label &fvMesh::faceNum() const {
     return NFACE;

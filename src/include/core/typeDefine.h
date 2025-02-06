@@ -15,7 +15,7 @@ namespace MESO {
     typedef double Scalar;
     typedef std::string KeyString;
     typedef MESO::Math::Vector Vector;
-    typedef MESO::Math::Vector Position;
+    typedef MESO::Math::Vector Coordinate;
     /// set
     template<class T>
     using Set = std::array<T, 2>;
@@ -24,7 +24,7 @@ namespace MESO {
     using List = std::vector<T>;
     /// Map
     template<class T>
-    using Map = std::unordered_map<ObjectId, T>;
+    using Map = std::unordered_map<Label, T>;
     /// Dict
     template<class T>
     using Dict = std::unordered_map<String, T>;

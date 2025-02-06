@@ -22,10 +22,10 @@ const ObjectType &BasicMeshObject::geomType() const {
 
 
 NodeBasedObject::NodeBasedObject(
-        const MESO::Mesh::GeomMesh &owner,
-        const MESO::ObjectId &id,
-        const MESO::ObjectType &GT,
-        const List<MESO::ObjectId> &nodes)
+        const GeomMesh &owner,
+        const ObjectId &id,
+        const ObjectType &GT,
+        const List<ObjectId> &nodes)
         : BasicMeshObject(owner, id, GT),
           nodes_(nodes),
           C_(Geometric::getCoordinate(mesh_, nodes)) {

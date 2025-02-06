@@ -62,7 +62,7 @@ namespace MESO::Mesh {
 
     class Node : public BasicMeshObject {
     protected:
-        const Vector C_;    // coordinate
+        const Coordinate C_;
     private:
         void operator=(const Node &);
 
@@ -73,7 +73,7 @@ namespace MESO::Mesh {
 
         ~Node() = default;
 
-        [[nodiscard]] const Vector &C() const;
+        [[nodiscard]] const Coordinate &C() const;
     };
 
     class Face : public NodeBasedObject {
@@ -140,7 +140,7 @@ namespace MESO::Mesh {
 
     class Patch {
     protected:
-        const String name;
+        const String name_;
         const GeomMesh &mesh_;
         List<ObjectId> group_;
 
@@ -151,6 +151,10 @@ namespace MESO::Mesh {
         Patch(const GeomMesh &owner, String name);
 
         ~Patch() = default;
+
+        /// Interfaces
+
+        [[nodiscard]] const String &name() const;
 
         [[nodiscard]] const GeomMesh &mesh() const;
 
@@ -163,7 +167,7 @@ namespace MESO::Mesh {
     protected:
         bool isParsed;
         const String name_;
-        const Time time_;
+        const Time &time_;
 
         // mesh info
         Label NNODE{};      // num of points
@@ -190,6 +194,8 @@ namespace MESO::Mesh {
         ~GeomMesh() = default;
 
         /// Interfaces
+        [[nodiscard]] const Time &time() const;
+
         [[nodiscard]] const Label &dimension() const;
 
         [[nodiscard]] const Label &nodeNum() const;
@@ -230,6 +236,8 @@ namespace MESO::Mesh {
         ~fvMesh() = default;
 
         /// Interfaces
+        void info() const;
+
         [[nodiscard]] const Label &faceNum() const;
 
         [[nodiscard]] const Face &face(const ObjectId &id) const;
@@ -241,7 +249,9 @@ namespace MESO::Mesh {
     };
 
 #include "mesh/meshGeometric.h"
+#include "mesh/meshBoundary.h"
 
 }
+
 
 #endif //MESO_MESH_H

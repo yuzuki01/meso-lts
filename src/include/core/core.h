@@ -21,8 +21,17 @@
 #include <memory>
 #include <mpi.h>
 
+
+/// Global
+namespace MESO {
+    extern bool debug;
+
+    extern const std::string logo;
+}
+
 /// MACRO
 #define namespaceMESO using namespace MESO;
+
 #define FATAL_ERROR_THROW  throw std::invalid_argument("MESO FATAL ERROR")
 
 /// UDF

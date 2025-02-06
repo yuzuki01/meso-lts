@@ -21,11 +21,15 @@ endif ()
 set(LIBRARY_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build")
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/build")
 
-include_directories("src/include")
+include_directories(
+        "src/include"
+        "src/include/include"
+)
 
 file(GLOB SRC
         "src/core/*.cpp"
         "src/mesh/*.cpp"
+        "src/field/*.cpp"
         "src/meso/*.cpp"
 )
 

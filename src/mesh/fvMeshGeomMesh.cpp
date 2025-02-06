@@ -35,7 +35,7 @@ void GeomMesh::parseGambitHead(Label &i, const Label &size,
             NCELL = std::stoi(data[1]);
             NZONE = std::stoi(data[2]);
             zones_.reserve(NZONE);
-            NMARK = std::stoi(data[3]);
+            NMARK = std::stoi(data[3]) + 1;
             NDFCD = std::stoi(data[4]);
             NDFVL = std::stoi(data[5]);
         }
@@ -121,6 +121,11 @@ void GeomMesh::parseGambitCell(Label &i, const Label &size,
  *  ------------------ Interfaces ------------------
  *  ================================================
  **/
+
+
+const Time &GeomMesh::time() const {
+    return time_;
+}
 
 const Label &GeomMesh::dimension() const {
     return NDFCD;

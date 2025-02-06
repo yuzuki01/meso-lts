@@ -2,10 +2,10 @@
 
 namespaceMesoMesh
 
-Face::Face(const MESO::Mesh::GeomMesh &owner,
-           const MESO::ObjectId &id,
+Face::Face(const Mesh::GeomMesh &owner,
+           const ObjectId &id,
            const ObjectType &geomType,
-           const List<MESO::ObjectId> &nodes,
+           const List<ObjectId> &nodes,
            const ObjectId &ci)
         : NodeBasedObject(owner, id, geomType, nodes),
           S_(Geometric::getArea(mesh_, nodes_, GT_)),
@@ -21,7 +21,7 @@ void Face::setPatch(const ObjectId &patchId) {
     patch_ = patchId;
 }
 
-void Face::setNeighbor(const MESO::Label &cellId) {
+void Face::setNeighbor(const Label &cellId) {
     neighbor_ = cellId;
 }
 

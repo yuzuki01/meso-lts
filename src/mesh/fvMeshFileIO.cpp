@@ -4,9 +4,11 @@
 namespaceMesoMesh
 
 
-void writeHead(std::fstream &fp, const fvMesh& mesh, const List<String>& varName);
-void writeNode(std::fstream &fp, const fvMesh& mesh);
-void writeGeom(std::fstream &fp, const fvMesh& mesh);
+void writeHead(std::fstream &fp, const fvMesh &mesh, const List<String> &varName);
+
+void writeNode(std::fstream &fp, const fvMesh &mesh);
+
+void writeGeom(std::fstream &fp, const fvMesh &mesh);
 
 /**
  * ===================================================
@@ -17,14 +19,11 @@ void writeGeom(std::fstream &fp, const fvMesh& mesh);
 void fvMesh::output() {
     if (MPI::rank != MPI::mainRank) return;
     Utils::mkdir("constant");
-    const int dim = dimension();
-    const int DATA_PRECISION = 15;
     const int LINE_DATA_NUM = 30;
     std::fstream fp;
-    std::stringstream ss;
     fp.open("constant/grid.plt", std::ios::out | std::ios::trunc);
     if (!fp.is_open()) {
-        logger.warn << "Cannot open file: " << ss.str() << std::endl;
+        logger.warn << "Cannot open file: constant/grid.plt" << std::endl;
         fp.close();
         return;
     }
@@ -36,9 +35,9 @@ void fvMesh::output() {
     int count;
     List<ObjectId> cellValue(NCELL);
 
-    for (int patchi = 0; patchi < zones_.size() ; ++patchi) {
-        const auto& patch = zones_[patchi];
-        for (const auto &ci : patch.group()) {
+    for (int patchi = 0; patchi < zones_.size(); ++patchi) {
+        const auto &patch = zones_[patchi];
+        for (const auto &ci: patch.group()) {
             cellValue[ci] = patchi;
         }
     }
@@ -53,9 +52,9 @@ void fvMesh::output() {
     }
     fp << std::endl;
 
-    for (int patchi = 0; patchi < parts_.size() ; ++patchi) {
-        const auto& patch = parts_[patchi];
-        for (const auto &ci : patch.group()) {
+    for (int patchi = 0; patchi < parts_.size(); ++patchi) {
+        const auto &patch = parts_[patchi];
+        for (const auto &ci: patch.group()) {
             cellValue[ci] = patchi;
         }
     }
@@ -77,39 +76,42 @@ void fvMesh::output() {
     fp.close();
 
     /// Write cell/face/node files
-    Utils::mkdir("constant/meshGeom");
-    {
-        List <Vector> node_pos;
-        for (auto &it: nodes_) {
-            node_pos.push_back(it.C());
+    if (debug) {
+        Utils::mkdir("constant/meshGeom");
+        {
+            List<Vector> node_pos;
+            for (auto &it: nodes_) {
+                node_pos.push_back(it.C());
+            }
+            Utils::output_list("constant/meshGeom/nodePosition", node_pos);
         }
-        Utils::output_list("constant/meshGeom/nodePosition", node_pos);
-    }
-    {
-        List <Vector> cell_pos;
-        List <Scalar> cell_volume;
-        List <List<ObjectId>> cell_neighbor;
-        for (auto &it: cells_) {
-            cell_pos.push_back(it.C());
-            cell_volume.push_back(it.V());
+        {
+            List<Vector> cell_pos;
+            List<Scalar> cell_volume;
+            List<List<ObjectId>> cell_neighbor;
+            for (auto &it: cells_) {
+                cell_pos.push_back(it.C());
+                cell_volume.push_back(it.V());
+            }
+            Utils::output_list("constant/meshGeom/cellPosition", cell_pos);
+            Utils::output_list("constant/meshGeom/cellVolume", cell_volume);
         }
-        Utils::output_list("constant/meshGeom/cellPosition", cell_pos);
-        Utils::output_list("constant/meshGeom/cellVolume", cell_volume);
-    }
-    {
-        List <Vector> face_pos;
-        List <Scalar> face_area;
-        List <Set<ObjectId>> face_neighbor;
-        for (auto &it: faces_) {
-            face_pos.push_back(it.C());
-            face_area.push_back(it.S());
+        {
+            List<Vector> face_pos;
+            List<Scalar> face_area;
+            List<Set<ObjectId>> face_neighbor;
+            for (auto &it: faces_) {
+                face_pos.push_back(it.C());
+                face_area.push_back(it.S());
+            }
+            Utils::output_list("constant/meshGeom/facePosition", face_pos);
+            Utils::output_list("constant/meshGeom/faceArea", face_area);
         }
-        Utils::output_list("constant/meshGeom/facePosition", face_pos);
-        Utils::output_list("constant/meshGeom/faceArea", face_area);
+        logger.debug << "Write mesh geom to constant/meshGeom" << std::endl;
     }
 
-    logger.note << "Write mesh to file: ";
-    logger.info << ss.str() << std::endl;
+    logger.note << "Write mesh "
+                << name_ << " to constant/grid.plt" << std::endl;
 }
 
 
@@ -119,20 +121,20 @@ void fvMesh::output() {
  * ===================================================
  **/
 
-void writeHead(std::fstream &fp, const fvMesh& mesh, const List<String>& varName) {
+void writeHead(std::fstream &fp, const fvMesh &mesh, const List<String> &varName) {
     const Label dim = mesh.dimension();
     fp << "TITLE = \"Grid\"\n"
           "FileType = \"GRID\"\n";
     if (dim == 2) {
         fp << R"(VARIABLES = "X", "Y")";
         if (!varName.empty())
-            for (const auto& it : varName) {
+            for (const auto &it: varName) {
                 fp << ", " << it;
             }
     } else {
         fp << R"(VARIABLES = "X", "Y", "Z")";
         if (!varName.empty())
-            for (const auto& it : varName) {
+            for (const auto &it: varName) {
                 fp << ", " << it;
             }
     }
@@ -166,7 +168,7 @@ void writeHead(std::fstream &fp, const fvMesh& mesh, const List<String>& varName
     fp << std::endl;
 }
 
-void writeNode(std::fstream &fp, const fvMesh& mesh) {
+void writeNode(std::fstream &fp, const fvMesh &mesh) {
     const Label dim = mesh.dimension();
     const int DATA_PRECISION = 15;
     const int LINE_DATA_NUM = 30;
@@ -174,7 +176,7 @@ void writeNode(std::fstream &fp, const fvMesh& mesh) {
     // write node
     count = 0;
     fp << std::endl << "## Node-x" << std::endl;
-    for (auto &node : mesh.nodes()) {
+    for (auto &node: mesh.nodes()) {
         fp << "\t" << std::setprecision(DATA_PRECISION) << node.C().x;
         if (count++ >= LINE_DATA_NUM) {
             fp << std::endl;
@@ -209,12 +211,12 @@ void writeNode(std::fstream &fp, const fvMesh& mesh) {
     }
 }
 
-void writeGeom(std::fstream &fp, const fvMesh& mesh) {
+void writeGeom(std::fstream &fp, const fvMesh &mesh) {
     // write geom
     fp << std::endl << "## geom" << std::endl;
     for (auto &cell: mesh.cells()) {
         const int nodeNum = Geometric::nodeNum(cell.geomType());
-        MESO::List<MESO::ObjectId> node(nodeNum);
+        List<ObjectId> node(nodeNum);
         for (int i = 0; i < nodeNum; ++i) {
             node[i] = cell.nodes()[i] + 1;
         }

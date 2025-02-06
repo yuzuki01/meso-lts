@@ -3,5 +3,6 @@
 
 #include "core/core.h"
 #include "mesh/mesh.h"
+#include "field/field.h"
 
 #endif //MESO_H
