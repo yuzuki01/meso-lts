@@ -17,6 +17,41 @@ namespace MESO::Mesh {
     class GeomMesh;
 }
 
+#ifndef MESO_FIELD_INDICATION
+#define MESO_FIELD_INDICATION
+namespace MESO {
+    template<typename ValueType, Label PatchType>
+    class BasicField;
+
+    enum {
+        VolFlag, SurfFlag
+    };
+
+    template<typename ValueType>
+    using volField = BasicField<ValueType, VolFlag>;
+    using volScalarField = volField<Scalar>;
+    using volVectorField = volField<Vector>;
+
+    template<typename ValueType>
+    using surfField = BasicField<ValueType, SurfFlag>;
+    using surfScalarField = surfField<Scalar>;
+    using surfVectorField = surfField<Vector>;
+
+    /// LeastSquare
+    class LeastSquare {
+    public:
+        List<Vector> dr;        // self to neighbor
+        List<Scalar> weight;
+        Vector Cx, Cy, Cz;
+
+        explicit LeastSquare(const Label &neiSize)
+                : dr(neiSize), weight(neiSize) {
+
+        }
+    };
+}
+#endif //MESO_FIELD_INDICATION
+
 namespace MESO::Mesh {
 
     class BasicMeshObject {
@@ -97,10 +132,9 @@ namespace MESO::Mesh {
 
         void setPatch(const ObjectId &patchId);
 
-        void setNeighbor(const Label& cellId);
+        void setNeighbor(const Label &cellId);
 
         /// Interfaces
-
         [[nodiscard]] const Scalar &S() const;
 
         [[nodiscard]] const ObjectId &owner() const;
@@ -114,9 +148,11 @@ namespace MESO::Mesh {
 
     class Cell : public NodeBasedObject {
     protected:
-        Scalar V_;                  // Volume
-        List<ObjectId> faces_;      // Faces
-        List<ObjectId> neighbors_;  // Neighbor cells
+        Scalar V_;                              // Volume
+        List<ObjectId> faces_;                  // Faces
+        List<ObjectId> neighbors_;              // Neighbor cells
+        ObjectId partition_{};                  // partition
+        ObjectId idOnPartition_{};              // id of partition
 
     private:
 
@@ -133,15 +169,20 @@ namespace MESO::Mesh {
 
         void setFace(const ObjectId &idFace, const ObjectId &idOnOwner);
 
-        void setNeighbor(const Label& nei);
+        void setNeighbor(const Label &nei);
+
+        void setPart(const Label &idPart, const Label &idOnPart);
 
         /// Interfaces
-
         [[nodiscard]] const Scalar &V() const;
 
         [[nodiscard]] const List<ObjectId> &faces() const;
 
         [[nodiscard]] const List<ObjectId> &neighbors() const;
+
+        [[nodiscard]] const Label &partition() const;
+
+        [[nodiscard]] const Label &idOnPartition() const;
     };
 
     class Patch {
@@ -159,6 +200,7 @@ namespace MESO::Mesh {
         ~Patch() = default;
 
         /// Interfaces
+        void append(const ObjectId& objectId);
 
         [[nodiscard]] Label size() const;
 
@@ -166,9 +208,9 @@ namespace MESO::Mesh {
 
         [[nodiscard]] const GeomMesh &mesh() const;
 
-        ObjectId& operator[](const Label &index);
+        ObjectId &operator[](const Label &index);
 
-        const ObjectId& operator[](const Label &index) const;
+        const ObjectId &operator[](const Label &index) const;
 
         List<ObjectId> &group();
 
@@ -262,6 +304,15 @@ namespace MESO::Mesh {
 
         /// File IO
         void output();
+
+        /// FVM
+    protected:
+        List<LeastSquare> leastSquare_;
+
+        void initLeastSquare();
+
+    public:
+        [[nodiscard]] const List<LeastSquare> &leastSquare() const;
     };
 
 #include "mesh/meshGeometric.h"

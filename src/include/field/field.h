@@ -9,25 +9,10 @@ namespaceMesoMesh
 
 
 #define FieldTemplate template<typename ValueType, Label PatchType>
+#define PatchTypeTemplate template<Label PatchType>
+
 
 namespace MESO {
-
-    template<typename ValueType, Label PatchType>
-    class BasicField;
-
-    enum {
-        VolFlag, SurfFlag
-    };
-
-    template<typename ValueType>
-    using volField = BasicField<ValueType, VolFlag>;
-    using volScalarField = volField<Scalar>;
-    using volVectorField = volField<Vector>;
-
-    template<typename ValueType>
-    using surfField = BasicField<ValueType, SurfFlag>;
-    using surfScalarField = surfField<Scalar>;
-    using surfVectorField = surfField<Vector>;
 
     FieldTemplate
     class BasicField {
@@ -39,18 +24,24 @@ namespace MESO {
         List<ObjectId> index_;
         List<ValueType> values_;
 
-    public:
         /// Constructors
+    public:
         explicit BasicField(const fvMesh &mesh);
 
-        BasicField(const fvMesh &mesh, const List<ValueType> &values);
+        BasicField(const fvMesh &mesh,
+                   const List<ValueType> &values);
 
         ~BasicField() = default;
 
         /// Interfaces
+    public:
         List<ValueType> &values();
 
+        [[nodiscard]] const List<ObjectId> &index() const;
+
         [[nodiscard]] const List<ValueType> &values() const;
+
+        [[nodiscard]] const Label size() const;
 
         [[nodiscard]] const fvMesh &mesh() const;
 
@@ -60,13 +51,18 @@ namespace MESO {
 
         const ValueType &operator[](const Label &index) const;
 
-        /// Math
+        BasicField<Scalar, PatchType> component(const Label &index) const;
 
+        /// Math
+    public:
         BasicField &operator=(const BasicField &other);
 
         BasicField operator+(const BasicField &other);
 
         BasicField operator-(const BasicField &other);
+
+        /// File IO
+        void output(const String &fieldName);
     };
 }
 
@@ -86,5 +82,8 @@ BasicField<ValueType, PatchType> operator-(const ValueType &_x, const BasicField
 #include "field/fieldInterfaces.h"
 /// Math
 #include "field/fieldMath.h"
+#include "field/fieldMathFunctions.h"
+/// fvMesh
+#include "field/fvMeshField.h"
 
 #endif //MESO_FIELD_H

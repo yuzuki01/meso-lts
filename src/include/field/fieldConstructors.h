@@ -9,12 +9,11 @@ BasicField<ValueType, PatchType>::BasicField(const MESO::Mesh::fvMesh &mesh)
     switch (PatchType) {
         case VolFlag:   // vol
         {
-            values_.resize(size, ValueType(0));
             for (int i = 0; i < size; ++i) {
                 index_.push_back(partitionPatch[i]);
             }
         }
-        break;
+            break;
         case SurfFlag:  // surf
         {
             for (int ci = 0; ci < size; ++ci) {
@@ -32,20 +31,21 @@ BasicField<ValueType, PatchType>::BasicField(const MESO::Mesh::fvMesh &mesh)
                     }
                 }
             }
-            index_.shrink_to_fit();
-            values_.resize(index_.size(), ValueType(0));
         }
-        break;
+            break;
         default:
             logger.error << "BasicField caught unexpected PatchType" << std::endl;
             FATAL_ERROR_THROW;
     }
+    values_.resize(index_.size(), ValueType(0));
+    index_.shrink_to_fit();
     values_.shrink_to_fit();
 }
 
 FieldTemplate
-BasicField<ValueType, PatchType>::BasicField(const fvMesh &mesh, const List<ValueType> &values)
-    : BasicField(mesh) {
+BasicField<ValueType, PatchType>::BasicField(const fvMesh &mesh,
+                                             const List<ValueType> &values)
+        : BasicField(mesh) {
     values_ = values;
 }
 

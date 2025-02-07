@@ -11,6 +11,10 @@ Patch::Patch(const Mesh::GeomMesh &owner,
 
 }
 
+void Patch::append(const ObjectId &objectId) {
+    group_.push_back(objectId);
+}
+
 Label Patch::size() const {
     return static_cast<Label>(group_.size());
 }

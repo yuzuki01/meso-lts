@@ -11,16 +11,31 @@ int main(int argc, char **argv) {
 
     Time runTime(FileIO::ParamReader{"config"});
     Mesh::fvMesh mesh(
-            FileIO::BasicReader("cavity.neu"),
+            FileIO::BasicReader("dvs.neu"),
             runTime
     );
-    logger.info << "nFace=" << mesh.faces().size() << std::endl;
 
     mesh.info();
     mesh.output();
 
-    volVectorField a(mesh);
-    volScalarField b(mesh);
+    volScalarField a(mesh);
+
+    forAll(a, ai) {
+        const auto& ci = a.index()[ai];
+        const auto& cell = mesh.cell(ci);
+        a[ai] = 1.0 / M_PI * exp(-(magSqr(cell.C() - Vector(0.25,0,0))));
+    }
+
+    auto grad = fvm::grad(a);
+
+    a.output("a");
+    auto S(a);
+    forAll(S, si) {
+        const auto& ci = a.index()[si];
+        const auto& cell = mesh.cell(ci);
+        S[si] = - grad[si] * Vector(1, 0, 0);
+    }
+    S.output("source");
 
     MPI::Finalize();
 

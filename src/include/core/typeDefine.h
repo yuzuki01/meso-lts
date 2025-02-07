@@ -28,6 +28,8 @@ namespace MESO {
     /// Dict
     template<class T>
     using Dict = std::unordered_map<String, T>;
+    /// Enum
+    enum {X_COMPONENT, Y_COMPONENT, Z_COMPONENT};
 }
 
 #endif //CORE_TYPE_DEF_H

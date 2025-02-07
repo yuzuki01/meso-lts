@@ -38,6 +38,10 @@ public:
 
 MESO::Math::Vector operator*(MESO::Scalar k, const MESO::Math::Vector &vec);
 
+MESO::Scalar mag(const MESO::Math::Vector &x);
+
+MESO::Scalar magSqr(const MESO::Math::Vector &x);
+
 /// openMP
 #pragma omp declare reduction(+: MESO::Math::Vector : omp_out += omp_in)
 #pragma omp declare reduction(-: MESO::Math::Vector : omp_out -= omp_in)

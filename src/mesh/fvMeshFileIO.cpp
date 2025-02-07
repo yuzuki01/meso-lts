@@ -25,7 +25,7 @@ void fvMesh::output() {
     if (!fp.is_open()) {
         logger.warn << "Cannot open file: constant/grid.plt" << std::endl;
         fp.close();
-        return;
+        FATAL_ERROR_THROW;
     }
     // write head
     writeHead(fp, *this, {"Group", "Partition"});
@@ -107,11 +107,10 @@ void fvMesh::output() {
             Utils::output_list("constant/meshGeom/facePosition", face_pos);
             Utils::output_list("constant/meshGeom/faceArea", face_area);
         }
-        logger.debug << "Write mesh geom to constant/meshGeom" << std::endl;
+        logger.debug << "Write meshGeom -> constant/meshGeom" << std::endl;
     }
 
-    logger.note << "Write mesh "
-                << name_ << " to constant/grid.plt" << std::endl;
+    logger.note << "Write mesh {" << name_ << "} -> constant/grid.plt" << std::endl;
 }
 
 

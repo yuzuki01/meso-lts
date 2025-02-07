@@ -101,7 +101,7 @@ void fvMesh::generateFace() {
         }
     }
     NFACE = Label(faces_.size());
-    /// Construct Cell-neighbor
+    /// Construct cell-neighbors by faces
     for (const auto& face : faces_) {
         if (face.owner() == face.neighbor()) continue;
         auto &owner = cells_[face.owner()];

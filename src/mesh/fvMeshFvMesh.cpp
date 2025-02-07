@@ -16,6 +16,8 @@ fvMesh::fvMesh(const FileIO::BasicReader &reader, const Time &time, bool parse)
         parseGambitMark(i, size, lines);
         // partition
         partitionMesh(MPI::processorNum);
+        // init LeastSquare here
+        initLeastSquare();
     }
 }
 
@@ -200,7 +202,7 @@ void fvMesh::partitionMesh(const Label &nPart) {
         auto &patch = partition_.back();
         patch.group().reserve(NCELL);
         for (const auto &cell_: cells_) {
-            patch.group().push_back(cell_.id());
+            patch.append(cell_.id());
         }
         logger.debug << "No need to partitionMesh mesh " << name_ << std::endl;
         return;
@@ -248,7 +250,10 @@ void fvMesh::partitionMesh(const Label &nPart) {
         partition_.emplace_back(*this, partName.str());
     }
     for (int i = 0; i < NCELL; ++i) {
-        partition_[partitionCells[i]].group().push_back(i);
+        auto &partPatch = partition_[partitionCells[i]];
+        cells_[i].setPart(partitionCells[i],
+                          partPatch.size());
+        partPatch.append(i);
     }
     logger.debug << "Mesh " << name_ << " was partitioned into " <<
                  Label(partition_.size()) << " part(s)" <<

@@ -59,8 +59,6 @@ BasicField<ValueType, PatchType> operator-(const ValueType &_x, const BasicField
     return {_y.mesh(), result};
 }
 
-#define PatchTypeTemplate template<Label PatchType>
-
 PatchTypeTemplate
 BasicField<Scalar, PatchType> operator*(const Scalar &_x, const BasicField<Scalar, PatchType> &_y) {
     List<Scalar> result(_y.values().size());

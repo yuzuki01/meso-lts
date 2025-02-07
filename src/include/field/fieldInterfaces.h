@@ -7,8 +7,18 @@ List<ValueType> &BasicField<ValueType, PatchType>::values() {
 }
 
 FieldTemplate
+[[nodiscard]] const List<ObjectId> &BasicField<ValueType, PatchType>::index() const {
+    return index_;
+}
+
+FieldTemplate
 [[nodiscard]] const List<ValueType> &BasicField<ValueType, PatchType>::values() const {
     return values_;
+}
+
+FieldTemplate
+[[nodiscard]] const Label BasicField<ValueType, PatchType>::size() const {
+    return values_.size();
 }
 
 FieldTemplate
