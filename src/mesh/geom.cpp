@@ -165,25 +165,25 @@ KeyString Geom::generate_key(const MESO::List<ObjectId> &node_list) {
 void fvmMesh::Cell::compute_least_square(Mesh &mesh, int dimension) {
     least_square.neighbor_num = int(neighbors.size());
     least_square.dr.resize(least_square.neighbor_num);
-    // least_square.weight.resize(least_square.neighbor_num);
+    least_square.weight.resize(least_square.neighbor_num);
     double Sxx, Sxy, Sxz, Syy, Syz, Szz;
     Sxx = Sxy = Sxz = Syy = Syz = Szz = 0.0;
     for (int i = 0; i < least_square.neighbor_num; i++) {
         auto &neighbor_cell = mesh.cells[neighbors[i]];
         Vector dr = neighbor_cell.position - position;
-        double wi = dr * dr;
+        double wi = 1.0 / (dr * dr);
         least_square.dr[i] = dr;
-        // least_square.weight[i] = wi;
+        least_square.weight[i] = wi;
         // sum
-        Sxx += (dr.x * dr.x);
-        Sxy += (dr.x * dr.y);
-        Sxz += (dr.x * dr.z);
-        Syy += (dr.y * dr.y);
-        Syz += (dr.y * dr.z);
-        Szz += (dr.z * dr.z);
+        Sxx += wi * (dr.x * dr.x);
+        Sxy += wi * (dr.x * dr.y);
+        Sxz += wi * (dr.x * dr.z);
+        Syy += wi * (dr.y * dr.y);
+        Syz += wi * (dr.y * dr.z);
+        Szz += wi * (dr.z * dr.z);
     }
     least_square.dr.shrink_to_fit();
-    // least_square.weight.shrink_to_fit();
+    least_square.weight.shrink_to_fit();
     if (dimension == 2) {
         double FM = Sxx * Syy - Sxy * Sxy;
         least_square.Cx = {Syy / FM, -Sxy / FM, 0.0};

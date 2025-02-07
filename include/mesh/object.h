@@ -23,7 +23,7 @@ namespace MESO {
          * grad = Inv(A) . b
          **/
         int neighbor_num{};
-        // List<Scalar> weight;
+        List<Scalar> weight;
         List<Vector> dr;
         Vector Cx, Cy, Cz;
     };

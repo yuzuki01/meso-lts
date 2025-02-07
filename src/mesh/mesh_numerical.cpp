@@ -32,8 +32,8 @@ Field<Vector> fvmMesh::grad(Field<Scalar> &field) {
                 Vector Sfr(0.0, 0.0, 0.0);
                 for (int j = 0; j < cell.least_square.neighbor_num; ++j) {
                     int &neighbor_id = cell.neighbors[j];
-                    // auto wj = cell.least_square.weight[j];
-                    Sfr += (values[neighbor_id] - values[cell.id]) * cell.least_square.dr[j];
+                    auto wj = cell.least_square.weight[j];
+                    Sfr += wj * (values[neighbor_id] - values[cell.id]) * cell.least_square.dr[j];
                 }
                 result[cell.id] = {cell.least_square.Cx * Sfr, cell.least_square.Cy * Sfr, cell.least_square.Cz * Sfr};
             }
