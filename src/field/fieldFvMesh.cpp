@@ -9,7 +9,7 @@ List<Scalar> fvm::processorCommAdjData(const volScalarField &x) {
     const auto &partition = mesh.partition();
     List<Scalar> data(mesh.cellNum());
     forAll(x.index(), ii) {
-        data[x.index()[ii]] = x[ii];
+        data[x.index()[ii]] = x.values()[ii];
     }
     if (MPI::processorNum == 1) return data;
     // Send and Recv
@@ -56,7 +56,7 @@ volVectorField gradLeastSquare(const volScalarField &x) {
                     * (values[neighbor.id()] - values[cell.id()]))
                    * leastSquare.dr[nci];
         }
-        grad_[cell.idOnPartition()] = {leastSquare.Cx * Sfr, leastSquare.Cy * Sfr, leastSquare.Cz * Sfr};
+        grad_.values()[cell.idOnPartition()] = {leastSquare.Cx * Sfr, leastSquare.Cy * Sfr, leastSquare.Cz * Sfr};
     }
     return grad_;
 }
@@ -77,7 +77,7 @@ volVectorField gradGreenGauss(const volScalarField &x) {
 
 
 void fvMesh::initLeastSquare() {
-    if (not leastSquare_.empty()) return;
+    leastSquare_.clear();
     leastSquare_.reserve(NCELL);
     forConstRef(cells_, cell) {     // after fvMesh::partition()
         const auto neiSize = static_cast<Label>(cell.neighbors().size());

@@ -22,7 +22,7 @@ List<ValueType> fvm::processorCommAllData(const volField<ValueType> &x) {
     const auto &partition = mesh.partition();
     List<ValueType> data(mesh.cellNum());
     forAll(x.index(), ii) {
-        data[x.index()[ii]] = x[ii];
+        data[x.index()[ii]] = x.values()[ii];
     }
     if (MPI::processorNum == 1) return data;
     // Send and Recv

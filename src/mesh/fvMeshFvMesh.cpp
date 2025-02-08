@@ -201,8 +201,9 @@ void fvMesh::partitionMesh(const Label &nPart) {
         partition_.emplace_back(*this, "cellPartition");
         auto &patch = partition_.back();
         patch.group().reserve(NCELL);
-        for (const auto &cell_: cells_) {
+        for (auto &cell_: cells_) {
             patch.append(cell_.id());
+            cell_.setPart(0, cell_.id());
         }
         logger.debug << "No need to partitionMesh mesh " << name_ << std::endl;
         return;

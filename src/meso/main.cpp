@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
 
     Time runTime(FileIO::ParamReader{"config"});
     Mesh::fvMesh mesh(
-            FileIO::BasicReader("dvs.neu"),
+            FileIO::BasicReader("cavity.neu"),
             runTime
     );
 
@@ -22,8 +22,10 @@ int main(int argc, char **argv) {
     forAll(a, ai) {
         const auto& ci = a.index()[ai];
         const auto& cell = mesh.cell(ci);
-        // a[ai] = 1.0 / M_PI * exp(-(magSqr(cell.C() - Vector(0.25,0,0))));
-        a[ai] = cell.V();
+        std::cout << cell.idOnPartition() << " " << ai << std::endl;
+        // a.values()[ai] = 1.0 / M_PI * exp(-(magSqr(cell.C() - Vector(0,0,0))) / 8.0);
+        a.values()[ai] = mag(cell.C());
+        // a[ai] = cell.V();
         // b[ai] = cell.C();
     }
 

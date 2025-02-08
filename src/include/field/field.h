@@ -47,10 +47,6 @@ namespace MESO {
 
         [[nodiscard]] const Time &time() const;
 
-        ValueType &operator[](const Label &index);
-
-        const ValueType &operator[](const Label &index) const;
-
         BasicField<Scalar, PatchType> component(const Label &index) const;
 
         /// Math

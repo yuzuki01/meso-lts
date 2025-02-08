@@ -31,14 +31,4 @@ FieldTemplate
     return time_;
 }
 
-FieldTemplate
-ValueType &BasicField<ValueType, PatchType>::operator[](const Label &index) {
-    return values_[index];
-}
-
-FieldTemplate
-const ValueType &BasicField<ValueType, PatchType>::operator[](const Label &index) const {
-    return values_[index];
-}
-
 #endif //MESO_FIELDINTERFACES_H

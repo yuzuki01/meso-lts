@@ -26,7 +26,7 @@ void volScalarField::output(const String &fieldName) {
     fp << "TITLE = \"" << fieldName << "\"\n";
     fp << "FileType = \"SOLUTION\"\n"
           "VARIABLES = \"" << fieldName << "\"\n";
-    fp << "ZONE N=" << mesh_.nodeNum() << ", E=" << mesh_.cellNum();
+    fp << "ZONE T=\"" << fieldName << "\", N=" << mesh_.nodeNum() << ", E=" << mesh_.cellNum();
     fp << ", VARLOCATION=([1]=CELLCENTERED), DATAPACKING=BLOCK, ZONETYPE=";
     fp << (mesh_.dimension() == 2 ? "FEQUADRILATERAL" : "FEBRICK") << ", SOLUTIONTIME=" << time_.name() << std::endl;
     // write values
@@ -69,7 +69,7 @@ void volVectorField::output(const String &fieldName) {
     fp << "TITLE = \"" << fieldName << "\"\n";
     fp << "FileType = \"SOLUTION\"\n"
           "VARIABLES = \"" << fieldName << "-X\", \"" << fieldName << "-Y\", \" " << fieldName << "-Z\"\n";
-    fp << "ZONE N=" << mesh_.nodeNum() << ", E=" << mesh_.cellNum();
+    fp << "ZONE T=\"" << fieldName << "\", N=" << mesh_.nodeNum() << ", E=" << mesh_.cellNum();
     fp << ", VARLOCATION=([1-3]=CELLCENTERED), DATAPACKING=BLOCK, ZONETYPE=";
     fp << (mesh_.dimension() == 2 ? "FEQUADRILATERAL" : "FEBRICK") << ", SOLUTIONTIME=" << time_.name() << std::endl;
     // write values
