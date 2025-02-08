@@ -17,11 +17,17 @@ namespace MESO::MPI {
 
     void Finalize();
 
+    bool isMainProcessor();
+
     void Barrier();
 
-    /// UDF MPI DataType
-    namespace UDF {
-        extern MPI_Datatype MPI_Vector;
+    /// Costume MPI DataType
+    namespace DataType {
+        extern MPI_Datatype MPI_VECTOR;
+
+        void MPI_Vector_init();
+
+        void MPI_Vector_free();
     }
 
     /// Send

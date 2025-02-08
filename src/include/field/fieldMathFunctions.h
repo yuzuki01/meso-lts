@@ -9,7 +9,7 @@ namespace MESO {
         forAll(result, i) {
             result[i] = std::sqrt(_x[i]);
         }
-        return {_x.mesh(), result};
+        return BasicField(_x.mesh(), result);
     }
 
     PatchTypeTemplate
@@ -18,7 +18,7 @@ namespace MESO {
         forAll(result, i) {
             result[i] = std::exp(_x[i]);
         }
-        return {_x.mesh(), result};
+        return BasicField(_x.mesh(), result);
     }
 
     PatchTypeTemplate
@@ -27,7 +27,7 @@ namespace MESO {
         forAll(result, i) {
             result[i] = _x[i].magnitude();
         }
-        return {_x.mesh(), result};
+        return BasicField(_x.mesh(), result);
     }
 }
 

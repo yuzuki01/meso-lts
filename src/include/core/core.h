@@ -27,6 +27,9 @@ namespace MESO {
     extern bool debug;
 
     extern const std::string logo;
+
+    const int DATA_PRECISION = 18;
+    const int LINE_DATA_NUM = 30;
 }
 
 /// MACRO
@@ -36,7 +39,9 @@ namespace MESO {
 
 #define forAll(X, i) for(int i=0; i < (X).size(); ++i)
 
-/// UDF
+#define forConstRef(X, iter) for(const auto& iter : X)
+
+/// Costume
 #include "core/typeDefine.h"
 #include "core/math.h"
 #include "core/mesompi.h"

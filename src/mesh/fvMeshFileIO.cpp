@@ -10,6 +10,7 @@ void writeNode(std::fstream &fp, const fvMesh &mesh);
 
 void writeGeom(std::fstream &fp, const fvMesh &mesh);
 
+
 /**
  * ===================================================
  * --------------------- fvMesh ----------------------
@@ -17,9 +18,11 @@ void writeGeom(std::fstream &fp, const fvMesh &mesh);
  **/
 
 void fvMesh::output() {
-    if (MPI::rank != MPI::mainRank) return;
+    if (not MPI::isMainProcessor()) {
+        MPI::Barrier();     // waiting for mainRank
+        return;
+    }
     Utils::mkdir("constant");
-    const int LINE_DATA_NUM = 30;
     std::fstream fp;
     fp.open("constant/grid.plt", std::ios::out | std::ios::trunc);
     if (!fp.is_open()) {
@@ -111,6 +114,7 @@ void fvMesh::output() {
     }
 
     logger.note << "Write mesh {" << name_ << "} -> constant/grid.plt" << std::endl;
+    MPI::Barrier();
 }
 
 
@@ -169,8 +173,6 @@ void writeHead(std::fstream &fp, const fvMesh &mesh, const List<String> &varName
 
 void writeNode(std::fstream &fp, const fvMesh &mesh) {
     const Label dim = mesh.dimension();
-    const int DATA_PRECISION = 15;
-    const int LINE_DATA_NUM = 30;
     int count;
     // write node
     count = 0;

@@ -5,45 +5,48 @@ namespaceMESO
 
 
 List<Scalar> fvm::processorCommAdjData(const volScalarField &x) {
-    List<Scalar> data(x.mesh().cellNum());
-    const auto& mesh = x.mesh();
-    const auto& partition = mesh.partition();
-    forAll(x.index(), ci) {
-        data[x.index()[ci]] = x[ci];
+    const auto &mesh = x.mesh();
+    const auto &partition = mesh.partition();
+    List<Scalar> data(mesh.cellNum());
+    forAll(x.index(), ii) {
+        data[x.index()[ii]] = x[ii];
     }
     if (MPI::processorNum == 1) return data;
     // Send and Recv
     for (int rank = 0; rank < MPI::processorNum; ++rank) {
-        const auto& patch = partition[rank];
+        const auto &patch = partition[rank];
         forAll(patch.group(), pi) {
-            const auto& cell = mesh.cell(patch[pi]);
-            forAll(cell.neighbors(), ni) {
-                const auto& neighbor = mesh.cell(cell.neighbors()[ni]);
-                if (cell.partition() == neighbor.partition()) continue; // Skip
-                if (MPI::rank == cell.partition()) {
+            const auto &cell = mesh.cell(patch[pi]);
+            forConstRef(cell.neighbors(), cni) {
+                const auto &neighbor = mesh.cell(cni);
+                if (cell.rank() == neighbor.rank()) continue;
+                if (MPI::rank == cell.rank()) {
                     // Send
-                    MPI::SendWithStatus(data[cell.id()], neighbor.partition(), neighbor.id());
-                } else if (MPI::rank == neighbor.partition()) {
+                    MPI::SendWithStatus(data[cell.id()], neighbor.rank(), cell.id());
+                    // std::cout << "Rank-" << MPI::rank << " send cell-" << cell.id() << " to Rank-" << neighbor.rank() << std::endl;
+                } else if (MPI::rank == neighbor.rank()) {
                     // Recv
                     Label tag = -1;
-                    MPI::RecvWithStatus(data[neighbor.id()], cell.id(), tag);
-                    if (tag != neighbor.id()) {
-                        logger.warn << "fvm::processorCommAdjData() receive wrong value" << std::endl;
-                    }
-                }   // Next
+                    Scalar var;
+                    MPI::RecvWithStatus(var, cell.rank(), tag);
+                    data[tag] = var;
+                    // std::cout << "Rank-" << MPI::rank << " recv cell-" << tag << " from Rank-" << cell.rank() << std::endl;
+                }   // Other rank
             }
         }
-        MPI::Barrier();
     }
+    MPI::Barrier();
     return data;
 }
 
 
 volVectorField gradLeastSquare(const volScalarField &x) {
+    //todo
+    //debug
     auto values = fvm::processorCommAdjData(x);
     const auto &mesh = x.mesh();
     volVectorField grad_(mesh);
-    for (const auto &ci : x.index()) {
+    forConstRef(x.index(), ci) {
         const auto &cell = mesh.cell(ci);
         const auto &leastSquare = mesh.leastSquare()[cell.id()];
         Vector Sfr(0.0, 0.0, 0.0);
@@ -53,7 +56,7 @@ volVectorField gradLeastSquare(const volScalarField &x) {
                     * (values[neighbor.id()] - values[cell.id()]))
                    * leastSquare.dr[nci];
         }
-        grad_[ci] = {leastSquare.Cx * Sfr, leastSquare.Cy * Sfr, leastSquare.Cz * Sfr};
+        grad_[cell.idOnPartition()] = {leastSquare.Cx * Sfr, leastSquare.Cy * Sfr, leastSquare.Cz * Sfr};
     }
     return grad_;
 }
@@ -65,7 +68,6 @@ volVectorField gradGreenGauss(const volScalarField &x) {
     return grad_;
 }
 
-Label fvm::gradComputationMethod = fvm::LEAST_SQUARE;    // default
 
 /**
  * =========================================================
@@ -77,7 +79,7 @@ Label fvm::gradComputationMethod = fvm::LEAST_SQUARE;    // default
 void fvMesh::initLeastSquare() {
     if (not leastSquare_.empty()) return;
     leastSquare_.reserve(NCELL);
-    for (const auto &cell: cells_) {        // after fvMesh::partition()
+    forConstRef(cells_, cell) {     // after fvMesh::partition()
         const auto neiSize = static_cast<Label>(cell.neighbors().size());
         LeastSquare ls(neiSize);
         Scalar Sxx, Sxy, Sxz, Syy, Syz, Szz;
@@ -128,8 +130,8 @@ const List<LeastSquare> &fvMesh::leastSquare() const {
     return leastSquare_;
 }
 
-volVectorField fvm::grad(const volScalarField &x) {
-    switch (fvm::gradComputationMethod) {
+volVectorField fvm::grad(const volScalarField &x, Label defaultMethod) {
+    switch (defaultMethod) {
         case fvm::LEAST_SQUARE:
             return gradLeastSquare(x);
         case fvm::GREEN_GAUSS:

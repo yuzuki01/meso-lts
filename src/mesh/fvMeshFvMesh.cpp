@@ -213,9 +213,9 @@ void fvMesh::partitionMesh(const Label &nPart) {
     typedef std::vector<idx_t> MetisIdList;
     MetisIdList partitionCells(numCells);
 
-    if (MPI::rank == MPI::mainRank) {
-        List<List<ObjectId>> neighbors(NCELL);
-        for (int ci = 0; ci < NCELL; ++ci) {
+    if (MPI::isMainProcessor()) {
+        List<List<ObjectId>> neighbors(numCells);
+        for (int ci = 0; ci < numCells; ++ci) {
             neighbors[ci] = cells_[ci].neighbors();
         }
 
@@ -244,26 +244,23 @@ void fvMesh::partitionMesh(const Label &nPart) {
 
     MPI::Barrier();
     // METIS to MESO
+    partition_.reserve(nPart);
     for (int i = 0; i < nPart; ++i) {
         StringStream partName;
         partName << "Part:" << i;
         partition_.emplace_back(*this, partName.str());
     }
-    for (int i = 0; i < NCELL; ++i) {
+    for (int i = 0; i < numCells; ++i) {
         auto &partPatch = partition_[partitionCells[i]];
         cells_[i].setPart(partitionCells[i],
                           partPatch.size());
         partPatch.append(i);
     }
-    logger.debug << "Mesh " << name_ << " was partitioned into " <<
-                 Label(partition_.size()) << " part(s)" <<
-                 std::endl;
     // Reset Interior Faces
     auto& interiorPatch = marks_[0];
-    marks_.emplace_back(*this, "processor");
-    auto& processorPatch = marks_.back();
+    Patch processorPatch(*this, "processor");
     List<ObjectId> interiorFaces;
-    for (const Label fi : interiorPatch.group()) {
+    for (const Label &fi : interiorPatch.group()) {
         const auto& face = faces_[fi];
         const auto& own = cells_[face.owner()];
         const auto& nei = cells_[face.neighbor()];
@@ -273,7 +270,13 @@ void fvMesh::partitionMesh(const Label &nPart) {
             processorPatch.group().push_back(fi);
         }
     }
-    interiorPatch.group() = interiorFaces;
+    if (processorPatch.size() > 0) {
+        interiorPatch.group() = interiorFaces;
+        marks_.push_back(processorPatch);
+    }
+    logger.debug << "Mesh {" << name_ << "} was partitioned into " <<
+                 Label(partition_.size()) << " part(s)" <<
+                 std::endl;
 }
 
 
@@ -284,6 +287,7 @@ void fvMesh::partitionMesh(const Label &nPart) {
  **/
 
 void fvMesh::info() const {
+    if (not MPI::isMainProcessor()) return;
     logger.info << "\nfvMesh:"
                    "\n    name: " << name_ <<
                    "\n    num of nodes: " << NNODE <<

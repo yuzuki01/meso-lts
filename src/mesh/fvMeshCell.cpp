@@ -38,13 +38,13 @@ const List<ObjectId> &Cell::neighbors() const {
     return neighbors_;
 }
 
-void Cell::setPart(const Label &idPart, const Label &idOnPart) {
-    partition_ = idPart;
+void Cell::setPart(const Label &rank, const Label &idOnPart) {
+    rank_ = rank;
     idOnPartition_ = idOnPart;
 }
 
-const Label &Cell::partition() const {
-    return partition_;
+const Label &Cell::rank() const {
+    return rank_;
 }
 
 const Label &Cell::idOnPartition() const {

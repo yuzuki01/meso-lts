@@ -1,3 +1,5 @@
+MESO::MPI::Initialize(&argc, &argv);
+
 MESO::ArgParser parser(argc, argv);
 
 if (parser.parse_switch("debug")) {

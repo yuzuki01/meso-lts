@@ -16,7 +16,7 @@ void MPI::Bcast(Scalar &global, const MESO::Label &root) {
 
 template<>
 void MPI::Bcast(Vector &global, const MESO::Label &root) {
-    MPI_Bcast(&global, 1, UDF::MPI_Vector, root, MPI_COMM_WORLD);
+    MPI_Bcast(&global, 1, DataType::MPI_VECTOR, root, MPI_COMM_WORLD);
 }
 
 template<>
@@ -31,5 +31,5 @@ void MPI::Bcast(List<Scalar> &global, const MESO::Label &root) {
 
 template<>
 void MPI::Bcast(List<Vector> &global, const MESO::Label &root) {
-    MPI_Bcast(global.data(), Label(global.size()), UDF::MPI_Vector, root, MPI_COMM_WORLD);
+    MPI_Bcast(global.data(), Label(global.size()), DataType::MPI_VECTOR, root, MPI_COMM_WORLD);
 }

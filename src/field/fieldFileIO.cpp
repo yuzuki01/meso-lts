@@ -5,12 +5,13 @@ namespaceMESO
 
 
 template<>
-void volField<Scalar>::output(const String &fieldName) {
+void volScalarField::output(const String &fieldName) {
     const auto values = fvm::processorCommAllData(*this);
-    if (MPI::rank != MPI::mainRank) return;
+    if (not MPI::isMainProcessor()) {
+        MPI::Barrier(); // waiting for mainRank
+        return;
+    }
 
-    const int DATA_PRECISION = 18;
-    const int LINE_DATA_NUM = 30;
     Utils::mkdir(time_.name());
     StringStream sPath;
     sPath << time_.name() << "/" << fieldName << ".plt";
@@ -42,16 +43,18 @@ void volField<Scalar>::output(const String &fieldName) {
     // close
     fp.close();
     logger.note << "Write volScalarField data <" << fieldName << "> -> " << sPath.str() << std::endl;
+    MPI::Barrier();
 }
 
 
 template<>
-void volField<Vector>::output(const String &fieldName) {
+void volVectorField::output(const String &fieldName) {
     const auto values = fvm::processorCommAllData(*this);
-    if (MPI::rank != MPI::mainRank) return;
+    if (not MPI::isMainProcessor()) {
+        MPI::Barrier();     // waiting for mainRank
+        return;
+    }
 
-    const int DATA_PRECISION = 18;
-    const int LINE_DATA_NUM = 30;
     Utils::mkdir(time_.name());
     StringStream sPath;
     sPath << time_.name() << "/" << fieldName << ".plt";
@@ -85,4 +88,5 @@ void volField<Vector>::output(const String &fieldName) {
     // close
     fp.close();
     logger.note << "Write volVectorField data <" << fieldName << "> -> " << sPath.str() << std::endl;
+    MPI::Barrier();
 }

@@ -151,7 +151,7 @@ namespace MESO::Mesh {
         Scalar V_;                              // Volume
         List<ObjectId> faces_;                  // Faces
         List<ObjectId> neighbors_;              // Neighbor cells
-        ObjectId partition_{};                  // partition
+        ObjectId rank_{};                  // partition
         ObjectId idOnPartition_{};              // id of partition
 
     private:
@@ -171,7 +171,7 @@ namespace MESO::Mesh {
 
         void setNeighbor(const Label &nei);
 
-        void setPart(const Label &idPart, const Label &idOnPart);
+        void setPart(const Label &rank, const Label &idOnPart);
 
         /// Interfaces
         [[nodiscard]] const Scalar &V() const;
@@ -180,7 +180,7 @@ namespace MESO::Mesh {
 
         [[nodiscard]] const List<ObjectId> &neighbors() const;
 
-        [[nodiscard]] const Label &partition() const;
+        [[nodiscard]] const Label &rank() const;
 
         [[nodiscard]] const Label &idOnPartition() const;
     };

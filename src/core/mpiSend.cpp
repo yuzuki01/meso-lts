@@ -16,5 +16,5 @@ void MPI::SendWithStatus(const Scalar &var, const Label &target, const Label &ta
 
 template<>
 void MPI::SendWithStatus(const Vector &var, const Label &target, const Label &tag) {
-    MPI_Send(&var, 1, UDF::MPI_Vector, target, tag, MPI_COMM_WORLD);
+    MPI_Send(&var, 1, DataType::MPI_VECTOR, target, tag, MPI_COMM_WORLD);
 }

@@ -5,10 +5,11 @@ using namespace MESO;
 
 Label MPI::processorNum = 1;
 Label MPI::rank = 0;
-MPI_Datatype MPI::UDF::MPI_Vector;
 
 void MPI::Initialize(Label *p_argc, char ***p_argv) {
     MPI_Init(p_argc, p_argv);
+
+    DataType::MPI_Vector_init();
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &processorNum);
@@ -29,10 +30,13 @@ void MPI::Initialize(Label *p_argc, char ***p_argv) {
 }
 
 void MPI::Finalize() {
-    /// 清理
-    // MPI_Type_free(&UDF::MPI_Vector);
+    DataType::MPI_Vector_free();
 
     MPI_Finalize();
+}
+
+bool MPI::isMainProcessor() {
+    return (MPI::rank == MPI::mainRank);
 }
 
 void MPI::Barrier() {

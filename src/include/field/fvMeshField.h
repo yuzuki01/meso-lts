@@ -6,9 +6,8 @@ namespace MESO::fvm {
     enum {
         LEAST_SQUARE, GREEN_GAUSS
     };
-    extern Label gradComputationMethod;
 
-    volVectorField grad(const volScalarField &x);
+    volVectorField grad(const volScalarField &x, Label defaultMethod=LEAST_SQUARE);
 
     List<Scalar> processorCommAdjData(const volScalarField &x);
 
@@ -19,31 +18,31 @@ namespace MESO::fvm {
 
 template<typename ValueType>
 List<ValueType> fvm::processorCommAllData(const volField<ValueType> &x) {
-    List<ValueType> data(x.mesh().cellNum());
     const auto &mesh = x.mesh();
     const auto &partition = mesh.partition();
-    forAll(x.index(), ci) {
-        data[x.index()[ci]] = x[ci];
+    List<ValueType> data(mesh.cellNum());
+    forAll(x.index(), ii) {
+        data[x.index()[ii]] = x[ii];
     }
     if (MPI::processorNum == 1) return data;
     // Send and Recv
-    for (int rank = 0; rank < MPI::processorNum; ++rank) {
+    for (int rank = 1; rank < MPI::processorNum; ++rank) {
         const auto &patch = partition[rank];
         forAll(patch.group(), pi) {
             const auto &cell = mesh.cell(patch[pi]);
-            if (MPI::rank == MPI::mainRank) {
+            if (MPI::rank == cell.rank()) {
+                // Send
+                MPI::SendWithStatus(data[cell.id()], MPI::mainRank, cell.id());
+            } else if (MPI::rank == MPI::mainRank) {
                 // Recv
                 Label tag = -1;
                 ValueType var;
-                MPI::RecvWithStatus(var, cell.partition(), tag);
+                MPI::RecvWithStatus(var, cell.rank(), tag);
                 data[tag] = var;
-            } else if (MPI::rank == cell.partition()) {
-                // Send
-                MPI::SendWithStatus(data[cell.id()], MPI::mainRank, cell.id());
-            }  // Next
+            }   // Other rank
         }
-        MPI::Barrier();
     }
+    MPI::Barrier();
     return data;
 }
 

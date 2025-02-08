@@ -7,8 +7,6 @@ int main(int argc, char **argv) {
 
 #include "mesoHelp.h"
 
-    MPI::Initialize(&argc, &argv);
-
     Time runTime(FileIO::ParamReader{"config"});
     Mesh::fvMesh mesh(
             FileIO::BasicReader("dvs.neu"),
@@ -19,23 +17,22 @@ int main(int argc, char **argv) {
     mesh.output();
 
     volScalarField a(mesh);
+    // volVectorField b(mesh);
 
     forAll(a, ai) {
         const auto& ci = a.index()[ai];
         const auto& cell = mesh.cell(ci);
-        a[ai] = 1.0 / M_PI * exp(-(magSqr(cell.C() - Vector(0.25,0,0))));
+        // a[ai] = 1.0 / M_PI * exp(-(magSqr(cell.C() - Vector(0.25,0,0))));
+        a[ai] = cell.V();
+        // b[ai] = cell.C();
     }
+
+    a.output("a");
+    // b.output("b");
 
     auto grad = fvm::grad(a);
 
-    a.output("a");
-    auto S(a);
-    forAll(S, si) {
-        const auto& ci = a.index()[si];
-        const auto& cell = mesh.cell(ci);
-        S[si] = - grad[si] * Vector(1, 0, 0);
-    }
-    S.output("source");
+    grad.output("grad");
 
     MPI::Finalize();
 
