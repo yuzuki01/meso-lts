@@ -7,34 +7,13 @@ int main(int argc, char **argv) {
 
 #include "mesoHelp.h"
 
-    Time runTime(FileIO::ParamReader{"config"});
-    Mesh::fvMesh mesh(
-            FileIO::BasicReader("cavity50x50.neu"),
-            runTime
-    );
+    Solver::BasicSolver solver(
+            FileIO::ParamReader("system/config")
+            );
 
-    mesh.info();
-    mesh.output();
-
-    volScalarField a(mesh);
-    // volVectorField b(mesh);
-
-    forAll(a, ai) {
-        const auto& ci = a.index()[ai];
-        const auto& cell = mesh.cell(ci);
-        // std::cout << cell.idOnPartition() << " " << ai << std::endl;
-        // a.values()[ai] = 1.0 / M_PI * exp(-(magSqr(cell.C())) / 8.0);
-        a.values()[ai] = magSqr(cell.C());
-        // a[ai] = cell.V();
-        // b[ai] = cell.C();
+    while (solver.solution()) {
+        logger.info << solver.name() << " - Time: " << solver.time().name() << std::endl;
     }
-
-    a.output("a");
-    // b.output("b");
-
-    auto grad = fvm::grad(a, fvm::GREEN_GAUSS);
-
-    grad.output("grad");
 
     MPI::Finalize();
 

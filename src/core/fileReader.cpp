@@ -89,7 +89,7 @@ String ParamReader::get(const String &varRegion, const String &varName, const St
     if (isVarExisted(varRegion, varName)) {
         return data_[varRegion][varName];
     } else if (throwNotFoundErr) {
-        logger.warn << "ParamReader[" << name() << "] trys to fetch a nonexistent value: "
+        logger.warn << "ParamReader[" << name() << "] tried to fetch a nonexistent value: "
                     << varRegion << "::" << varName << std::endl;
         FATAL_ERROR_THROW;
     }
@@ -102,7 +102,7 @@ Label ParamReader::get(const String &varRegion, const String &varName, const Lab
     if (isVarExisted(varRegion, varName)) {
         return std::stoi(data_[varRegion][varName]);
     } else if (throwNotFoundErr) {
-        logger.warn << "ParamReader[" << name() << "] trys to fetch a nonexistent value: "
+        logger.warn << "ParamReader[" << name() << "] tried to fetch a nonexistent value: "
                     << varRegion << "::" << varName << std::endl;
         FATAL_ERROR_THROW;
     }
@@ -116,7 +116,7 @@ Scalar ParamReader::get(const String &varRegion, const String &varName, const Sc
     if (isVarExisted(varRegion, varName)) {
         return std::stod(data_[varRegion][varName]);
     } else if (throwNotFoundErr) {
-        logger.warn << "ParamReader[" << name() << "] trys to fetch a nonexistent value: "
+        logger.warn << "ParamReader[" << name() << "] tried to fetch a nonexistent value: "
                     << varRegion << "::" << varName << std::endl;
         FATAL_ERROR_THROW;
     }
@@ -131,7 +131,7 @@ Vector ParamReader::get(const String &varRegion, const String &varName, const Ve
         auto split = Utils::split(data_[varRegion][varName]);
         return {std::stod(split[0]), std::stod(split[1]), std::stod(split[2])};
     } else if (throwNotFoundErr) {
-        logger.warn << "ParamReader[" << name() << "] trys to fetch a nonexistent value: "
+        logger.warn << "ParamReader[" << name() << "] tried to fetch a nonexistent value: "
                     << varRegion << "::" << varName << std::endl;
         FATAL_ERROR_THROW;
     }

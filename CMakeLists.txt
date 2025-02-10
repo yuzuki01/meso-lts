@@ -31,6 +31,7 @@ file(GLOB SRC
         "src/mesh/*.cpp"
         "src/field/*.cpp"
         "src/meso/*.cpp"
+        "src/solver/*.cpp"
 )
 
 # set(CMAKE_SHARED_LIBRARY_PREFIX "")                     # remove prefix
