@@ -4,11 +4,11 @@
 FieldTemplate
 BasicField<ValueType, PatchType>::BasicField(const MESO::Mesh::fvMesh &mesh)
         : mesh_(mesh), time_(mesh.time()) {
-    const auto &partitionPatch = mesh_.partition()[MPI::rank];
-    const auto size = static_cast<Label>(partitionPatch.size());
     switch (PatchType) {
         case VolFlag:   // vol
         {
+            const auto &partitionPatch = mesh_.partitionCellPatch()[MPI::rank];
+            const auto size = static_cast<Label>(partitionPatch.size());
             for (int i = 0; i < size; ++i) {
                 index_.push_back(partitionPatch[i]);
             }
@@ -16,20 +16,10 @@ BasicField<ValueType, PatchType>::BasicField(const MESO::Mesh::fvMesh &mesh)
             break;
         case SurfFlag:  // surf
         {
-            for (int ci = 0; ci < size; ++ci) {
-                const auto &cell = mesh_.cell(ci);
-                for (const auto &fi: cell.faces()) {
-                    const auto &face = mesh_.face(fi);
-                    if (
-                        // face is owned by cell
-                            (face.owner() == ci)
-                            and
-                            // faceId does not exist
-                            (std::find(index_.begin(), index_.end(), fi) == index_.end())
-                            ) {
-                        index_.push_back(fi);
-                    }
-                }
+            const auto &partitionPatch = mesh_.partitionFacePatch()[MPI::rank];
+            const auto size = static_cast<Label>(partitionPatch.size());
+            for (int i = 0; i < size; ++i) {
+                index_.push_back(partitionPatch[i]);
             }
         }
             break;

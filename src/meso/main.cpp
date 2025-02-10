@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
 
     Time runTime(FileIO::ParamReader{"config"});
     Mesh::fvMesh mesh(
-            FileIO::BasicReader("cavity.neu"),
+            FileIO::BasicReader("cavity50x50.neu"),
             runTime
     );
 
@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
         const auto& ci = a.index()[ai];
         const auto& cell = mesh.cell(ci);
         // std::cout << cell.idOnPartition() << " " << ai << std::endl;
-        // a.values()[ai] = 1.0 / M_PI * exp(-(magSqr(cell.C() - Vector(0,0,0))) / 8.0);
+        // a.values()[ai] = 1.0 / M_PI * exp(-(magSqr(cell.C())) / 8.0);
         a.values()[ai] = magSqr(cell.C());
         // a[ai] = cell.V();
         // b[ai] = cell.C();
@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
     a.output("a");
     // b.output("b");
 
-    auto grad = fvm::grad(a);
+    auto grad = fvm::grad(a, fvm::GREEN_GAUSS);
 
     grad.output("grad");
 

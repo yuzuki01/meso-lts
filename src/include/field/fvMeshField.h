@@ -9,7 +9,8 @@ namespace MESO::fvm {
 
     volVectorField grad(const volScalarField &x, Label defaultMethod=LEAST_SQUARE);
 
-    List<Scalar> processorCommAdjData(const volScalarField &x);
+    template<typename DataType, Label PatchType>
+    List<DataType> processorCommAdjData(const BasicField<DataType, PatchType> &x);
 
     template<typename ValueType>
     List<ValueType> processorCommAllData(const volField<ValueType> &x);
@@ -19,7 +20,7 @@ namespace MESO::fvm {
 template<typename ValueType>
 List<ValueType> fvm::processorCommAllData(const volField<ValueType> &x) {
     const auto &mesh = x.mesh();
-    const auto &partition = mesh.partition();
+    const auto &partition = mesh.partitionCellPatch();
     List<ValueType> data(mesh.cellNum());
     forAll(x.index(), ii) {
         data[x.index()[ii]] = x.values()[ii];

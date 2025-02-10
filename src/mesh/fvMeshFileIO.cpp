@@ -55,8 +55,8 @@ void fvMesh::output() {
     }
     fp << std::endl;
 
-    for (int patchi = 0; patchi < partition_.size(); ++patchi) {
-        const auto &patch = partition_[patchi];
+    for (int patchi = 0; patchi < partitionCellPatch_.size(); ++patchi) {
+        const auto &patch = partitionCellPatch_[patchi];
         for (const auto &ci: patch.group()) {
             cellValue[ci] = patchi;
         }

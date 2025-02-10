@@ -197,13 +197,21 @@ void fvMesh::parseGambitMark(Label &i, const Label &size,
 
 void fvMesh::partitionMesh(const Label &nPart) {
     if (nPart == 1) {
-        partition_.reserve(1);
-        partition_.emplace_back(*this, "cellPartition");
-        auto &patch = partition_.back();
-        patch.group().reserve(NCELL);
+        partitionCellPatch_.reserve(1);
+        partitionCellPatch_.emplace_back(*this, "cellPartition");
+        auto &patchCell = partitionCellPatch_.back();
+        partitionFacePatch_.reserve(1);
+        patchCell.group().reserve(NCELL);
+        partitionFacePatch_.emplace_back(*this, "facePartition");
+        auto &patchFace = partitionFacePatch_.back();
+        patchFace.group().reserve(NFACE);
         for (auto &cell_: cells_) {
-            patch.append(cell_.id());
+            patchCell.append(cell_.id());
             cell_.setPart(0, cell_.id());
+        }
+        for (auto &face_: faces_) {
+            patchFace.append(face_.id());
+            face_.setPart(0, face_.id());
         }
         logger.debug << "No need to partitionMesh mesh " << name_ << std::endl;
         return;
@@ -245,17 +253,33 @@ void fvMesh::partitionMesh(const Label &nPart) {
 
     MPI::Barrier();
     // METIS to MESO
-    partition_.reserve(nPart);
+    partitionCellPatch_.reserve(nPart);
+    partitionFacePatch_.reserve(nPart);
     for (int i = 0; i < nPart; ++i) {
         StringStream partName;
         partName << "Part:" << i;
-        partition_.emplace_back(*this, partName.str());
+        partitionCellPatch_.emplace_back(*this, partName.str());
+        partitionFacePatch_.emplace_back(*this, partName.str());
     }
     for (int i = 0; i < numCells; ++i) {
-        auto &partPatch = partition_[partitionCells[i]];
+        auto &partPatch = partitionCellPatch_[partitionCells[i]];
         cells_[i].setPart(partitionCells[i],
                           partPatch.size());
         partPatch.append(i);
+    }
+    for (auto &part: partitionCellPatch_) {
+        part.fit();
+    }
+    for (int i = 0; i < NFACE; ++i) {
+        auto &face = faces_[i];
+        const auto &owner = cells_[face.owner()];
+        auto &partPatch = partitionFacePatch_[owner.rank()];
+        face.setPart(owner.rank(),
+                     partPatch.size());
+        partPatch.append(face.id());
+    }
+    for (auto &part: partitionFacePatch_) {
+        part.fit();
     }
     // Reset Interior Faces
     auto& interiorPatch = marks_[0];
@@ -274,9 +298,13 @@ void fvMesh::partitionMesh(const Label &nPart) {
     if (processorPatch.size() > 0) {
         interiorPatch.group() = interiorFaces;
         marks_.push_back(processorPatch);
+        marks_.shrink_to_fit();
+    }
+    for (auto &part: marks_) {
+        part.fit();
     }
     logger.debug << "Mesh {" << name_ << "} was partitioned into " <<
-                 Label(partition_.size()) << " part(s)" <<
+                 Label(partitionCellPatch_.size()) << " part(s)" <<
                  std::endl;
 }
 
@@ -319,6 +347,10 @@ const List<Face> &fvMesh::faces() const {
     return faces_;
 }
 
-const List<Patch> &fvMesh::partition() const {
-    return partition_;
+const List<Patch> &fvMesh::partitionCellPatch() const {
+    return partitionCellPatch_;
+}
+
+const List<Patch> &fvMesh::partitionFacePatch() const {
+    return partitionFacePatch_;
 }

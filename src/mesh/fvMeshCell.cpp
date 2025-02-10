@@ -37,16 +37,3 @@ void Cell::setNeighbor(const Label &nei) {
 const List<ObjectId> &Cell::neighbors() const {
     return neighbors_;
 }
-
-void Cell::setPart(const Label &rank, const Label &idOnPart) {
-    rank_ = rank;
-    idOnPartition_ = idOnPart;
-}
-
-const Label &Cell::rank() const {
-    return rank_;
-}
-
-const Label &Cell::idOnPartition() const {
-    return idOnPartition_;
-}

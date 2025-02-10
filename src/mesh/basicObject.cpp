@@ -32,10 +32,26 @@ NodeBasedObject::NodeBasedObject(
 
 }
 
+/// Set
+void NodeBasedObject::setPart(const Label &rank, const Label &idOnPart) {
+    rank_ = rank;
+    idOnPartition_ = idOnPart;
+}
+
+
+/// Interfaces
 const List<ObjectId> &NodeBasedObject::nodes() const {
     return nodes_;
 }
 
 const Vector &NodeBasedObject::C() const {
     return C_;
+}
+
+const Label &NodeBasedObject::rank() const {
+    return rank_;
+}
+
+const Label &NodeBasedObject::idOnPartition() const {
+    return idOnPartition_;
 }

@@ -39,7 +39,7 @@ namespace MESO {
 
 #define forAll(X, i) for(int i=0; i < (X).size(); ++i)
 
-#define forConstRef(X, iter) for(const auto& iter : X)
+#define forConstRef(X, List) for(const auto& X : List)
 
 /// Costume
 #include "core/typeDefine.h"

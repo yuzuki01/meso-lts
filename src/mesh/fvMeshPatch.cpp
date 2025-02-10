@@ -15,6 +15,10 @@ void Patch::append(const ObjectId &objectId) {
     group_.push_back(objectId);
 }
 
+void Patch::fit() {
+    group_.shrink_to_fit();
+}
+
 Label Patch::size() const {
     return static_cast<Label>(group_.size());
 }

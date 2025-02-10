@@ -70,6 +70,7 @@ namespace MESO::Mesh {
 
         ~BasicMeshObject() = default;
 
+        /// Interfaces
         [[nodiscard]] const GeomMesh &mesh() const;
 
         [[nodiscard]] const ObjectId &id() const;
@@ -79,8 +80,10 @@ namespace MESO::Mesh {
 
     class NodeBasedObject : public BasicMeshObject {
     protected:
-        Vector C_;              // Center coordinate
+        Coordinate C_;                          // Center coordinate
         const List<ObjectId> nodes_;
+        ObjectId rank_{};                       // partition
+        ObjectId idOnPartition_{};              // id of partition
     private:
         void operator=(const NodeBasedObject &);
 
@@ -90,9 +93,17 @@ namespace MESO::Mesh {
                         const ObjectType &GT,
                         const List<ObjectId> &nodes);
 
+        /// Set
+        void setPart(const Label &rank, const Label &idOnPart);
+
+        /// Interfaces
         [[nodiscard]] const List<ObjectId> &nodes() const;
 
-        [[nodiscard]] const Vector &C() const;
+        [[nodiscard]] const Coordinate &C() const;
+
+        [[nodiscard]] const Label &rank() const;
+
+        [[nodiscard]] const Label &idOnPartition() const;
     };
 
     class Node : public BasicMeshObject {
@@ -151,8 +162,6 @@ namespace MESO::Mesh {
         Scalar V_;                              // Volume
         List<ObjectId> faces_;                  // Faces
         List<ObjectId> neighbors_;              // Neighbor cells
-        ObjectId rank_{};                  // partition
-        ObjectId idOnPartition_{};              // id of partition
 
     private:
 
@@ -171,18 +180,12 @@ namespace MESO::Mesh {
 
         void setNeighbor(const Label &nei);
 
-        void setPart(const Label &rank, const Label &idOnPart);
-
         /// Interfaces
         [[nodiscard]] const Scalar &V() const;
 
         [[nodiscard]] const List<ObjectId> &faces() const;
 
         [[nodiscard]] const List<ObjectId> &neighbors() const;
-
-        [[nodiscard]] const Label &rank() const;
-
-        [[nodiscard]] const Label &idOnPartition() const;
     };
 
     class Patch {
@@ -201,6 +204,8 @@ namespace MESO::Mesh {
 
         /// Interfaces
         void append(const ObjectId& objectId);
+
+        void fit();
 
         [[nodiscard]] Label size() const;
 
@@ -274,7 +279,8 @@ namespace MESO::Mesh {
         List<Patch> marks_ = {
                 Patch(*this, "fluid-interior")
         };
-        List<Patch> partition_;     // cell partitions
+        List<Patch> partitionCellPatch_;        // cell patch
+        List<Patch> partitionFacePatch_;        // face patch
         void partitionMesh(const Label &nPart);
 
         void generateFace();
@@ -300,7 +306,9 @@ namespace MESO::Mesh {
 
         [[nodiscard]] const List<Face> &faces() const;
 
-        [[nodiscard]] const List<Patch> &partition() const;
+        [[nodiscard]] const List<Patch> &partitionCellPatch() const;
+
+        [[nodiscard]] const List<Patch> &partitionFacePatch() const;
 
         /// File IO
         void output();
