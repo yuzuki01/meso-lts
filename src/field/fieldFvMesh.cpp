@@ -41,8 +41,6 @@ List<Scalar> fvm::processorCommAdjData(const volScalarField &x) {
 
 
 volVectorField gradLeastSquare(const volScalarField &x) {
-    //todo
-    //debug
     auto values = fvm::processorCommAdjData(x);
     const auto &mesh = x.mesh();
     volVectorField grad_(mesh);
@@ -50,11 +48,11 @@ volVectorField gradLeastSquare(const volScalarField &x) {
         const auto &cell = mesh.cell(ci);
         const auto &leastSquare = mesh.leastSquare()[cell.id()];
         Vector Sfr(0.0, 0.0, 0.0);
-        forAll(cell.neighbors(), nci) {
-            const auto &neighbor = mesh.cell(nci);
-            Sfr += (leastSquare.weight[nci]
-                    * (values[neighbor.id()] - values[cell.id()]))
-                   * leastSquare.dr[nci];
+        forAll(cell.neighbors(), ni) {
+            const auto &neighbor = mesh.cell(cell.neighbors()[ni]);
+            Sfr += (leastSquare.weight[ni]
+                    * (values[cell.id()] - values[neighbor.id()]))
+                   * leastSquare.dr[ni];
         }
         grad_.values()[cell.idOnPartition()] = {leastSquare.Cx * Sfr, leastSquare.Cy * Sfr, leastSquare.Cz * Sfr};
     }
@@ -80,23 +78,23 @@ void fvMesh::initLeastSquare() {
     leastSquare_.clear();
     leastSquare_.reserve(NCELL);
     forConstRef(cells_, cell) {     // after fvMesh::partition()
-        const auto neiSize = static_cast<Label>(cell.neighbors().size());
-        LeastSquare ls(neiSize);
+        const auto neighborNum = static_cast<Label>(cell.neighbors().size());
+        LeastSquare ls(neighborNum);
         Scalar Sxx, Sxy, Sxz, Syy, Syz, Szz;
         Sxx = Sxy = Sxz = Syy = Syz = Szz = 0.0;
-        for (int i = 0; i < neiSize; i++) {
-            auto &neiCell = cells_[cell.neighbors()[i]];
-            Vector dr = neiCell.C() - cell.C();
-            Scalar wi = 1.0 / (dr * dr);
+        forAll(cell.neighbors(), i) {
+            const auto &neighbor = cells_[cell.neighbors()[i]];
+            Vector dr = cell.C() - neighbor.C();
+            Scalar wi = 1.0 / magSqr(dr);
             ls.dr[i] = dr;
             ls.weight[i] = wi;
             // sum
-            Sxx += wi * (dr.x * dr.x);
-            Sxy += wi * (dr.x * dr.y);
-            Sxz += wi * (dr.x * dr.z);
-            Syy += wi * (dr.y * dr.y);
-            Syz += wi * (dr.y * dr.z);
-            Szz += wi * (dr.z * dr.z);
+            Sxx += (dr.x * dr.x) * wi;
+            Sxy += (dr.x * dr.y) * wi;
+            Sxz += (dr.x * dr.z) * wi;
+            Syy += (dr.y * dr.y) * wi;
+            Syz += (dr.y * dr.z) * wi;
+            Szz += (dr.z * dr.z) * wi;
         }
         if (dimension() == 2) {
             Scalar FM = Sxx * Syy - Sxy * Sxy;

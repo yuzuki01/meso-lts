@@ -22,9 +22,9 @@ int main(int argc, char **argv) {
     forAll(a, ai) {
         const auto& ci = a.index()[ai];
         const auto& cell = mesh.cell(ci);
-        std::cout << cell.idOnPartition() << " " << ai << std::endl;
+        // std::cout << cell.idOnPartition() << " " << ai << std::endl;
         // a.values()[ai] = 1.0 / M_PI * exp(-(magSqr(cell.C() - Vector(0,0,0))) / 8.0);
-        a.values()[ai] = mag(cell.C());
+        a.values()[ai] = magSqr(cell.C());
         // a[ai] = cell.V();
         // b[ai] = cell.C();
     }

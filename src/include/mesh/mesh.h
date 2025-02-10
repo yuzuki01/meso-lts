@@ -40,7 +40,7 @@ namespace MESO {
     /// LeastSquare
     class LeastSquare {
     public:
-        List<Vector> dr;        // self to neighbor
+        List<Vector> dr;
         List<Scalar> weight;
         Vector Cx, Cy, Cz;
 
