@@ -246,7 +246,7 @@ namespace MESO::Mesh {
 #include "mesh/meshGeomMeshReader.h"
 
     public:
-        explicit GeomMesh(const FileIO::BasicReader &reader,
+        explicit GeomMesh(const String &filePath,
                           const Time &time,
                           bool parse = true);
 
@@ -291,7 +291,7 @@ namespace MESO::Mesh {
 #include "mesh/meshFvMeshReader.h"
 
     public:
-        explicit fvMesh(const FileIO::BasicReader &reader,
+        explicit fvMesh(const String &filePath,
                         const Time &time,
                         bool parse = true);
 

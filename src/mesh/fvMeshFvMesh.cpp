@@ -2,10 +2,11 @@
 
 namespaceMesoMesh
 
-fvMesh::fvMesh(const FileIO::BasicReader &reader, const Time &time, bool parse)
-        : GeomMesh(reader, time, false) {
+fvMesh::fvMesh(const String &filePath, const Time &time, bool parse)
+        : GeomMesh(filePath, time, false) {
     isParsed = parse;
     if (parse) {
+        FileIO::BasicReader reader(filePath);
         const auto &lines = reader.read_lines();
         Label i = 0;
         auto size = static_cast<Label>(lines.size());

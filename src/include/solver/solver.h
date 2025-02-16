@@ -17,7 +17,7 @@ namespace MESO::Solver {
         fvMesh mesh_;
 
     public:
-        explicit BasicSolver(FileIO::ParamReader config);
+        explicit BasicSolver(const String &filePath);
 
         /// Interfaces
         [[nodiscard]] const String &name() const;
@@ -32,6 +32,10 @@ namespace MESO::Solver {
         /// File IO
         void output();
     };
+
+    /// Solvers
+#include "solver/boltzmann/cdugks.h"
+
 }
 
 

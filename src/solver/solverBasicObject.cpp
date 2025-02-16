@@ -4,15 +4,14 @@
 namespaceMESO
 
 
-Solver::BasicSolver::BasicSolver(FileIO::ParamReader config)
-        : config_(std::move(config)),
+Solver::BasicSolver::BasicSolver(const String &filePath)
+        : config_(FileIO::ParamReader(filePath)),
           name_(config_.get<String>("solver", "name", "EmptyName")),
           time_(Time(config_)),
-          mesh_(fvMesh(
-                  FileIO::BasicReader(config_.get<String>("solver",
-                                                          "mesh",
-                                                          "constant/mesh.neu")),
-                  time_, true)) {
+          mesh_(fvMesh(config_.get<String>("solver",
+                                           "mesh",
+                                           "constant/mesh.neu"),
+                       time_, true)) {
 
 }
 

@@ -3,11 +3,12 @@
 namespaceMesoMesh
 
 
-GeomMesh::GeomMesh(const FileIO::BasicReader &reader, const Time& time, bool parse)
-        : name_(reader.name()),
+GeomMesh::GeomMesh(const String &filePath, const Time& time, bool parse)
+        : name_(filePath),
           time_(time),
           isParsed(parse) {
     if (parse) {
+        FileIO::BasicReader reader(filePath);
         const auto &lines = reader.read_lines();
         Label i = 0;
         auto size = static_cast<Label>(lines.size());

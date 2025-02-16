@@ -1,8 +1,8 @@
-//
-// Created by mayc on 2025/2/11.
-//
+#ifndef MESO_SOLVER_CDUGKS_H
+#define MESO_SOLVER_CDUGKS_H
 
-#ifndef MESO_MPI_CDUGKS_H
-#define MESO_MPI_CDUGKS_H
+class CDUGKS : public BasicSolver {
 
-#endif //MESO_MPI_CDUGKS_H
+};
+
+#endif //MESO_SOLVER_CDUGKS_H
