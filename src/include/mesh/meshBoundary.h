@@ -9,11 +9,11 @@ namespace Boundary {
         FarField,
     };
 
-    const Map<String> TypeName = {
-            {FluidInterior, "fluidInterior"},
-            {Processor, "processor"},
-            {Wall, "wall"},
-            {FarField, "farField"},
+    const Dict<ObjectType> TypeName = {
+            {"fluidInterior", FluidInterior},
+            {"processor", Processor},
+            {"wall", Wall},
+            {"farField", FarField},
     };
 }
 

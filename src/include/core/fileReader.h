@@ -19,9 +19,40 @@ namespace MESO::FileIO {
         [[nodiscard]] const String& name() const;
     };
 
-    class ParamReader : private BasicReader {
-    private:
+    namespace Flag {
+        enum {string, scalar, vector};
+        const Dict<ObjectType> TypeName = {
+                {"string", string},
+                {"scalar", scalar},
+                {"vector", vector}
+        };
+    }
+
+    class ParamReader : public BasicReader {
+    public:
+        class PatchParam {
+        protected:
+            Dict<String> dataStr_;
+            Dict<Scalar> dataScl_;
+            Dict<Vector> dataVtr_;
+        public:
+
+            PatchParam() = default;
+
+            String name();
+
+            String type();
+
+            void set(const String &line, Label lineNo=0);
+
+            template<typename T>
+            T get(const String &name);
+        };
+
+    protected:
         Dict<Dict<String>> data_;
+        Dict<PatchParam> zones_;
+        Dict<PatchParam> marks_;
 
         bool isVarExisted(const String& varRegion, const String& varName);
 
@@ -39,6 +70,10 @@ namespace MESO::FileIO {
         /// Interfaces
         template<typename MesoType> MesoType get(const String& varRegion, const String& varName,
                 const MesoType& varDefault, bool throwNotFoundErr = true);
+
+        const PatchParam &zone(const String &name);
+
+        const PatchParam &mark(const String &name);
     };
 }
 

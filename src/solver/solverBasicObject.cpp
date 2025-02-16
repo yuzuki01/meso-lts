@@ -12,6 +12,7 @@ Solver::BasicSolver::BasicSolver(const String &filePath)
                                            "mesh",
                                            "constant/mesh.neu"),
                        time_, true)) {
+    // boundary
 
 }
 
@@ -30,6 +31,11 @@ const fvMesh &Solver::BasicSolver::mesh() const {
 
 void Solver::BasicSolver::output() {
     logger.warn << "MESO::BasicSolver::output() was called: output grid file only" << std::endl;
+    mesh_.output();
+}
+
+void Solver::BasicSolver::initialize() {
+    logger.warn << "MESO::BasicSolver::initialize() was called: nothing to be initialized" << std::endl;
     mesh_.output();
 }
 

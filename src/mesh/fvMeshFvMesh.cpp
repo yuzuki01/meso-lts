@@ -325,15 +325,26 @@ void fvMesh::info() const {
                    "\n    num of faces: " << NFACE <<
                    "\n    num of marks: " << NMARK <<
                    std::endl;
-    // mark info
-    if (marks_.empty()) return;
-    logger.info << "  fvMesh::Marks:";
-    for (int i = 0; i < marks_.size(); ++i) {
-        const auto& markPatch = marks_[i];
-        logger.info << "\n    " << i << " - " << markPatch.name()
-                    << "\n        num of faces: " << markPatch.size();
+    // zone info
+    if (not zones_.empty()) {
+        logger.info << "  fvMesh::Zones:";
+        for (int i = 0; i < zones_.size(); ++i) {
+            const auto& zonePatch = zones_[i];
+            logger.info << "\n    " << i << " - " << zonePatch.name()
+                        << "\n        num of faces: " << zonePatch.size();
+        }
+        logger.info << std::endl;
     }
-    logger.info << std::endl;
+    // mark info
+    if (not marks_.empty()) {
+        logger.info << "  fvMesh::Marks:";
+        for (int i = 0; i < marks_.size(); ++i) {
+            const auto& markPatch = marks_[i];
+            logger.info << "\n    " << i << " - " << markPatch.name()
+                        << "\n        num of faces: " << markPatch.size();
+        }
+        logger.info << std::endl;
+    }
 }
 
 const Label &fvMesh::faceNum() const {
@@ -346,6 +357,14 @@ const Face &fvMesh::face(const ObjectId &id) const {
 
 const List<Face> &fvMesh::faces() const {
     return faces_;
+}
+
+const Patch &fvMesh::mark(const ObjectId &id) const {
+    return marks_[id];
+}
+
+const List<Patch> &fvMesh::marks() const {
+    return marks_;
 }
 
 const List<Patch> &fvMesh::partitionCellPatch() const {

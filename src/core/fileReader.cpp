@@ -151,7 +151,8 @@ void ParamReader::update() {
             return fileAnnotation;
         }
     };
-    for (const auto &line: lines) {
+    forAll(lines, li) {
+        auto line = lines[li];
         auto data = Utils::split(line);
         if (data[0] == fileAnnotation) continue;
         {
@@ -160,6 +161,26 @@ void ParamReader::update() {
                 if (tmp.empty()) {
                     logger.error << "ParamReader caught unexpected format" << std::endl;
                     FATAL_ERROR_THROW;
+                }
+                if (tmp == "mark" or tmp == "zone") {
+                    li++;
+                    PatchParam patch;
+                    while (li < lines.size()) {
+                        line = lines[li];
+                        data = Utils::split(line);
+                        if (data[0] == fileAnnotation) {
+                            li++;
+                            continue;
+                        } else if (extractContent(data[0]) != fileAnnotation) {
+                            li--;
+                            break;
+                        }
+                        patch.set(line, li);
+                        li++;
+                    }
+                    if (tmp == "mark") marks_[patch.name()] = patch;
+                    if (tmp == "zone") zones_[patch.name()] = patch;
+                    continue;
                 }
                 varRegion = tmp;
                 continue;
@@ -175,4 +196,113 @@ void ParamReader::update() {
             data_[varRegion][data[0]] = var.str();
         }
     }
+}
+
+const ParamReader::PatchParam &ParamReader::zone(const String &name){
+    return zones_[name];
+}
+
+const ParamReader::PatchParam &ParamReader::mark(const String &name){
+    return marks_[name];
+}
+
+/**
+ * =======================================================
+ * ------------------- Param Reader ----------------------
+ * -------------------   PatchParm  ----------------------
+ * =======================================================
+ **/
+
+String ParamReader::PatchParam::name() {
+    return dataStr_["name"];
+}
+
+String ParamReader::PatchParam::type() {
+    return dataStr_["type"];
+}
+
+void ParamReader::PatchParam::set(const String &line, Label lineNo) {
+    auto data = Utils::split(line);
+    if (data[0] == "name") {
+        dataStr_["name"] = data[1];
+    } else if (data[0] == "type") {
+        dataStr_["type"] = data[1];
+    } else {
+        if (data[0] == "#") return;
+        if (data.size() < 3) {
+            logger.warn << "ParamReader::PatchParam caught invalid format data:" << std::endl << "\t" << lineNo + 1 << "| ";
+            forConstRef(it, data) {
+                logger.info << it << " ";
+            }
+            logger.info << std::endl;
+            FATAL_ERROR_THROW;
+        }
+        auto varName = data[0];
+        auto varType = data[1];
+        if (Flag::TypeName.find(varType) == Flag::TypeName.end()) {
+            logger.warn << "ParamReader::PatchParam caught invalid format data:" << std::endl << "\t" << lineNo + 1 << "| ";
+            forConstRef(it, data) {
+                logger.info << it << " ";
+            }
+            logger.info << std::endl;
+            FATAL_ERROR_THROW;
+        }
+        switch (Flag::TypeName.at(varType)) {
+            case Flag::string:
+                dataStr_[varName] = data[2];
+                break;
+            case Flag::scalar:
+                dataScl_[varName] = std::stod(data[2]);
+                break;
+            case Flag::vector:
+                if (data.size() < 5) {
+                    logger.warn << "ParamReader::PatchParam caught invalid format data:" << std::endl << "\t" << lineNo + 1 << "| ";
+                    forConstRef(it, data) {
+                        logger.info << it << " ";
+                    }
+                    logger.info << std::endl;
+                    FATAL_ERROR_THROW;
+                }
+                dataVtr_[varName] = Vector(
+                        std::stod(data[2]),
+                        std::stod(data[3]),
+                        std::stod(data[4])
+                );
+                break;
+            default:
+                logger.warn << "PatchParam caught invalid data:" << std::endl << "\t";
+                forConstRef(it, data) {
+                    logger.warn << it << " ";
+                }
+                logger.warn << std::endl;
+                FATAL_ERROR_THROW;
+        }
+    }
+}
+
+template<>
+String ParamReader::PatchParam::get(const String &name) {
+    if (dataStr_.find(name) == dataStr_.end()) {
+        logger.warn << "ParamReader::PatchParam::get() - Cannot find \"" << name << "\"<String>" << std::endl;
+        FATAL_ERROR_THROW;
+    }
+    return dataStr_[name];
+}
+
+template<>
+Scalar ParamReader::PatchParam::get(const String &name) {
+    if (dataScl_.find(name) == dataScl_.end()) {
+        logger.warn << "ParamReader::PatchParam::get() - Cannot find \"" << name << "\"<Scalar>" << std::endl;
+        FATAL_ERROR_THROW;
+    }
+    return dataScl_[name];
+}
+
+template<>
+Vector ParamReader::PatchParam::get(const String &name) {
+    if (dataVtr_.find(name) == dataVtr_.end()) {
+        logger.warn << "ParamReader::PatchParam::get() - Cannot find \"" << name << "\"<Vector>" << std::endl;
+        FATAL_ERROR_THROW;
+    }
+    return dataVtr_[name];
 }

@@ -7,8 +7,9 @@ int main(int argc, char **argv) {
 
 #include "mesoHelp.h"
 
-    Solver::BasicSolver solver("system/config");
+    Solver::CDUGKS solver("system/config");
 
+    solver.initialize();
     while (solver.solution()) {
         logger.info << solver.name() << " - Time: " << solver.time().name() << std::endl;
     }

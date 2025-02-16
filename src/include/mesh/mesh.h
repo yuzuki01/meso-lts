@@ -238,7 +238,7 @@ namespace MESO::Mesh {
 
         List<Node> nodes_;
         List<Cell> cells_;
-        List<Patch> zones_;     // zone groups
+        List<Patch> zones_;
 
     private:
         void operator=(const GeomMesh &);
@@ -270,6 +270,10 @@ namespace MESO::Mesh {
         [[nodiscard]] const Cell &cell(const ObjectId &id) const;
 
         [[nodiscard]] const List<Cell> &cells() const;
+
+        [[nodiscard]] const Patch &zone(const ObjectId &id) const;
+
+        [[nodiscard]] const List<Patch> &zones() const;
     };
 
     class fvMesh : public GeomMesh {
@@ -305,6 +309,10 @@ namespace MESO::Mesh {
         [[nodiscard]] const Face &face(const ObjectId &id) const;
 
         [[nodiscard]] const List<Face> &faces() const;
+
+        [[nodiscard]] const Patch &mark(const ObjectId &id) const;
+
+        [[nodiscard]] const List<Patch> &marks() const;
 
         [[nodiscard]] const List<Patch> &partitionCellPatch() const;
 

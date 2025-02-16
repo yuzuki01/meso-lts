@@ -26,6 +26,9 @@ namespace MESO::Solver {
 
         [[nodiscard]] const fvMesh &mesh() const;
 
+        /// Initialize
+        void initialize();
+
         /// Solution
         bool solution();
 

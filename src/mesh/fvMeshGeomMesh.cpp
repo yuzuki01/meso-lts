@@ -159,3 +159,11 @@ const Cell &GeomMesh::cell(const ObjectId &id) const {
 const List<Cell> &GeomMesh::cells() const {
     return cells_;
 }
+
+const Patch &GeomMesh::zone(const ObjectId &id) const {
+    return zones_[id];
+}
+
+const List<Patch> &GeomMesh::zones() const {
+    return zones_;
+}
