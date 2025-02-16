@@ -15,9 +15,7 @@ int main(int argc, char **argv) {
         logger.info << solver.name() << " - Time: " << solver.time().name() << std::endl;
     }
 
-    MPI::Finalize();
+#include "mesoFinalize.h"
 
-    /// run with no params
-    logger.warn << "type \"./meso-mpi -help\" to get help." << std::endl;
     return 0;
 }
