@@ -345,6 +345,7 @@ void fvMesh::info() const {
         }
         logger.info << std::endl;
     }
+    logger.info << std::endl;
 }
 
 const Label &fvMesh::faceNum() const {

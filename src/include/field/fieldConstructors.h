@@ -34,6 +34,15 @@ BasicField<ValueType, PatchType>::BasicField(const MESO::Mesh::fvMesh &mesh)
 
 FieldTemplate
 BasicField<ValueType, PatchType>::BasicField(const fvMesh &mesh,
+                                             const ValueType &value)
+        : BasicField(mesh) {
+    forAll(values_, i) {
+        values_[i] = value;
+    }
+}
+
+FieldTemplate
+BasicField<ValueType, PatchType>::BasicField(const fvMesh &mesh,
                                              const List<ValueType> &values)
         : BasicField(mesh) {
     values_ = values;

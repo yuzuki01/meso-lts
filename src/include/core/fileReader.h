@@ -69,7 +69,7 @@ namespace MESO::FileIO {
 
         /// Interfaces
         template<typename MesoType> MesoType get(const String& varRegion, const String& varName,
-                const MesoType& varDefault, bool throwNotFoundErr = true);
+                                                 const MesoType &varDefault, bool throwNotFoundErr = true);
 
         const PatchParam &zone(const String &name);
 

@@ -26,13 +26,13 @@ namespace MESO::Solver {
 
         [[nodiscard]] const fvMesh &mesh() const;
 
-        /// Initialize
+        virtual /// Initialize
         void initialize();
 
-        /// Solution
+        virtual /// Solution
         bool solution();
 
-        /// File IO
+        virtual /// File IO
         void output();
     };
 

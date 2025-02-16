@@ -33,8 +33,8 @@ Label Time::step() const {
 
 void Time::update() {
     config_.update();
-    deltaT_ = config_.get("solver", "deltaT", 1.0);
-    endTime_ = config_.get("solver", "endTime", 10.0);
+    deltaT_ = config_.get("solver", "deltaT", 0.1);
+    endTime_ = config_.get("solver", "endTime", 1.0);
 }
 
 void Time::runStep(Label stepNum) {

@@ -9,16 +9,16 @@ namespace MESO {
         forAll(result, i) {
             result[i] = std::sqrt(_x[i]);
         }
-        return BasicField(_x.mesh(), result);
+        return BasicField<Scalar, PatchType>(_x.mesh(), result);
     }
 
     PatchTypeTemplate
     BasicField<Scalar, PatchType> exp(const BasicField<Scalar, PatchType> &_x) {
         List<Scalar> result(_x.values().size());
         forAll(result, i) {
-            result[i] = std::exp(_x[i]);
+            result[i] = std::exp(_x.values()[i]);
         }
-        return BasicField(_x.mesh(), result);
+        return BasicField<Scalar, PatchType>(_x.mesh(), result);
     }
 
     PatchTypeTemplate

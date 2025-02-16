@@ -29,6 +29,9 @@ namespace MESO {
         explicit BasicField(const fvMesh &mesh);
 
         BasicField(const fvMesh &mesh,
+                   const ValueType &value);
+
+        BasicField(const fvMesh &mesh,
                    const List<ValueType> &values);
 
         ~BasicField() = default;
@@ -51,11 +54,19 @@ namespace MESO {
 
         /// Math
     public:
+        BasicField &operator=(const ValueType &x);
+
         BasicField &operator=(const BasicField &other);
+
+        BasicField &operator+=(const ValueType &x);
+
+        BasicField &operator+=(const BasicField &other);
 
         BasicField operator+(const BasicField &other);
 
         BasicField operator-(const BasicField &other);
+
+        BasicField operator-();
 
         /// File IO
         void output(const String &fieldName);
@@ -63,6 +74,9 @@ namespace MESO {
 }
 
 /// Math
+template<typename T, Label PatchType>
+void isOperationAvailable(const BasicField<T, PatchType> &_x, const BasicField<T, PatchType> &_y);
+
 template<typename T1, typename T2, Label PatchType>
 void isOperationAvailable(const BasicField<T1, PatchType> &_x, const BasicField<T2, PatchType> &_y);
 
