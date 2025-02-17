@@ -15,7 +15,7 @@ BasicField<Scalar, VolFlag> BasicField<Vector, VolFlag>::component(const MESO::L
             {
                 result[i] = values_[i][index];
             }
-            return {mesh_, result};
+            return {mesh_, index_, result};
         default:
             logger.error << "VectorField::component() caught index out of range" << std::endl;
             FATAL_ERROR_THROW;
@@ -34,7 +34,7 @@ BasicField<Scalar, SurfFlag> BasicField<Vector, SurfFlag>::component(const MESO:
             {
                 result[i] = values_[i][index];
             }
-            return {mesh_, result};
+            return {mesh_, index_, result};
         default:
             logger.error << "VectorField::component() caught index out of range" << std::endl;
             FATAL_ERROR_THROW;

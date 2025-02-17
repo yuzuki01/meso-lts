@@ -34,18 +34,27 @@ BasicField<ValueType, PatchType>::BasicField(const MESO::Mesh::fvMesh &mesh)
 
 FieldTemplate
 BasicField<ValueType, PatchType>::BasicField(const fvMesh &mesh,
-                                             const ValueType &value)
-        : BasicField(mesh) {
-    forAll(values_, i) {
-        values_[i] = value;
-    }
+                                             const List<ObjectId> &index)
+        : mesh_(mesh), index_(index), time_(mesh_.time()) {
+    values_.resize(index_.size(), ValueType(0));
+    values_.shrink_to_fit();
 }
 
 FieldTemplate
-BasicField<ValueType, PatchType>::BasicField(const fvMesh &mesh,
+BasicField<ValueType, PatchType>::BasicField(const fvMesh &mesh, const List<ObjectId> &index,
+                                             const ValueType &value)
+        : mesh_(mesh), index_(index), time_(mesh_.time()), values_(index_.size(), value) {
+    values_.shrink_to_fit();
+}
+
+FieldTemplate
+BasicField<ValueType, PatchType>::BasicField(const fvMesh &mesh, const List<ObjectId> &index,
                                              const List<ValueType> &values)
-        : BasicField(mesh) {
-    values_ = values;
+        : mesh_(mesh), index_(index), time_(mesh_.time()), values_(values) {
+    if (values_.size() != index_.size()) {
+        logger.error << "BasicField(mesh, index, values) caught invalid values." << std::endl;
+        FATAL_ERROR_THROW;
+    }
 }
 
 #endif //MESO_FIELDCONSTRUCTOR_H

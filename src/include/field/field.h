@@ -28,10 +28,12 @@ namespace MESO {
     public:
         explicit BasicField(const fvMesh &mesh);
 
-        BasicField(const fvMesh &mesh,
+        BasicField(const fvMesh &mesh, const List<ObjectId> &index);
+
+        BasicField(const fvMesh &mesh, const List<ObjectId> &index,
                    const ValueType &value);
 
-        BasicField(const fvMesh &mesh,
+        BasicField(const fvMesh &mesh, const List<ObjectId> &index,
                    const List<ValueType> &values);
 
         ~BasicField() = default;

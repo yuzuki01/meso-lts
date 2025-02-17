@@ -51,6 +51,7 @@ void Time::runStep(Label stepNum) {
         step_++;
         count++;
     }
+    update();
 }
 
 bool Time::isStoppable() const {

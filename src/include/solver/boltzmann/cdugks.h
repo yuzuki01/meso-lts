@@ -7,8 +7,8 @@ private:
     const Scalar TRef;
     const Scalar muRef;
 
-    volScalarField rho;
-    volVectorField U;
+    volScalarField rhoVol, rhoVolOld;
+    volVectorField UVol, UVolOld;
 
     GeomMesh DV_;
     List<volScalarField> gVol_;
@@ -31,7 +31,12 @@ public:
 
 private:
     /// CDUGKS
-    void gEqMaxwell(volScalarField &g_, const volScalarField &rho_, const volVectorField &U_, const Mesh::Cell &dv_);
+    template<Label PatchType>
+    BasicField<Scalar, PatchType> gMaxwell(const BasicField<Scalar, PatchType> &rho_,
+                                           const BasicField<Vector, PatchType> &U_,
+                                           const Mesh::Cell &dv_);
+
+    inline Scalar tau_f();
 };
 
 #endif //MESO_SOLVER_CDUGKS_H
