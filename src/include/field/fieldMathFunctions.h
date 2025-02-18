@@ -3,6 +3,9 @@
 
 namespace MESO {
 
+    using std::exp;
+    using std::sqrt;
+
     PatchTypeTemplate
     BasicField<Scalar, PatchType> sqrt(const BasicField<Scalar, PatchType> &_x) {
         List<Scalar> result(_x.values().size());

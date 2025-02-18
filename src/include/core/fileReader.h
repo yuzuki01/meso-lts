@@ -39,14 +39,16 @@ namespace MESO::FileIO {
 
             PatchParam() = default;
 
-            String name();
+            PatchParam(const String &name, const String &type);
 
-            String type();
+            const String &name() const;
+
+            const String &type() const;
 
             void set(const String &line, Label lineNo=0);
 
             template<typename T>
-            T get(const String &name);
+            const T &get(const String &name) const;
         };
 
     protected:

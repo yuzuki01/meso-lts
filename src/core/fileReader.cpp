@@ -196,6 +196,8 @@ void ParamReader::update() {
             data_[varRegion][data[0]] = var.str();
         }
     }
+    marks_["fluidInterior"] = PatchParam("fluidInterior", "fluidInterior");
+    marks_["processor"] = PatchParam("processor", "processor");
 }
 
 const ParamReader::PatchParam &ParamReader::zone(const String &name){
@@ -213,12 +215,17 @@ const ParamReader::PatchParam &ParamReader::mark(const String &name){
  * =======================================================
  **/
 
-String ParamReader::PatchParam::name() {
-    return dataStr_["name"];
+ParamReader::PatchParam::PatchParam(const String &name, const String &type) {
+    dataStr_["name"] = name;
+    dataStr_["type"] = type;
 }
 
-String ParamReader::PatchParam::type() {
-    return dataStr_["type"];
+const String &ParamReader::PatchParam::name() const {
+    return dataStr_.at("name");
+}
+
+const String &ParamReader::PatchParam::type() const {
+    return dataStr_.at("type");
 }
 
 void ParamReader::PatchParam::set(const String &line, Label lineNo) {
@@ -281,28 +288,28 @@ void ParamReader::PatchParam::set(const String &line, Label lineNo) {
 }
 
 template<>
-String ParamReader::PatchParam::get(const String &name) {
+const String &ParamReader::PatchParam::get(const String &name) const {
     if (dataStr_.find(name) == dataStr_.end()) {
         logger.warn << "ParamReader::PatchParam::get() - Cannot find \"" << name << "\"<String>" << std::endl;
         FATAL_ERROR_THROW;
     }
-    return dataStr_[name];
+    return dataStr_.at(name);
 }
 
 template<>
-Scalar ParamReader::PatchParam::get(const String &name) {
+const Scalar &ParamReader::PatchParam::get(const String &name) const {
     if (dataScl_.find(name) == dataScl_.end()) {
         logger.warn << "ParamReader::PatchParam::get() - Cannot find \"" << name << "\"<Scalar>" << std::endl;
         FATAL_ERROR_THROW;
     }
-    return dataScl_[name];
+    return dataScl_.at(name);
 }
 
 template<>
-Vector ParamReader::PatchParam::get(const String &name) {
+const Vector &ParamReader::PatchParam::get(const String &name) const {
     if (dataVtr_.find(name) == dataVtr_.end()) {
         logger.warn << "ParamReader::PatchParam::get() - Cannot find \"" << name << "\"<Vector>" << std::endl;
         FATAL_ERROR_THROW;
     }
-    return dataVtr_[name];
+    return dataVtr_.at(name);
 }

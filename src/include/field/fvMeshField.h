@@ -9,6 +9,8 @@ namespace MESO::fvm {
 
     volVectorField grad(const volScalarField &x, Label defaultMethod=LEAST_SQUARE);
 
+    volVectorField grad(const volScalarField &x, const List<Scalar> &adjData, Label defaultMethod=LEAST_SQUARE);
+
     template<typename DataType, Label PatchType>
     List<DataType> processorCommAdjData(const BasicField<DataType, PatchType> &x);
 

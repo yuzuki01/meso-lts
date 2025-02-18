@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
 
     solver.initialize();
     while (solver.solution()) {
-        logger.info << solver.name() << " - Time: " << solver.time().name() << std::endl;
+
     }
 
 #include "mesoFinalize.h"

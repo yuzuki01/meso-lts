@@ -65,6 +65,16 @@ BasicField<ValueType, PatchType>::operator+(const BasicField<ValueType, PatchTyp
 
 
 FieldTemplate
+BasicField<ValueType, PatchType> BasicField<ValueType, PatchType>::operator+(const ValueType &x) {
+    List<ValueType> result(values_.size());
+    for (int i = 0; i < result.size(); ++i) {
+        result[i] = values_[i] + x;
+    }
+    return {mesh_, index_, result};
+}
+
+
+FieldTemplate
 BasicField<ValueType, PatchType>
 BasicField<ValueType, PatchType>::operator-(const BasicField<ValueType, PatchType> &other) {
     List<ValueType> result(values_.size());
@@ -73,6 +83,17 @@ BasicField<ValueType, PatchType>::operator-(const BasicField<ValueType, PatchTyp
     }
     return {mesh_, index_, result};
 }
+
+
+FieldTemplate
+BasicField<ValueType, PatchType> BasicField<ValueType, PatchType>::operator-(const ValueType &x) {
+    List<ValueType> result(values_.size());
+    for (int i = 0; i < result.size(); ++i) {
+        result[i] = values_[i] - x;
+    }
+    return {mesh_, index_, result};
+}
+
 
 FieldTemplate
 BasicField<ValueType, PatchType>
@@ -247,7 +268,7 @@ BasicField<Scalar, PatchType> operator/(const Scalar &_x,
     forAll(result, i) {
         result[i] = _y.values()[i] * _s;
     }
-    return {_y.mesh(), result};
+    return {_y.mesh(), _y.index(), result};
 }
 
 PatchTypeTemplate
@@ -257,14 +278,14 @@ BasicField<Vector, PatchType> operator/(const Vector &_x,
     forAll(result, i) {
         result[i] = _x / _y.values()[i];
     }
-    return {_y.mesh(), result};
+    return {_y.mesh(), _y.index(), result};
 }
 
 PatchTypeTemplate
 BasicField<Scalar, PatchType> operator/(const BasicField<Scalar, PatchType> &_x,
                                         const BasicField<Scalar, PatchType> &_y) {
     isOperationAvailable(_x, _y);
-    List<Vector> result(_x.values().size());
+    List<Scalar> result(_x.values().size());
     forAll(result, i) {
         result[i] = _x.values()[i] / _y.values()[i];
     }

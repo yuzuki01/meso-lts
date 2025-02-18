@@ -281,7 +281,7 @@ namespace MESO::Mesh {
         Label NFACE{};
         List<Face> faces_;
         List<Patch> marks_ = {
-                Patch(*this, "fluid-interior")
+                Patch(*this, "fluidInterior")
         };
         List<Patch> partitionCellPatch_;        // cell patch
         List<Patch> partitionFacePatch_;        // face patch

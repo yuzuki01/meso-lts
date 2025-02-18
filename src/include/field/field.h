@@ -66,7 +66,11 @@ namespace MESO {
 
         BasicField operator+(const BasicField &other);
 
+        BasicField operator+(const ValueType &x);
+
         BasicField operator-(const BasicField &other);
+
+        BasicField operator-(const ValueType &x);
 
         BasicField operator-();
 

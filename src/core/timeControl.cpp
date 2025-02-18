@@ -43,17 +43,19 @@ void Time::runStep(Label stepNum) {
         FATAL_ERROR_THROW;
     }
     int count = 0;
-    while (isStoppable() and (count < stepNum)) {
-        if ((time_ + deltaT_) > endTime_) {
+    while ((time_ < endTime_) and (count < stepNum)) {
+        if ((time_ + deltaT_) >= endTime_) {
             deltaT_ = endTime_ - time_;
+            time_ = endTime_;
+            step_++;
+            break;
         }
         time_ += deltaT_;
         step_++;
         count++;
     }
-    update();
 }
 
 bool Time::isStoppable() const {
-    return (time_ < endTime_);
+    return (time_ >= endTime_);
 }

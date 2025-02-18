@@ -7,12 +7,18 @@ private:
     const Scalar TRef;
     const Scalar muRef;
 
+    Scalar dt_{};
+
     volScalarField rhoVol, rhoVolOld;
     volVectorField UVol, UVolOld;
+
+    surfScalarField rhoSurf;
+    surfVectorField USurf;
 
     GeomMesh DV_;
     List<volScalarField> gVol_;
     List<surfScalarField> gSurf_;
+    List<volScalarField> fluxGVol_;
 
 public:
     /// Constructor
@@ -31,12 +37,23 @@ public:
 
 private:
     /// CDUGKS
+    Scalar gMaxwell(const Scalar &rho_, const Vector &U_, const Mesh::Cell &dv_);
+
     template<Label PatchType>
     BasicField<Scalar, PatchType> gMaxwell(const BasicField<Scalar, PatchType> &rho_,
                                            const BasicField<Vector, PatchType> &U_,
                                            const Mesh::Cell &dv_);
 
-    inline Scalar tau_f();
+    template<Label PatchType>
+    BasicField<Scalar, PatchType> tau_f(const BasicField<Scalar, PatchType> &rho_);
+
+    void updateGbpSurf();
+
+    void updateGSurf();
+
+    void updateBC();
+
+    void updateFVM();
 };
 
 #endif //MESO_SOLVER_CDUGKS_H
