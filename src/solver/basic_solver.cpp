@@ -32,3 +32,7 @@ int BasicSolver::max_step() {
 int BasicSolver::write_interval() {
     return config.get<int>("write-interval", 1000, false);
 }
+
+void BasicSolver::update_config() {
+    config.update_config(false);
+}
