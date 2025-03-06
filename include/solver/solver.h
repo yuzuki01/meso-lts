@@ -34,7 +34,7 @@ namespace MESO::Solver {
 
         BasicSolver(ArgParser &parser, Config &config);
 
-        void update_config();
+        virtual void update_config();
 
         bool get_run_state() const { return run_state; };
 

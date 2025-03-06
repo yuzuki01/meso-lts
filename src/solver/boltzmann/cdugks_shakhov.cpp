@@ -632,9 +632,9 @@ void CDUGKS_SHAKHOV::fvm_update() {
                     particle.volume * ((particle.position * particle.position) * flux_g_tmp + flux_h_tmp);
         }
     }
-    auto flux_m0 = mesh.zero_scalar_field();
-    auto flux_m1 = mesh.zero_vector_field();
-    auto flux_m2 = mesh.zero_scalar_field();
+    flux_m0 = mesh.zero_scalar_field();
+    flux_m1 = mesh.zero_vector_field();
+    flux_m2 = mesh.zero_scalar_field();
     MPI::AllReduce(flux_m0_local, flux_m0);
     MPI::AllReduce(flux_m1_local, flux_m1);
     MPI::AllReduce(flux_m2_local, flux_m2);
@@ -833,14 +833,11 @@ void CDUGKS_SHAKHOV::output() {
         vel_cell.output(path + "U");
         T_cell.output(path + "T");
         q_cell.output(path + "q");
+        flux_m0.output(path + "fluxM0");
+        flux_m1.output(path + "fluxM1");
+        flux_m2.output(path + "fluxM2");
 
         logger.note << ", np-data";
-    }
-    {
-        rho_cell.output(path_latest + "Rho");
-        vel_cell.output(path_latest + "U");
-        T_cell.output(path_latest + "T");
-        q_cell.output(path_latest + "q");
     }
     logger.note << " @ step=" << step << std::endl;
 }

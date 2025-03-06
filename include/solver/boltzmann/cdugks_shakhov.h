@@ -23,6 +23,10 @@ public:
     Field<Scalar> rho_cell_res, T_cell_res;
     Field<Vector> vel_cell_res, q_cell_res;
 
+    Field<Scalar> flux_m0;
+    Field<Vector> flux_m1;
+    Field<Scalar> flux_m2;
+
     DistributionFunction g_cell, h_cell;
     DistributionFunction g_face, h_face;
     DistributionFunction flux_g, flux_h;
