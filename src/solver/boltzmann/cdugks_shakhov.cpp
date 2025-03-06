@@ -429,7 +429,6 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     break;
                 case BoundaryType::pressure_outlet: {
                     auto p_patch = mark.patch.get_scalar("pressure");
-
                     auto u_m = vel_cell[neighbor.id];
                     auto T_m = T_cell[neighbor.id];
                     auto p_e = Boundary::Compressible::solve_pressure(p_patch, R,
@@ -507,6 +506,10 @@ void CDUGKS_SHAKHOV::reconstruct() {
                         if (kn >= VSMALL) {
                             g_face[p][face.id] = g_all[particle.symmetry.id[direction]];
                             h_face[p][face.id] = h_all[particle.symmetry.id[direction]];
+                        } else {
+                            if (kn < -VSMALL) continue;
+                            g_face[p][face.id] = 0.5 * (g_face[p][face.id] + g_all[particle.symmetry.id[direction]]);
+                            h_face[p][face.id] = 0.5 * (h_face[p][face.id] + h_all[particle.symmetry.id[direction]]);
                         }
                     }
                 }

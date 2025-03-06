@@ -2,7 +2,7 @@
 
 using namespace MESO::Solver;
 
-std::unordered_map<std::string, int> MESO::Solver::mark_type_map = {
+const std::unordered_map<std::string, int> MESO::Solver::mark_type_map = {
         {"fluid-interior",   BoundaryType::fluid_interior},
         {"farfield-inlet",   BoundaryType::farfield_inlet},
         {"pressure-inlet",   BoundaryType::pressure_inlet},
@@ -20,7 +20,7 @@ Config::Config(const std::string &file_path) : file_path(file_path) {
         auto mark_ptr = new Mark;
         mark_ptr->id = 1;
         mark_ptr->name = mark_ptr->type_name = "fluid-interior";
-        mark_ptr->type = mark_type_map[mark_ptr->type_name];
+        mark_ptr->type = mark_type_map.at(mark_ptr->type_name);
         marks[mark_ptr->name] = *mark_ptr;
     }
     update_config(true);
@@ -72,7 +72,7 @@ void Config::update_config(bool update_patch) {
                 if (data[0] == "name") mark.name = data[1];
                 else if (data[0] == "type") {
                     mark.type_name = data[1];
-                    mark.type = mark_type_map[mark.type_name];
+                    mark.type = mark_type_map.at(mark.type_name);
                 } else mark.patch.set_value(data);
                 ++i;
             }

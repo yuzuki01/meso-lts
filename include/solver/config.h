@@ -8,7 +8,7 @@
 
 namespace MESO::Solver {
 
-    extern Dict<int> mark_type_map;
+    extern const Dict<int> mark_type_map;
 
     enum BoundaryType {
         fluid_interior,
