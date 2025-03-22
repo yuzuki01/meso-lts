@@ -1,0 +1,52 @@
+[settings]
+solver          cdugks@shakhov
+case-name       neumann
+mesh-file       neumann/neumann_phy.neu
+dvs-file        neumann/neumann_dvs.neu
+
+write-interval  10
+max-step        300
+
+Pr          0.6666666666666667
+
+gradient-switch     True
+limiter-switch      False
+output-np           True
+
+timeStep            5.0e-4
+gas-constant        0.5
+gas-k               2
+ref-density         1.0
+ref-length          1.0
+ref-temperature     1.0
+ref-viscosity       10.0
+vhs-index           0.5
+
+[group]
+name            RU
+density         fixedValue  scalar  0.5313
+temperature     fixedValue  scalar  1.5057406
+velocity        fixedValue  vector  0.0 0.0 0.0
+
+[group]
+name            LU
+density         fixedValue  scalar  1.0
+temperature     fixedValue  scalar  2.0
+velocity        fixedValue  vector  0.7276 0.0 0.0
+
+[group]
+name            LD
+density         fixedValue  scalar  0.8
+temperature     fixedValue  scalar  2.5
+velocity        fixedValue  vector  0.0 0.0 0.0
+
+[group]
+name            RD
+density         fixedValue  scalar  1.0
+temperature     fixedValue  scalar  2.0
+velocity        fixedValue  vector  0.0 0.7276 0.0
+
+[mark]
+name            Unspecified
+type            fluid-interior
+

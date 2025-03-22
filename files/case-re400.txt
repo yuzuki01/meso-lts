@@ -1,0 +1,33 @@
+[settings]
+solver          cdugks@incompressible
+case-name       re400
+mesh-file       cavity.neu
+dvs-file        gh-3.dvs
+dvs-type        Gauss-Hermite
+
+write-interval  1000
+max-step        100000
+
+Re          400.0
+Ma          0.1414213562373095
+
+gradient-switch     True
+
+timeStep            2.5e-3
+gas-constant        0.5
+ref-density         1.0
+ref-length          1.0
+ref-temperature     1.0
+
+[group]
+name        fluid
+density     fixedValue  scalar  1.0
+
+[mark]
+name        lid
+type        wall
+velocity    fixedValue  vector  0.1 0.0 0.0
+
+[mark]
+name        wall
+type        wall

@@ -1,0 +1,45 @@
+[settings]
+solver          cdugks@shakhov
+case-name       re1000
+mesh-file       cavity.neu
+dvs-file        hGH.dvs
+dvs-type        half-range-Gauss-Hermite
+
+write-interval  1000
+max-step        200000
+
+timeStep            2.5e-3
+gradient-switch     True
+limiter-switch      False
+output-np           True
+read-np-data        False
+
+Kn          0.00018054066673528204
+Pr          0.6666666666666667
+Ma          0.10954451150103323
+CFL         0.8
+
+gas-constant        0.5
+gas-k               0
+vhs-index           0.5
+ref-density         1.0
+ref-length          1.0
+ref-temperature     1.0
+ref-viscosity       0.0001
+
+[group]
+name        fluid
+density     fixedValue scalar 1.0
+temperature fixedValue scalar 1.0
+
+[mark]
+name        lid
+type        wall
+velocity    fixedValue  vector  0.1 0.0 0.0
+temperature fixedValue scalar 1.0
+
+[mark]
+name        wall
+type        wall
+velocity    fixedValue  vector  0.0 0.0 0.0
+temperature fixedValue scalar 1.0

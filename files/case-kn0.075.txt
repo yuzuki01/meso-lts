@@ -1,0 +1,40 @@
+[settings]
+solver          cdugks@shakhov
+case-name       kn0.075
+mesh-file       cavity.neu
+dvs-file        nc.dvs
+dvs-type        Newton-Cotes
+
+write-interval  1000
+max-step        100000
+
+Pr          0.6666666666666667
+
+gradient-switch     True
+limiter-switch      False
+output-np           True
+
+timeStep            3.5e-6
+gas-constant        208.24434389140274
+gas-k               0
+ref-density         1.1442351492660286e-06
+ref-length          1.0
+ref-temperature     273.0
+ref-viscosity       1.6028188248537943e-05
+vhs-index           0.5
+
+[group]
+name            fluid
+density         fixedValue  scalar  1.1442351492660286e-06
+temperature     fixedValue  scalar  273.0
+
+[mark]
+name            lid
+type            wall
+velocity        fixedValue  vector  50.0    0.0    0.0
+temperature     fixedValue  scalar  273.0
+
+[mark]
+name            wall
+type            wall
+temperature     fixedValue  scalar  273.0
