@@ -378,7 +378,7 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     auto T_in = mark.patch.get_scalar("temperature");
                     auto p_in = Boundary::Compressible::solve_pressure(
                             mark.patch.get_scalar("pressure"), R, T_m, u_in, gamma);
-                    auto rho_in = p_in / (R * T_m);
+                    auto rho_in = p_in / (R * T_in);
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;
                         auto &particle = dvs_mesh.cells[dvs_id];
@@ -434,7 +434,8 @@ void CDUGKS_SHAKHOV::reconstruct() {
                     auto p_e = Boundary::Compressible::solve_pressure(p_patch, R,
                                                                       T_m, u_m, gamma);
                     auto rho_e = p_e / (R * T_m);
-                    auto u_e = u_m;
+                    auto nv_e = -nv;
+                    auto u_e = (u_m * nv_e) * nv_e;
                     auto T_e = mark.patch.get_scalar("temperature");
                     for (int p = 0; p < mpi_task.size; ++p) {
                         ObjectId dvs_id = p + mpi_task.start;

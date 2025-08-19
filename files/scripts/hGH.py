@@ -14,7 +14,7 @@ Usage exampels:
 def save_file(Xis, weights):
     print("Writing Xis and weights...\n")
     data = np.column_stack((Xis, weights))
-    with open('../../build/hGH.dvs', 'w') as f_Xi:
+    with open('hGH.dvs', 'w') as f_Xi:
         f_Xi.write("half-range-Gauss-Hermite\n")
         for xi, weight in data:
             f_Xi.write(f"{xi:18.15e} {weight:18.15e}\n")
