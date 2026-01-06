@@ -407,16 +407,17 @@ void CDUGKS::output() {
     }
     logger.note << " tec-files";
 
+    if (output_latest) {
+        /// output latest
+        rho_cell.output(path_latest + "Rho");
+        vel_cell.output(path_latest + "U");
+    }
     if (output_np) {
         /// output numpy data
         rho_cell.output(path + "Rho");
         vel_cell.output(path + "U");
 
         logger.note << ", np-data";
-    }
-    {
-        rho_cell.output(path_latest + "Rho");
-        vel_cell.output(path_latest + "U");
     }
     logger.note << " @ step=" << step << std::endl;
 }

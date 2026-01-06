@@ -24,6 +24,7 @@ namespace MESO::Solver {
         ArgParser &parser;
         Config config;
         std::string case_name;
+        bool output_latest;
         bool output_np;
         double residual_limit{};
         bool run_state{};

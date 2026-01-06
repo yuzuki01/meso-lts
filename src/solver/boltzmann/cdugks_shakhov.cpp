@@ -828,6 +828,17 @@ void CDUGKS_SHAKHOV::output() {
     }
     logger.note << " tec-files";
 
+    if (output_latest) {
+        /// output latest
+        rho_cell.output(path_latest + "Rho");
+        vel_cell.output(path_latest + "U");
+        T_cell.output(path_latest + "T");
+        q_cell.output(path_latest + "q");
+        flux_m0.output(path_latest + "fluxM0");
+        flux_m1.output(path_latest + "fluxM1");
+        flux_m2.output(path_latest + "fluxM2");
+    }
+
     if (output_np) {
         /// output numpy data
         rho_cell.output(path + "Rho");

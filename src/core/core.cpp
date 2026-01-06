@@ -78,11 +78,12 @@ void Utils::output_list(const String &file_path, List<List<ObjectId>> &data) {
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
     for (auto &list : data) {
-        fp << "(";
+        int count = 0;
+        const int len = static_cast<int>(list.size());
         for (auto &it: list) {
-            fp << " " << it;
+            fp << it << ((count + 1 == len) ? " " : "\n");
+            count++;
         }
-        fp << " )" << std::endl;
     }
 }
 
@@ -93,7 +94,7 @@ void Utils::output_list(const String &file_path, List<Set<ObjectId>> &data) {
     std::fstream fp;
     fp.open(file_path, std::ios::out | std::ios::trunc);
     for (auto &set : data) {
-        fp << "( " << set[0] << " " << set[1] << " )" << std::endl;
+        fp << set[0] << " " << set[1] << std::endl;
     }
 }
 
