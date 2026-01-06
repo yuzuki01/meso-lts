@@ -16,6 +16,11 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    if (parser.parse_switch("v") || parser.parse_switch("version")) {
+        MESO::version();
+        return 0;
+    }
+
     if (parser.parse_switch("mpi-test")) {
         MESO::MPI::Initialize(&argc, &argv);
         MESO::MPI::Finalize();

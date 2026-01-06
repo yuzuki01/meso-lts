@@ -21,6 +21,46 @@ void MESO::help() {
 }
 
 
+void MESO::version() {
+    // 1. 编译日期和时间
+    logger.info << "Compile Date/Time:    " << COMPILE_DATE << " " << COMPILE_TIME << std::endl;
+
+    // 2. 编译器信息
+    logger.info << "Compiler:             " << COMPILER_NAME << std::endl;
+    logger.info << "Compiler Version:     " << COMPILER_VERSION_STR << " (Numeric: " << COMPILER_VERSION << ")" << std::endl;
+
+    // 3. 系统架构（可选扩展）
+#if defined(_WIN32) || defined(_WIN64)
+    #if defined(_WIN64)
+        logger.info << "System Arch:          x86_64 (Windows 64-bit)" << std::endl;
+    #else
+        logger.info << "System Arch:          x86 (Windows 32-bit)" << std::endl;
+    #endif
+#elif defined(__x86_64__) || defined(_M_X64)
+    logger.info << "System Arch:          x86_64 (Linux/macOS 64-bit)" << std::endl;
+#elif defined(__i386__) || defined(_M_IX86)
+    logger.info << "System Arch:          x86 (Linux/macOS 32-bit)" << std::endl;
+#elif defined(__arm64__) || defined(_M_ARM64)
+    logger.info << "System Arch:          ARM64" << std::endl;
+#else
+    logger.info << "System Arch:          Unknown" << std::endl;
+#endif
+
+    // 4. C++ 标准版本（可选扩展）
+#if __cplusplus == 201703L
+    logger.info << "C++ Standard:         C++17" << std::endl;
+#elif __cplusplus == 201402L
+    logger.info << "C++ Standard:         C++14" << std::endl;
+#elif __cplusplus == 201103L
+    logger.info << "C++ Standard:         C++11" << std::endl;
+#elif __cplusplus == 199711L
+    logger.info << "C++ Standard:         C++98" << std::endl;
+#else
+    logger.info << "C++ Standard:         C++20+ (Version: " << __cplusplus << ")" << std::endl;
+#endif
+}
+
+
 int MESO::handle_mesh(const std::string &mesh_file, double mesh_scale) {
     auto mesh = MESO::fvmMesh::load_gambit(mesh_file);
     mesh.build_geom(mesh_scale);
