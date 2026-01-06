@@ -81,8 +81,7 @@ void Utils::output_list(const String &file_path, List<List<ObjectId>> &data) {
         int count = 0;
         const int len = static_cast<int>(list.size());
         for (auto &it: list) {
-            fp << it << ((count + 1 == len) ? " " : "\n");
-            count++;
+            fp << it << ((++count == len) ? "\n" : " ");
         }
     }
 }
